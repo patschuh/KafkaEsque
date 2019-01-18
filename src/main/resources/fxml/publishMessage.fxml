@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import java.lang.*?>
+<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0"
+            xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="at.esque.kafka.PublisherController">
+   <bottom>
+       <ToolBar minWidth="40.0" nodeOrientation="RIGHT_TO_LEFT" prefHeight="40.0" prefWidth="200.0"
+                BorderPane.alignment="CENTER">
+        <items>
+            <HBox>
+                <children>
+                    <Button fx:id="publishMessageButton" minHeight="-Infinity" mnemonicParsing="false"
+                            onAction="#publishClick" text="Publish">
+                        <styleClass>
+                            <String fx:value="first"/>
+                            <String fx:value="primary"/>
+                        </styleClass>
+                    </Button>
+                    <ComboBox fx:id="partitionCombobox" prefWidth="150.0" promptText="Partition" styleClass="last"/>
+                </children>
+            </HBox>
+        </items>
+      </ToolBar>
+   </bottom>
+   <center>
+       <StackPane BorderPane.alignment="CENTER">
+           <children>
+               <SplitPane dividerPositions="0.5" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                          orientation="VERTICAL">
+                   <items>
+                       <TitledPane animated="false" collapsible="false" maxHeight="1.7976931348623157E308"
+                                   maxWidth="1.7976931348623157E308" styleClass="primary" text="Key">
+                           <content>
+                               <HBox>
+                                   <children>
+                                       <TextArea fx:id="keyTextArea" maxHeight="1.7976931348623157E308"
+                                                 maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                       <VBox>
+                                           <children>
+                                               <Label alignment="CENTER" maxWidth="1.7976931348623157E308"
+                                                      text="Key Validation" textAlignment="CENTER"/>
+                                               <CheckBox fx:id="validateIsJsonKeyBox" mnemonicParsing="false"
+                                                         text="Validate is JSON"/>
+                                           </children>
+                                           <padding>
+                                               <Insets left="10.0" right="10.0"/>
+                                           </padding>
+                                       </VBox>
+                                   </children>
+                               </HBox>
+                           </content>
+                       </TitledPane>
+                       <TitledPane animated="false" collapsible="false" maxHeight="1.7976931348623157E308"
+                                   maxWidth="1.7976931348623157E308" styleClass="primary" text="Value">
+                           <content>
+                               <HBox>
+                                   <children>
+                                       <TextArea fx:id="valueTextArea" maxHeight="1.7976931348623157E308"
+                                                 maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                       <VBox>
+                                           <children>
+                                               <Label alignment="CENTER" maxWidth="1.7976931348623157E308"
+                                                      text="Value Validation" textAlignment="CENTER"/>
+                                               <CheckBox fx:id="validateIsJsonValueBox" mnemonicParsing="false"
+                                                         text="Validate is JSON"/>
+                                               <CheckBox fx:id="nullMessageToggle" alignment="CENTER"
+                                                         mnemonicParsing="false" text="Send null">
+                                                   <cursor>
+                                                       <Cursor fx:constant="HAND"/>
+                                                   </cursor>
+                                               </CheckBox>
+                                           </children>
+                                           <padding>
+                                               <Insets left="10.0" right="10.0"/>
+                                           </padding>
+                                       </VBox>
+                                   </children>
+                               </HBox>
+                           </content>
+                       </TitledPane>
+                   </items>
+                   <StackPane.margin>
+                       <Insets top="40.0"/>
+                   </StackPane.margin>
+               </SplitPane>
+               <TitledPane expanded="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+                           pickOnBounds="false" prefHeight="200.0" prefWidth="200.0" styleClass="info" text="Headers"
+                           StackPane.alignment="TOP_RIGHT">
+                   <content>
+                       <BorderPane>
+                           <center>
+                               <TableView fx:id="headerTableView" editable="true" prefHeight="200.0" prefWidth="200.0">
+                                   <columns>
+                                       <TableColumn fx:id="headerKeyColumn" maxWidth="1.7976931348623157E308"
+                                                    prefWidth="75.0" sortable="false" text="Key"/>
+                                       <TableColumn fx:id="headerValueColumn" maxWidth="1.7976931348623157E308"
+                                                    prefWidth="75.0" sortable="false" text="Value"/>
+                                   </columns>
+                               </TableView>
+                           </center>
+                           <top>
+                               <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                                   <items>
+                                       <HBox alignment="CENTER" prefHeight="30.0">
+                                           <children>
+                                               <Button mnemonicParsing="false" onAction="#addHeaderClick">
+                                                   <graphic>
+                                                       <FontIcon iconColor="WHITE" iconLiteral="fa-plus"/>
+                                                   </graphic>
+                                                   <styleClass>
+                                                       <String fx:value="first"/>
+                                                       <String fx:value="success"/>
+                                                   </styleClass>
+                                               </Button>
+                                               <Button mnemonicParsing="false" onAction="#removeHeaderClick">
+                                                   <graphic>
+                                                       <FontIcon iconColor="WHITE" iconLiteral="fa-minus"/>
+                                                   </graphic>
+                                                   <styleClass>
+                                                       <String fx:value="last"/>
+                                                       <String fx:value="danger"/>
+                                                   </styleClass>
+                                               </Button>
+                                           </children>
+                                       </HBox>
+                                   </items>
+                               </ToolBar>
+                           </top>
+                       </BorderPane>
+                   </content>
+               </TitledPane>
+           </children>
+       </StackPane>
+   </center>
+</BorderPane>

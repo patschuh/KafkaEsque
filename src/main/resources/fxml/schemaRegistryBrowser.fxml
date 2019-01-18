@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
+            prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="at.esque.kafka.SchemaRegistryBrowserController">
+    <center>
+        <SplitPane dividerPositions="0.23244147157190637" prefHeight="160.0" prefWidth="200.0"
+                   BorderPane.alignment="CENTER">
+            <items>
+                <ListView fx:id="subjectListView" prefHeight="200.0" prefWidth="200.0"/>
+                <BorderPane prefHeight="200.0" prefWidth="200.0">
+                    <center>
+                        <TextArea fx:id="schemaTextArea" editable="false" prefHeight="200.0" prefWidth="200.0"
+                                  BorderPane.alignment="CENTER"/>
+                    </center>
+                    <top>
+                        <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                            <items>
+                                <Label text="Version:"/>
+                                <ComboBox fx:id="versionComboBox" prefWidth="150.0"/>
+                            </items>
+                        </ToolBar>
+                    </top>
+                </BorderPane>
+            </items>
+        </SplitPane>
+    </center>
+</BorderPane>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import java.lang.String?>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
+            prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="at.esque.kafka.topics.CreateTopicController">
+    <bottom>
+        <ToolBar minWidth="40.0" nodeOrientation="RIGHT_TO_LEFT" prefHeight="40.0" prefWidth="200.0"
+                 BorderPane.alignment="CENTER">
+            <items>
+                <Button defaultButton="true" mnemonicParsing="false" onAction="#createTopicClick" styleClass="primary"
+                        text="Create"/>
+            </items>
+        </ToolBar>
+    </bottom>
+    <center>
+        <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0"
+                   BorderPane.alignment="CENTER">
+            <items>
+                <GridPane>
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES"/>
+                    </rowConstraints>
+                    <children>
+                        <TextField fx:id="topicName" GridPane.columnIndex="1">
+                            <GridPane.margin>
+                                <Insets right="20.0"/>
+                            </GridPane.margin>
+                        </TextField>
+                        <TextField fx:id="numberOfPartitions" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                            <GridPane.margin>
+                                <Insets right="20.0"/>
+                            </GridPane.margin>
+                        </TextField>
+                        <TextField fx:id="replicationFactor" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                            <GridPane.margin>
+                                <Insets right="20.0"/>
+                            </GridPane.margin>
+                        </TextField>
+                        <Label text="name:">
+                            <GridPane.margin>
+                                <Insets left="20.0"/>
+                            </GridPane.margin>
+                        </Label>
+                        <Label text="partitions:" GridPane.rowIndex="1">
+                            <GridPane.margin>
+                                <Insets left="20.0"/>
+                            </GridPane.margin>
+                        </Label>
+                        <Label text="replication-factor:" GridPane.rowIndex="2">
+                            <GridPane.margin>
+                                <Insets left="20.0"/>
+                            </GridPane.margin>
+                        </Label>
+                        <Label text="config:" GridPane.rowIndex="3">
+                            <GridPane.margin>
+                                <Insets left="20.0"/>
+                            </GridPane.margin>
+                        </Label>
+                        <HBox alignment="CENTER" GridPane.columnIndex="1" GridPane.columnSpan="2147483647"
+                              GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+                            <children>
+                                <Button mnemonicParsing="false" onAction="#addConfig" text="Add Config">
+                                    <styleClass>
+                                        <String fx:value="first"/>
+                                        <String fx:value="success"/>
+                                    </styleClass>
+                                </Button>
+                                <Button alignment="CENTER" mnemonicParsing="false" onAction="#removeSelectedConfig"
+                                        text="remove selected Config">
+                                    <styleClass>
+                                        <String fx:value="last"/>
+                                        <String fx:value="danger"/>
+                                    </styleClass>
+                                </Button>
+                            </children>
+                            <GridPane.margin>
+                                <Insets right="20.0"/>
+                            </GridPane.margin>
+                        </HBox>
+                    </children>
+                </GridPane>
+                <ListView fx:id="configValueList" prefHeight="200.0" prefWidth="200.0"/>
+            </items>
+        </SplitPane>
+    </center>
+</BorderPane>

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import at.esque.kafka.controls.JsonTreeView?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+<?import java.lang.*?>
+<SplitPane dividerPositions="0.6929460580912863" orientation="VERTICAL" prefHeight="533.0" prefWidth="961.0"
+           xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="at.esque.kafka.Controller">
+    <items>
+        <BorderPane>
+            <center>
+                <SplitPane dividerPositions="0.32533889468196037" prefHeight="200.0" prefWidth="200.0">
+                    <items>
+                        <BorderPane prefHeight="200.0" prefWidth="200.0">
+                            <center>
+                                <ListView fx:id="topicListView" prefHeight="200.0" prefWidth="200.0"
+                                          BorderPane.alignment="CENTER"/>
+                            </center>
+                            <top>
+                                <ToolBar maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
+                                    <items>
+                                        <VBox HBox.hgrow="ALWAYS">
+                                            <children>
+                                                <HBox maxWidth="1.7976931348623157E308">
+                                                    <children>
+                                                        <Button maxHeight="-Infinity" maxWidth="-Infinity"
+                                                                minHeight="30.0" mnemonicParsing="false"
+                                                                onAction="#addClusterConfigClick" prefWidth="30.0">
+                                                            <tooltip>
+                                                                <Tooltip text="Add Cluster Config"/>
+                                                            </tooltip>
+                                                            <styleClass>
+                                                                <String fx:value="btn"/>
+                                                                <String fx:value="success"/>
+                                                                <String fx:value="first"/>
+                                                            </styleClass>
+                                                            <graphic>
+                                                                <FontIcon iconColor="WHITE" iconLiteral="fa-plus"
+                                                                          iconSize="20"/>
+                                                            </graphic>
+                                                        </Button>
+                                                        <Button minHeight="30.0" mnemonicParsing="false"
+                                                                onAction="#deleteClusterConfigsClick" prefWidth="30.0">
+                                                            <styleClass>
+                                                                <String fx:value="danger"/>
+                                                                <String fx:value="middle"/>
+                                                            </styleClass>
+                                                            <graphic>
+                                                                <FontIcon iconColor="WHITE" iconLiteral="fa-trash"
+                                                                          iconSize="20"/>
+                                                            </graphic>
+                                                            <tooltip>
+                                                                <Tooltip text="remove cluster configs"/>
+                                                            </tooltip>
+                                                        </Button>
+                                                        <ComboBox fx:id="clusterComboBox" prefWidth="150.0"
+                                                                  promptText="Select Cluster" styleClass="last"/>
+                                                    </children>
+                                                </HBox>
+                                                <Separator prefWidth="200.0"/>
+                                                <HBox>
+                                                    <children>
+                                                        <Button maxHeight="-Infinity" maxWidth="-Infinity"
+                                                                minHeight="-Infinity" mnemonicParsing="false"
+                                                                onAction="#createTopicButtonClick" prefWidth="30.0">
+                                                            <tooltip>
+                                                                <Tooltip text="Create Topic"/>
+                                                            </tooltip>
+                                                            <styleClass>
+                                                                <String fx:value="first"/>
+                                                                <String fx:value="success"/>
+                                                            </styleClass>
+                                                            <graphic>
+                                                                <FontIcon iconColor="WHITE" iconLiteral="fa-plus"
+                                                                          iconSize="20"/>
+                                                            </graphic>
+                                                        </Button>
+                                                        <Button fx:id="refreshTopicListButton" maxHeight="-Infinity"
+                                                                minHeight="-Infinity" mnemonicParsing="false"
+                                                                onAction="#refreshButtonClick">
+                                                            <styleClass>
+                                                                <String fx:value="last"/>
+                                                                <String fx:value="btn"/>
+                                                            </styleClass>
+                                                            <graphic>
+                                                                <FontIcon iconLiteral="fa-refresh"/>
+                                                            </graphic>
+                                                        </Button>
+                                                        <TextField fx:id="topicFilterTextField" prefHeight="25.0"
+                                                                   prefWidth="118.0" promptText="Filter"/>
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </VBox>
+                                    </items>
+                                </ToolBar>
+                            </top>
+                        </BorderPane>
+                        <BorderPane prefHeight="200.0" prefWidth="200.0">
+                            <center>
+                                <TableView fx:id="messageTable" prefHeight="200.0" prefWidth="200.0"
+                                           BorderPane.alignment="CENTER">
+                                    <columns>
+                                        <TableColumn fx:id="messagePartitionColumn" prefWidth="59.0" text="Partition"/>
+                                        <TableColumn fx:id="messageOffsetColumn" prefWidth="49.0" text="Offset"/>
+                                        <TableColumn fx:id="messageTimestampColumn" prefWidth="75.0" text="Timestamp"/>
+                                        <TableColumn fx:id="messageKeyColumn" maxWidth="1.7976931348623157E308"
+                                                     minWidth="27.0" prefWidth="154.0" text="Key"/>
+                                        <TableColumn fx:id="messageValueColumn" maxWidth="1.7976931348623157E308"
+                                                     minWidth="0.0" prefWidth="373.0" text="Value"/>
+                                    </columns>
+                                </TableView>
+                            </center>
+                            <top>
+                                <SplitPane BorderPane.alignment="CENTER">
+                                    <items>
+                                        <ToolBar prefHeight="40.0" prefWidth="200.0">
+                                            <items>
+                                                <HBox>
+                                                    <children>
+                                                        <Button fx:id="publishMessageButton" mnemonicParsing="false"
+                                                                onAction="#onPublishMessageClick" styleClass="first">
+                                                            <tooltip>
+                                                                <Tooltip text="publish Message"/>
+                                                            </tooltip>
+                                                            <graphic>
+                                                                <FontIcon iconLiteral="fa-cloud-upload" iconSize="15"/>
+                                                            </graphic>
+                                                        </Button>
+                                                        <Button fx:id="getMessagesButton" mnemonicParsing="false"
+                                                                onAction="#getMessagesClick" styleClass="last">
+                                                            <tooltip>
+                                                                <Tooltip text="get Messages"/>
+                                                            </tooltip>
+                                                            <graphic>
+                                                                <FontIcon iconLiteral="fa-cloud-download"
+                                                                          iconSize="15"/>
+                                                            </graphic>
+                                                        </Button>
+                                                    </children>
+                                                </HBox>
+                                                <ComboBox id="fetchModeCombobox" fx:id="fetchModeCombobox"
+                                                          prefHeight="25.0" promptText="Mode"/>
+                                                <TextField fx:id="numberOfMessagesToGetField" prefHeight="25.0"
+                                                           prefWidth="77.0" promptText="Messages Per Partition"
+                                                           text="1000">
+                                                    <tooltip>
+                                                        <Tooltip text="Messages per partition to get"/>
+                                                    </tooltip>
+                                                </TextField>
+                                                <TextField fx:id="specificOffsetTextField" prefHeight="25.0"
+                                                           prefWidth="91.0" promptText="Specific Offset"
+                                                           visible="false"/>
+                                                <Pane HBox.hgrow="ALWAYS"/>
+                                                <HBox>
+                                                    <children>
+                                                        <TextField fx:id="messageSearchTextField" promptText="Search"
+                                                                   styleClass="first"/>
+                                                        <Button maxHeight="-Infinity" minHeight="-Infinity"
+                                                                mnemonicParsing="false" onAction="#exportCsvClick">
+                                                            <graphic>
+                                                                <FontIcon iconColor="WHITE" iconLiteral="fa-share"/>
+                                                            </graphic>
+                                                            <tooltip>
+                                                                <Tooltip text="Export as CSV"/>
+                                                            </tooltip>
+                                                            <styleClass>
+                                                                <String fx:value="last"/>
+                                                                <String fx:value="info"/>
+                                                            </styleClass>
+                                                        </Button>
+                                                        <FontIcon/>
+                                                    </children>
+                                                </HBox>
+                                            </items>
+                                        </ToolBar>
+                                    </items>
+                                </SplitPane>
+                            </top>
+                        </BorderPane>
+                    </items>
+                </SplitPane>
+            </center>
+            <top>
+                <MenuBar BorderPane.alignment="CENTER">
+                    <menus>
+                        <Menu mnemonicParsing="false" text="Experimental">
+                            <items>
+                                <MenuItem fx:id="playMessageBookMenu" mnemonicParsing="false"
+                                          onAction="#playMessageBook" text="Play Message Book">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fa-play"/>
+                                    </graphic>
+                                </MenuItem>
+                                <MenuItem fx:id="applyTopicTemplatesMenu" mnemonicParsing="false"
+                                          onAction="#applyTopicTemplatesClick" text="Apply Topic Templates">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fa-copy"/>
+                                    </graphic>
+                                </MenuItem>
+                                <MenuItem mnemonicParsing="false" onAction="#schemaRegistryClick"
+                                          text="Schema registry Browser">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fa-registered"/>
+                                    </graphic>
+                                </MenuItem>
+                            </items>
+                        </Menu>
+                    </menus>
+                </MenuBar>
+            </top>
+        </BorderPane>
+        <BorderPane>
+            <center>
+                <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
+                    <tabs>
+                        <Tab text="Key">
+                            <content>
+                                <TextArea fx:id="keyTextArea" editable="false" prefHeight="200.0" prefWidth="200.0"/>
+                            </content>
+                        </Tab>
+                        <Tab text="Value">
+                            <content>
+                                <HBox>
+                                    <JsonTreeView fx:id="jsonTreeView" maxWidth="1.7976931348623157E308"/>
+                                    <TextArea fx:id="valueTextArea" editable="false" prefHeight="200.0"
+                                              prefWidth="200.0"
+                                              HBox.hgrow="ALWAYS"/>
+                                </HBox>
+                            </content>
+                        </Tab>
+                        <Tab text="Header">
+                            <content>
+                                <TableView fx:id="headerTableView" prefHeight="200.0" prefWidth="200.0">
+                                    <columns>
+                                        <TableColumn fx:id="headerKeyColumn" prefWidth="75.0" text="Key"/>
+                                        <TableColumn fx:id="headerValueColumn" prefWidth="75.0" text="Value"/>
+                                    </columns>
+                                </TableView>
+                            </content>
+                        </Tab>
+                    </tabs>
+                </TabPane>
+            </center>
+            <top>
+                <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                    <items>
+                        <ToggleButton fx:id="formatJsonToggle" mnemonicParsing="false" styleClass="info"
+                                      text="Format as  Json" textAlignment="CENTER"/>
+                        <ProgressIndicator fx:id="loadingIndicator" maxHeight="-Infinity" maxWidth="-Infinity"
+                                           minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0"
+                                           prefWidth="30.0"/>
+                        <Label fx:id="backgroundTaskDescription" text="backgroundTask" visible="false"/>
+                        <Pane HBox.hgrow="ALWAYS"/>
+                        <Label fx:id="taskProgressLabel" text="taskProgressLabel"/>
+                        <Button fx:id="interruptMessagePollingButton" mnemonicParsing="false" onAction="#stopPolling"
+                                text="stop polling">
+                            <styleClass>
+                                <String fx:value="btn"/>
+                                <String fx:value="warning"/>
+                            </styleClass>
+                        </Button>
+                    </items>
+                </ToolBar>
+            </top>
+        </BorderPane>
+    </items>
+</SplitPane>
