@@ -283,7 +283,7 @@ public class Controller {
         topicFilterTextField.textProperty().addListener(((observable, oldValue, newValue) ->
                 ((FilteredList<String>) topicListView.getItems()).setPredicate(t -> StringUtils.containsIgnoreCase(t, newValue))
         ));
-        jsonTreeView.jsonStringPropertyProperty().bind(valueTextArea.textProperty());
+        jsonTreeView.jsonStringProperty().bind(valueTextArea.textProperty());
         jsonTreeView.visibleProperty().bind(formatJsonToggle.selectedProperty());
         bindDisableProperties();
     }

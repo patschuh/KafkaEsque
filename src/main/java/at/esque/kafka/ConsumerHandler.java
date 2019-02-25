@@ -53,7 +53,9 @@ public class ConsumerHandler {
         consumerProps.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         consumerProps.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getKeyType().equals(MessageType.AVRO)? "io.confluent.kafka.serializers.KafkaAvroDeserializer" : "org.apache.kafka.common.serialization.StringDeserializer");
         consumerProps.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getValueType().equals(MessageType.AVRO)? "io.confluent.kafka.serializers.KafkaAvroDeserializer" : "org.apache.kafka.common.serialization.StringDeserializer");
-        consumerProps.setProperty("schema.registry.url", config.getSchemaRegistry());
+        if(config.getSchemaRegistry() != null && !config.getSchemaRegistry().isEmpty()) {
+            consumerProps.setProperty("schema.registry.url", config.getSchemaRegistry());
+        }
 
         consumerProps.putAll(consumerConfigs);
 

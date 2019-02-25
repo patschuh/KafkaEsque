@@ -18,7 +18,7 @@ public class JsonTreeView extends TreeView<String> {
         jsonString.addListener((observable, oldValue, newValue) -> {
             TreeItem<String> root;
             try {
-                if (newValue != null && isVisible()) {
+                if (newValue != null && !newValue.isEmpty() && isVisible()) {
                     root = JsonUtils.buildTreeFromJson(newValue);
                 } else {
                     root = null;
@@ -31,15 +31,15 @@ public class JsonTreeView extends TreeView<String> {
         });
     }
 
-    public String getJsonStringProperty() {
+    public String getJsonString() {
         return jsonString.get();
     }
 
-    public StringProperty jsonStringPropertyProperty() {
+    public StringProperty jsonStringProperty() {
         return jsonString;
     }
 
-    public void setJsonStringProperty(String jsonStringProperty) {
-        this.jsonString.set(jsonStringProperty);
+    public void setJsonString(String jsonString) {
+        this.jsonString.set(jsonString);
     }
 }

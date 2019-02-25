@@ -1,6 +1,7 @@
 package at.esque.kafka;
 
 import at.esque.kafka.alerts.ErrorAlert;
+import at.esque.kafka.controls.JsonTreeView;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -18,9 +19,12 @@ public class SchemaRegistryBrowserController {
     private TextArea schemaTextArea;
     @FXML
     private ComboBox<Integer> versionComboBox;
+    @FXML
+    private JsonTreeView jsonTreeView;
 
     public void setup(String schemaregistryUrl) {
         schemaRegistryRestService = new RestService(schemaregistryUrl);
+        jsonTreeView.jsonStringProperty().bind(schemaTextArea.textProperty());
         try {
             versionComboBox.getSelectionModel().selectedItemProperty().addListener(((observable1, oldValue1, newValue1) -> {
                 if(newValue1 == null){
@@ -28,7 +32,7 @@ public class SchemaRegistryBrowserController {
                     return;
                 }
                 try {
-                    schemaTextArea.setText(schemaRegistryRestService.getVersion(subjectListView.getSelectionModel().getSelectedItem(), newValue1).getSchema());
+                    schemaTextArea.setText(JsonUtils.formatJson(schemaRegistryRestService.getVersion(subjectListView.getSelectionModel().getSelectedItem(), newValue1).getSchema()));
                 } catch (Exception e) {
                     ErrorAlert.show(e);
                 }
