@@ -8,7 +8,7 @@ import at.esque.kafka.cluster.ClusterConfig;
 import at.esque.kafka.cluster.KafkaesqueAdminClient;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.controls.JsonTreeView;
-import at.esque.kafka.dialogs.AddClusterDialog;
+import at.esque.kafka.dialogs.ClusterConfigDialog;
 import at.esque.kafka.dialogs.DeleteClustersDialog;
 import at.esque.kafka.dialogs.TopicTemplatePartitionAndReplicationInputDialog;
 import at.esque.kafka.dialogs.TraceInputDialog;
@@ -188,6 +188,8 @@ public class Controller {
     private TextField messageSearchTextField;
     @FXML
     private Button interruptMessagePollingButton;
+    @FXML
+    private Button editClusterButton;
 
     private Stage controlledStage;
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -311,6 +313,7 @@ public class Controller {
         clusterComboBox.disableProperty().bind(backgroundTaskInProgressProperty);
         playMessageBookMenu.disableProperty().bind(backgroundTaskInProgressProperty);
         refreshTopicListButton.disableProperty().bind(backgroundTaskInProgressProperty);
+        editClusterButton.disableProperty().bind(clusterComboBox.getSelectionModel().selectedItemProperty().isNull());
     }
 
     private void updateKeyValueTextArea(KafkaMessage selectedMessage, boolean formatJson) {
@@ -750,7 +753,7 @@ public class Controller {
 
     @FXML
     public void addClusterConfigClick(ActionEvent event) {
-        AddClusterDialog.show().ifPresent(cc -> {
+        ClusterConfigDialog.show().ifPresent(cc -> {
             clusterComboBox.getItems().add(cc);
             configHandler.saveConfigs();
         });
@@ -768,6 +771,14 @@ public class Controller {
                         configHandler.saveConfigs();
                     }
                 });
+    }
+
+    @FXML
+    public void editClusterConfigsClick(ActionEvent actionEvent) {
+        ClusterConfigDialog.show(selectedCluster()).ifPresent(clusterConfig -> {
+
+            configHandler.saveConfigs();
+        });
     }
 
     @FXML
