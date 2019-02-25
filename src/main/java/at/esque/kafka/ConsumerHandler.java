@@ -2,6 +2,8 @@ package at.esque.kafka;
 
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.cluster.ClusterConfig;
+import at.esque.kafka.cluster.TopicMessageTypeConfig;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -11,7 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -19,39 +25,38 @@ import java.util.stream.Collectors;
 public class ConsumerHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(Controller.class);
 
-    private ConsumerHandler instance;
-    private Map<UUID, KafkaConsumer<String, String>> registeredConsumers = new ConcurrentHashMap<>();
+    @Inject
+    private ConfigHandler configHandler;
+
+    private Map<UUID, KafkaConsumer> registeredConsumers = new ConcurrentHashMap<>();
 
     public ConsumerHandler() {
     }
 
-    public ConsumerHandler getInstance() {
-        if (instance == null) {
-            return instance = new ConsumerHandler();
-        }
-        return instance;
-    }
-
-    public Optional<KafkaConsumer<String, String>> getConsumer(UUID consumerId) {
+    public Optional<KafkaConsumer> getConsumer(UUID consumerId) {
         return Optional.ofNullable(registeredConsumers.get(consumerId));
     }
 
-    public Map<UUID, KafkaConsumer<String, String>> getRegisteredConsumers() {
+    public Map<UUID, KafkaConsumer> getRegisteredConsumers() {
         return registeredConsumers;
     }
 
-    public void setRegisteredConsumers(Map<UUID, KafkaConsumer<String, String>> registeredConsumers) {
+    public void setRegisteredConsumers(Map<UUID, KafkaConsumer> registeredConsumers) {
         this.registeredConsumers = registeredConsumers;
     }
 
-    public UUID registerConsumer(ClusterConfig config) {
+    public UUID registerConsumer(ClusterConfig config, TopicMessageTypeConfig topicMessageTypeConfig, Map<String, String> consumerConfigs) {
         Properties consumerProps = new Properties();
         consumerProps.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, config.getBootStrapServers());
         UUID consumerId = UUID.randomUUID();
         consumerProps.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "kafkaesque-" + consumerId);
         consumerProps.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-        consumerProps.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
-        consumerProps.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getKeyType().equals(MessageType.AVRO)? "io.confluent.kafka.serializers.KafkaAvroDeserializer" : "org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getValueType().equals(MessageType.AVRO)? "io.confluent.kafka.serializers.KafkaAvroDeserializer" : "org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.setProperty("schema.registry.url", config.getSchemaRegistry());
+
+        consumerProps.putAll(consumerConfigs);
+
         LOGGER.info("Creating new Consumer with properties: [{}]", consumerProps);
         registeredConsumers.put(consumerId, new KafkaConsumer<>(consumerProps));
         return consumerId;

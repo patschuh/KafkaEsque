@@ -5,14 +5,18 @@ import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.alerts.SuccessAlert;
 import at.esque.kafka.alerts.TopicTemplateAppliedAlert;
 import at.esque.kafka.cluster.ClusterConfig;
-import at.esque.kafka.cluster.ClusterConfigs;
 import at.esque.kafka.cluster.KafkaesqueAdminClient;
+import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.controls.JsonTreeView;
 import at.esque.kafka.dialogs.AddClusterDialog;
 import at.esque.kafka.dialogs.DeleteClustersDialog;
 import at.esque.kafka.dialogs.TopicTemplatePartitionAndReplicationInputDialog;
 import at.esque.kafka.dialogs.TraceInputDialog;
-import at.esque.kafka.topics.*;
+import at.esque.kafka.topics.CreateTopicController;
+import at.esque.kafka.topics.DescribeTopicController;
+import at.esque.kafka.topics.DescribeTopicWrapper;
+import at.esque.kafka.topics.KafkaMessagBookWrapper;
+import at.esque.kafka.topics.KafkaMessage;
 import at.esque.kafka.topics.model.Topic;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,11 +38,20 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.control.*;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.stage.DirectoryChooser;
@@ -65,11 +78,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -84,13 +114,9 @@ public class Controller {
 
     private static final Pattern REPLACER_PATTERN = Pattern.compile("\\$\\{(?<identifier>.[^:{}]+):(?<type>.[^:{}]+)}");
 
-    private static final String CONFIG_DIRECTORY = System.getProperty("user.home") + "/.kafkaesque/%s";
-
     private KafkaesqueAdminClient adminClient;
 
     private KafkaProducer<String, String> topicProducer;
-
-    private File clusterConfig;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Controller.class);
 
@@ -99,6 +125,8 @@ public class Controller {
     private BackGroundTaskHolder backGroundTaskHolder;
     @Inject
     private ConsumerHandler consumerHandler;
+    @Inject
+    private ConfigHandler configHandler;
     //FXML
     @FXML
     private TextArea keyTextArea;
@@ -164,6 +192,16 @@ public class Controller {
     private Stage controlledStage;
     private ObjectMapper objectMapper = new ObjectMapper();
     private YAMLMapper yamlMapper = new YAMLMapper();
+
+
+    private String selectedTopic() {
+        return topicListView.getSelectionModel().getSelectedItem();
+    }
+
+
+    private ClusterConfig selectedCluster() {
+        return clusterComboBox.getSelectionModel().getSelectedItem();
+    }
 
     public void setup(Stage controlledStage) {
         this.controlledStage = controlledStage;
@@ -238,7 +276,7 @@ public class Controller {
         });
 
         setupClusterCombobox();
-        loadOrCreateConfigs();
+        clusterComboBox.setItems(configHandler.loadOrCreateConfigs().getClusterConfigs());
 
         topicFilterTextField.textProperty().addListener(((observable, oldValue, newValue) ->
                 ((FilteredList<String>) topicListView.getItems()).setPredicate(t -> StringUtils.containsIgnoreCase(t, newValue))
@@ -310,20 +348,23 @@ public class Controller {
         MenuItem infoItem = new MenuItem();
         infoItem.textProperty().set("describe");
         infoItem.setGraphic(new FontIcon(FontAwesome.INFO));
-        infoItem.setOnAction(event -> showDescribeTopicDialog(topicListView.getSelectionModel().getSelectedItem()));
+        infoItem.setOnAction(event -> showDescribeTopicDialog(selectedTopic()));
         MenuItem traceKeyItem = new MenuItem();
         traceKeyItem.setGraphic(new FontIcon(FontAwesome.KEY));
         traceKeyItem.textProperty().set("trace key");
         traceKeyItem.setOnAction(event -> {
             try {
+                Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
+                TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
+                Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
                 TraceInputDialog.show(true)
                         .ifPresent(traceKeyInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing key: " + traceKeyInput.getSearch());
                             Integer partition = null;
                             if (traceKeyInput.isFastTrace()) {
-                                partition = getPartitionForKey(topicListView.getSelectionModel().getSelectedItem(), traceKeyInput.getSearch());
+                                partition = getPartitionForKey(selectedTopic(), traceKeyInput.getSearch());
                             }
-                            trace((ConsumerRecord<String, String> cr) -> StringUtils.equals(cr.key(), traceKeyInput.getSearch()), partition, traceKeyInput.getEpoch());
+                            trace(topicMessageTypeConfig, consumerConfig, (ConsumerRecord cr) -> StringUtils.equals(cr.key().toString(), traceKeyInput.getSearch()), partition, traceKeyInput.getEpoch());
                         });
             } catch (Exception e) {
                 ErrorAlert.show(e);
@@ -335,12 +376,15 @@ public class Controller {
         traceInValueItem.textProperty().set("trace in value");
         traceInValueItem.setOnAction(event -> {
             try {
+                Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
+                TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
+                Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
                 TraceInputDialog.show(false)
                         .ifPresent(traceInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing in Value: " + traceInput.getSearch());
                             Pattern pattern = Pattern.compile(traceInput.getSearch());
-                            trace((ConsumerRecord<String, String> cr) -> {
-                                Matcher matcher = pattern.matcher(cr.value());
+                            trace(topicMessageTypeConfig, consumerConfig,(ConsumerRecord cr) -> {
+                                Matcher matcher = pattern.matcher(cr.value().toString());
                                 return matcher.find();
                             }, null, traceInput.getEpoch());
                         });
@@ -412,40 +456,9 @@ public class Controller {
 
     }
 
-    private void loadOrCreateConfigs() {
-        clusterConfig = new File(String.format(CONFIG_DIRECTORY, "clusters.json"));
-        if (clusterConfig.exists()) {
-            try {
-                ClusterConfigs clusterConfigs = objectMapper.readValue(clusterConfig, ClusterConfigs.class);
-                clusterComboBox.setItems(clusterConfigs.getClusterConfigs());
-            } catch (IOException e) {
-                ErrorAlert.show(e);
-            }
-        } else {
-            ClusterConfigs clusterConfigs = new ClusterConfigs();
-            try {
-                clusterConfig.getParentFile().mkdirs();
-                objectMapper.writeValue(clusterConfig, clusterConfigs);
-                clusterComboBox.setItems(clusterConfigs.getClusterConfigs());
-            } catch (IOException e) {
-                ErrorAlert.show(e);
-            }
-        }
-    }
-
-    private void saveClusterConfig() {
-        try {
-            ClusterConfigs clusterConfigs = new ClusterConfigs();
-            clusterConfigs.setClusterConfigs(clusterComboBox.getItems());
-            objectMapper.writeValue(clusterConfig, clusterConfigs);
-        } catch (IOException e) {
-            ErrorAlert.show(e);
-        }
-    }
-
     @FXML
     public void refreshButtonClick(ActionEvent e) {
-        ClusterConfig selecctedCluster = clusterComboBox.getSelectionModel().getSelectedItem();
+        ClusterConfig selecctedCluster = selectedCluster();
         if (selecctedCluster != null) {
             refreshTopicList(selecctedCluster);
         }
@@ -463,23 +476,41 @@ public class Controller {
 
     @FXML
     public void getMessagesClick(ActionEvent event) {
-        backGroundTaskHolder.setBackGroundTaskDescription("getting messages...");
-        FetchTypes fetchMode = fetchModeCombobox.getSelectionModel().getSelectedItem();
-        if (fetchMode == FetchTypes.OLDEST) {
-            getOldestMessages();
-        } else if (fetchMode == FetchTypes.NEWEST) {
-            getNewestMessages();
-        } else if (fetchMode == FetchTypes.SPECIFIC_OFFSET) {
-            getMessagesFromSpecificOffset();
-        } else if (fetchMode == FetchTypes.CONTINUOUS) {
-            getMessagesContinuously();
+        try {
+            Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
+            TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
+            Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
+
+            backGroundTaskHolder.setBackGroundTaskDescription("getting messages...");
+            FetchTypes fetchMode = fetchModeCombobox.getSelectionModel().getSelectedItem();
+            if (fetchMode == FetchTypes.OLDEST) {
+                getOldestMessages(topicMessageTypeConfig, consumerConfig);
+            } else if (fetchMode == FetchTypes.NEWEST) {
+                getNewestMessages(topicMessageTypeConfig, consumerConfig);
+            } else if (fetchMode == FetchTypes.SPECIFIC_OFFSET) {
+                getMessagesFromSpecificOffset(topicMessageTypeConfig, consumerConfig);
+            } else if (fetchMode == FetchTypes.CONTINUOUS) {
+                getMessagesContinuously(topicMessageTypeConfig, consumerConfig);
+            }
+        } catch (IOException e) {
+            ErrorAlert.show(e);
         }
+    }
+
+    private TopicMessageTypeConfig getTopicMessageTypeConfig(Map<String, TopicMessageTypeConfig> configs) {
+        TopicMessageTypeConfig topicMessageTypeConfig = configs.get(selectedTopic());
+        if (topicMessageTypeConfig == null) {
+            topicMessageTypeConfig = new TopicMessageTypeConfig(selectedTopic());
+            configs.put(selectedTopic(), topicMessageTypeConfig);
+            configHandler.saveTopicMessageTypeConfigs(selectedCluster().getIdentifier());
+        }
+        return topicMessageTypeConfig;
     }
 
     @FXML
     public void schemaRegistryClick(ActionEvent event) {
         try {
-            ClusterConfig selectedConfig = clusterComboBox.getSelectionModel().getSelectedItem();
+            ClusterConfig selectedConfig = selectedCluster();
             if (StringUtils.isEmpty(selectedConfig.getSchemaRegistry())) {
                 Optional<String> input = showInputDialog("http://localhost:8081", "Add schema-registry url", "this cluster config is missing a schema registry url please add it now", "schema-registry URL");
                 if (!input.isPresent()) {
@@ -487,7 +518,7 @@ public class Controller {
                 }
                 input.ifPresent(url -> {
                     selectedConfig.setSchemaRegistry(url);
-                    saveClusterConfig();
+                    configHandler.saveConfigs();
                 });
             }
 
@@ -506,13 +537,13 @@ public class Controller {
         }
     }
 
-    private void getOldestMessages() {
+    private void getOldestMessages(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
         runInDaemonThread(() -> {
-            UUID consumerId = consumerHandler.registerConsumer(clusterComboBox.getSelectionModel().getSelectedItem());
+            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
             try {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
                 backGroundTaskHolder.setIsInProgress(true);
-                consumerHandler.subscribe(consumerId, topicListView.getSelectionModel().getSelectedItem());
+                consumerHandler.subscribe(consumerId, selectedTopic());
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 consumerHandler.seekToOffset(consumerId, -1);
@@ -535,8 +566,8 @@ public class Controller {
         return Long.parseLong(numberOfMessagesToGetField.getText());
     }
 
-    private void receiveMessages(Map<Integer, AtomicLong> messagesConsumedPerPartition, Map<TopicPartition, Long> currentOffsets, KafkaConsumer<String, String> topicConsumer, long numberToConsume) {
-        ConsumerRecords<String, String> records = topicConsumer.poll(Duration.ofSeconds(1));
+    private <KT, VT> void receiveMessages(Map<Integer, AtomicLong> messagesConsumedPerPartition, Map<TopicPartition, Long> currentOffsets, KafkaConsumer topicConsumer, long numberToConsume) {
+        ConsumerRecords<KT, VT> records = topicConsumer.poll(Duration.ofSeconds(1));
         records.forEach(record -> {
             long numberConsumed = messagesConsumedPerPartition.computeIfAbsent(record.partition(), key -> new AtomicLong(0)).get();
             currentOffsets.put(new TopicPartition(record.topic(), record.partition()), record.offset());
@@ -548,13 +579,13 @@ public class Controller {
         Platform.runLater(() -> backGroundTaskHolder.setProgressMessage(String.format("Consumed %s messages", messagesConsumedPerPartition.values().stream().mapToLong(AtomicLong::get).sum())));
     }
 
-    private void getNewestMessages() {
+    private void getNewestMessages(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
         runInDaemonThread(() -> {
-            UUID consumerId = consumerHandler.registerConsumer(clusterComboBox.getSelectionModel().getSelectedItem());
+            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
             try {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
                 backGroundTaskHolder.setIsInProgress(true);
-                consumerHandler.subscribe(consumerId, topicListView.getSelectionModel().getSelectedItem());
+                consumerHandler.subscribe(consumerId, topic.getName());
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 maxOffsets.forEach((topicPartition, maxOffset) -> {
@@ -582,18 +613,18 @@ public class Controller {
         });
     }
 
-    private void getMessagesContinuously() {
-        UUID consumerId = consumerHandler.registerConsumer(clusterComboBox.getSelectionModel().getSelectedItem());
+    private <KT, VT> void getMessagesContinuously(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
+        UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
         runInDaemonThread(() -> {
             try {
                 AtomicLong messagesConsumed = new AtomicLong(0);
                 backGroundTaskHolder.setIsInProgress(true);
-                consumerHandler.subscribe(consumerId, topicListView.getSelectionModel().getSelectedItem());
+                consumerHandler.subscribe(consumerId, selectedTopic());
                 consumerHandler.seekToOffset(consumerId, -2);
                 baseList.clear();
                 consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
                     while (!backGroundTaskHolder.getStopBackGroundTask()) {
-                        ConsumerRecords<String, String> records = topicConsumer.poll(Duration.ofSeconds(1));
+                        ConsumerRecords<KT, VT> records = topicConsumer.poll(Duration.ofSeconds(1));
                         records.forEach(cr -> {
                             messagesConsumed.incrementAndGet();
                             convertAndAdd(cr);
@@ -608,15 +639,15 @@ public class Controller {
         });
     }
 
-    private void trace(Predicate<ConsumerRecord<String, String>> predicate, Integer fasttracePartition, Long epoch) {
+    private <KT, VT> void trace(TopicMessageTypeConfig topic, Map<String,String> consumerConfig, Predicate<ConsumerRecord> predicate, Integer fasttracePartition, Long epoch) {
         runInDaemonThread(() -> {
-            UUID consumerId = consumerHandler.registerConsumer(clusterComboBox.getSelectionModel().getSelectedItem());
+            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
             try {
                 backGroundTaskHolder.setIsInProgress(true);
                 if (fasttracePartition != null) {
-                    consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(Collections.singletonList(new TopicPartition(topicListView.getSelectionModel().getSelectedItem(), fasttracePartition))));
+                    consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(Collections.singletonList(new TopicPartition(selectedTopic(), fasttracePartition))));
                 } else {
-                    consumerHandler.subscribe(consumerId, topicListView.getSelectionModel().getSelectedItem());
+                    consumerHandler.subscribe(consumerId, selectedTopic());
                 }
                 AtomicLong messagesConsumed = new AtomicLong(0);
                 AtomicLong messagesFound = new AtomicLong(0);
@@ -631,7 +662,7 @@ public class Controller {
                 Map<TopicPartition, Long> currentOffsets = new HashMap<>();
                 consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
                     while (!backGroundTaskHolder.getStopBackGroundTask() && !reachedMaxOffsetForAllPartitions(maxOffsets, minOffsets, currentOffsets)) {
-                        ConsumerRecords<String, String> records = topicConsumer.poll(Duration.ofSeconds(1));
+                        ConsumerRecords<KT, VT> records = topicConsumer.poll(Duration.ofSeconds(1));
                         records.forEach(cr -> {
                             messagesConsumed.incrementAndGet();
                             currentOffsets.put(new TopicPartition(cr.topic(), cr.partition()), cr.offset());
@@ -660,25 +691,25 @@ public class Controller {
         }
     }
 
-    private void convertAndAdd(ConsumerRecord<String, String> cr) {
+    private <KT, VT> void convertAndAdd(ConsumerRecord<KT, VT> cr) {
         KafkaMessage kafkaMessage = new KafkaMessage();
         kafkaMessage.setOffset(cr.offset());
         kafkaMessage.setPartition(cr.partition());
-        kafkaMessage.setKey(cr.key());
-        kafkaMessage.setValue(cr.value());
+        kafkaMessage.setKey(cr.key().toString());
+        kafkaMessage.setValue(cr.value().toString());
         kafkaMessage.setTimestamp(Instant.ofEpochMilli(cr.timestamp()).toString());
         kafkaMessage.setHeaders(FXCollections.observableArrayList(cr.headers().toArray()));
         Platform.runLater(() -> baseList.add(kafkaMessage));
     }
 
-    private void getMessagesFromSpecificOffset() {
+    private void getMessagesFromSpecificOffset(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
         runInDaemonThread(() -> {
-            UUID consumerId = consumerHandler.registerConsumer(clusterComboBox.getSelectionModel().getSelectedItem());
+            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
             try {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
                 long specifiedOffset = Long.parseLong(specificOffsetTextField.getText());
                 backGroundTaskHolder.setIsInProgress(true);
-                consumerHandler.subscribe(consumerId, topicListView.getSelectionModel().getSelectedItem());
+                consumerHandler.subscribe(consumerId, selectedTopic());
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 consumerHandler.seekToOffset(consumerId, specifiedOffset);
@@ -721,13 +752,7 @@ public class Controller {
     public void addClusterConfigClick(ActionEvent event) {
         AddClusterDialog.show().ifPresent(cc -> {
             clusterComboBox.getItems().add(cc);
-            ClusterConfigs clusterConfigs = new ClusterConfigs();
-            clusterConfigs.setClusterConfigs(clusterComboBox.getItems());
-            try {
-                objectMapper.writeValue(clusterConfig, clusterConfigs);
-            } catch (IOException e) {
-                ErrorAlert.show(e);
-            }
+            configHandler.saveConfigs();
         });
     }
 
@@ -740,7 +765,7 @@ public class Controller {
                     deletedClusterConfigs.forEach(config -> builder.append(config.toString()).append(System.lineSeparator()));
                     if (ConfirmationAlert.show("Deleting cluster configs", "The following configs will be permanently deleted:", builder.toString())) {
                         clusterConfigs.removeAll(deletedClusterConfigs);
-                        saveClusterConfig();
+                        configHandler.saveConfigs();
                     }
                 });
     }
@@ -775,11 +800,12 @@ public class Controller {
 
     private void showPublishMessageDialog(KafkaMessage kafkaMessage) {
         try {
-            List<Integer> partitions = adminClient.getTopicPatitions(topicListView.getSelectionModel().getSelectedItem());
+            List<Integer> partitions = adminClient.getTopicPatitions(selectedTopic());
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/publishMessage.fxml"));
             Parent root1 = fxmlLoader.load();
             PublisherController controller = fxmlLoader.getController();
-            controller.setup(topicProducer, topicListView.getSelectionModel().getSelectedItem(), FXCollections.observableArrayList(partitions), kafkaMessage);
+            ClusterConfig selectedCluster = selectedCluster();
+            controller.setup(selectedCluster, configHandler.readProducerConfigs(selectedCluster.getIdentifier()), configHandler.getConfigForTopic(selectedCluster.getIdentifier(), selectedTopic()), FXCollections.observableArrayList(partitions), kafkaMessage);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
             stage.initModality(Modality.APPLICATION_MODAL);
