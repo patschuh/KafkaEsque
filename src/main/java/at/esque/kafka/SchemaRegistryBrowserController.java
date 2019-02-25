@@ -23,6 +23,10 @@ public class SchemaRegistryBrowserController {
         schemaRegistryRestService = new RestService(schemaregistryUrl);
         try {
             versionComboBox.getSelectionModel().selectedItemProperty().addListener(((observable1, oldValue1, newValue1) -> {
+                if(newValue1 == null){
+                    schemaTextArea.setText(null);
+                    return;
+                }
                 try {
                     schemaTextArea.setText(schemaRegistryRestService.getVersion(subjectListView.getSelectionModel().getSelectedItem(), newValue1).getSchema());
                 } catch (Exception e) {
