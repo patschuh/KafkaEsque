@@ -10,6 +10,7 @@ import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.controls.JsonTreeView;
 import at.esque.kafka.dialogs.ClusterConfigDialog;
 import at.esque.kafka.dialogs.DeleteClustersDialog;
+import at.esque.kafka.dialogs.TopicMessageTypeConfigDialog;
 import at.esque.kafka.dialogs.TopicTemplatePartitionAndReplicationInputDialog;
 import at.esque.kafka.dialogs.TraceInputDialog;
 import at.esque.kafka.topics.CreateTopicController;
@@ -352,6 +353,16 @@ public class Controller {
         infoItem.textProperty().set("describe");
         infoItem.setGraphic(new FontIcon(FontAwesome.INFO));
         infoItem.setOnAction(event -> showDescribeTopicDialog(selectedTopic()));
+
+        MenuItem configMessageTypesItem = new MenuItem();
+        configMessageTypesItem.textProperty().set("configure message types");
+        configMessageTypesItem.setGraphic(new FontIcon(FontAwesome.WRENCH));
+        configMessageTypesItem.setOnAction(event -> {
+            TopicMessageTypeConfig config = getTopicMessageTypeConfig(configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier()));
+            TopicMessageTypeConfigDialog.show(config);
+            configHandler.saveTopicMessageTypeConfigs(selectedCluster().getIdentifier());
+        });
+
         MenuItem traceKeyItem = new MenuItem();
         traceKeyItem.setGraphic(new FontIcon(FontAwesome.KEY));
         traceKeyItem.textProperty().set("trace key");
@@ -386,7 +397,7 @@ public class Controller {
                         .ifPresent(traceInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing in Value: " + traceInput.getSearch());
                             Pattern pattern = Pattern.compile(traceInput.getSearch());
-                            trace(topicMessageTypeConfig, consumerConfig,(ConsumerRecord cr) -> {
+                            trace(topicMessageTypeConfig, consumerConfig, (ConsumerRecord cr) -> {
                                 Matcher matcher = pattern.matcher(cr.value().toString());
                                 return matcher.find();
                             }, null, traceInput.getEpoch());
@@ -409,7 +420,7 @@ public class Controller {
                 }
             }
         });
-        contextMenu.getItems().addAll(infoItem, traceKeyItem, traceInValueItem, deleteItem);
+        contextMenu.getItems().addAll(infoItem, configMessageTypesItem, traceKeyItem, traceInValueItem, deleteItem);
 
         cell.textProperty().bind(cell.itemProperty());
 
@@ -642,7 +653,7 @@ public class Controller {
         });
     }
 
-    private <KT, VT> void trace(TopicMessageTypeConfig topic, Map<String,String> consumerConfig, Predicate<ConsumerRecord> predicate, Integer fasttracePartition, Long epoch) {
+    private <KT, VT> void trace(TopicMessageTypeConfig topic, Map<String, String> consumerConfig, Predicate<ConsumerRecord> predicate, Integer fasttracePartition, Long epoch) {
         runInDaemonThread(() -> {
             UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
             try {
