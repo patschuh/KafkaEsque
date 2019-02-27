@@ -32,7 +32,7 @@ import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -68,7 +68,11 @@ public class PublisherController {
     private TableColumn<Header, String> headerValueColumn;
 
     public void setup(ClusterConfig clusterConfig, Map<String, String> configs, TopicMessageTypeConfig topicMessageTypeConfig, ObservableList<Integer> partitions, KafkaMessage kafkaMessage) {
-        schemaRegistryRestService = new RestService(clusterConfig.getSchemaRegistry());
+        if (clusterConfig.getSchemaRegistry() == null || clusterConfig.getSchemaRegistry().isEmpty()) {
+            if (topicMessageTypeConfig.containsAvro()) {
+                throw new RuntimeException("Schema Registry URL not configured!");
+            }
+        }
         topic = topicMessageTypeConfig;
         Properties props = new Properties();
         props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, clusterConfig.getBootStrapServers());
@@ -76,7 +80,11 @@ public class PublisherController {
         props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getKeyType().equals(MessageType.AVRO) ? "io.confluent.kafka.serializers.KafkaAvroSerializer" : "org.apache.kafka.common.serialization.StringSerializer");
         props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getValueType().equals(MessageType.AVRO) ? "io.confluent.kafka.serializers.KafkaAvroSerializer" : "org.apache.kafka.common.serialization.StringSerializer");
         props.setProperty("auto.register.schemas", "false");
-        props.setProperty("schema.registry.url", clusterConfig.getSchemaRegistry());
+        if (clusterConfig.getSchemaRegistry() != null) {
+            props.setProperty("schema.registry.url", clusterConfig.getSchemaRegistry());
+            schemaRegistryRestService = new RestService(clusterConfig.getSchemaRegistry());
+        }
+
 
         props.putAll(configs);
 
@@ -108,22 +116,10 @@ public class PublisherController {
         });
         headerValueColumn.setOnEditCommit(event -> {
             Header current = event.getTableView().getItems().get(event.getTablePosition().getRow());
-            try {
-                event.getTableView().getItems().set(event.getTablePosition().getRow(), new RecordHeader(current.key(), event.getNewValue().getBytes("UTF-8")));
-            } catch (UnsupportedEncodingException e) {
-                ErrorAlert.show(e);
-            }
+            event.getTableView().getItems().set(event.getTablePosition().getRow(), new RecordHeader(current.key(), event.getNewValue().getBytes(StandardCharsets.UTF_8)));
         });
     }
 
-
-    //TODO: remove
-    @Deprecated
-    public void setup(KafkaProducer<String, String> publisher, String topic, ObservableList<Integer> partitions, KafkaMessage kafkaMessage) {
-        this.publisher = publisher;
-        this.topic = new TopicMessageTypeConfig(topic);
-        setupControls(partitions, kafkaMessage);
-    }
 
     private String keyText() {
         return keyTextArea.getText();
@@ -198,11 +194,7 @@ public class PublisherController {
 
     @FXML
     private void addHeaderClick(ActionEvent event) {
-        try {
-            headerTableView.getItems().add(new RecordHeader("key", "value".getBytes("UTF-8")));
-        } catch (UnsupportedEncodingException e) {
-            ErrorAlert.show(e);
-        }
+        headerTableView.getItems().add(new RecordHeader("key", "value".getBytes(StandardCharsets.UTF_8)));
     }
 
     @FXML

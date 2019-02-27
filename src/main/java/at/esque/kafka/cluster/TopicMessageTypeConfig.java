@@ -9,9 +9,10 @@ public class TopicMessageTypeConfig {
     private StringProperty keyType = new SimpleStringProperty(MessageType.STRING.name());
     private StringProperty valueType = new SimpleStringProperty(MessageType.STRING.name());
 
-    public TopicMessageTypeConfig(){}
+    public TopicMessageTypeConfig() {
+    }
 
-    public TopicMessageTypeConfig(String name){
+    public TopicMessageTypeConfig(String name) {
         this.name.set(name);
     }
 
@@ -28,7 +29,7 @@ public class TopicMessageTypeConfig {
     }
 
     public MessageType getKeyType() {
-        if(keyType.isEmpty().get()){
+        if (keyType.isEmpty().get()) {
             return null;
         }
         return MessageType.valueOf(keyType.get());
@@ -43,7 +44,7 @@ public class TopicMessageTypeConfig {
     }
 
     public MessageType getValueType() {
-        if(valueType.isEmpty().get()){
+        if (valueType.isEmpty().get()) {
             return null;
         }
         return MessageType.valueOf(valueType.get());
@@ -55,5 +56,9 @@ public class TopicMessageTypeConfig {
 
     public void setValueType(MessageType valueType) {
         this.valueType.set(valueType.name());
+    }
+
+    public boolean containsAvro() {
+        return getValueType() == MessageType.AVRO || getKeyType() == MessageType.AVRO;
     }
 }
