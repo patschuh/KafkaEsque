@@ -709,8 +709,8 @@ public class Controller {
         KafkaMessage kafkaMessage = new KafkaMessage();
         kafkaMessage.setOffset(cr.offset());
         kafkaMessage.setPartition(cr.partition());
-        kafkaMessage.setKey(cr.key().toString());
-        kafkaMessage.setValue(cr.value().toString());
+        kafkaMessage.setKey(cr.key() == null ? null : cr.key().toString());
+        kafkaMessage.setValue(cr.value() == null ? null : cr.value().toString());
         kafkaMessage.setTimestamp(Instant.ofEpochMilli(cr.timestamp()).toString());
         kafkaMessage.setHeaders(FXCollections.observableArrayList(cr.headers().toArray()));
         Platform.runLater(() -> baseList.add(kafkaMessage));

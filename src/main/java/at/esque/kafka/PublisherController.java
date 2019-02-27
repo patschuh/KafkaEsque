@@ -21,7 +21,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.TextFieldTableCell;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
@@ -219,7 +218,6 @@ public class PublisherController {
         Schema schema = getSchemaFromRegistry(topic + (isKey ? "-key" : "-value"));
 
         org.apache.avro.Schema avroSchema = new org.apache.avro.Schema.Parser().parse(schema.getSchema());
-        GenericRecordBuilder builder = new GenericRecordBuilder(avroSchema);
 
         JsonDecoder jsonDecoder = DecoderFactory.get().jsonDecoder(avroSchema, json);
         DatumReader<GenericRecord> reader = new GenericDatumReader<>(avroSchema);
