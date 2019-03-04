@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class ConsumerHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Controller.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConsumerHandler.class);
 
     @Inject
     private ConfigHandler configHandler;
@@ -51,8 +51,8 @@ public class ConsumerHandler {
         UUID consumerId = UUID.randomUUID();
         consumerProps.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "kafkaesque-" + consumerId);
         consumerProps.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-        consumerProps.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getKeyType().equals(MessageType.AVRO)? "io.confluent.kafka.serializers.KafkaAvroDeserializer" : "org.apache.kafka.common.serialization.StringDeserializer");
-        consumerProps.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getValueType().equals(MessageType.AVRO)? "io.confluent.kafka.serializers.KafkaAvroDeserializer" : "org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getKeyType().equals(MessageType.AVRO) ? "at.esque.kafka.serialization.ForgivingKafkaAvroDeserializer" : "org.apache.kafka.common.serialization.StringDeserializer");
+        consumerProps.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getValueType().equals(MessageType.AVRO) ? "at.esque.kafka.serialization.ForgivingKafkaAvroDeserializer" : "org.apache.kafka.common.serialization.StringDeserializer");
         if(config.getSchemaRegistry() != null && !config.getSchemaRegistry().isEmpty()) {
             consumerProps.setProperty("schema.registry.url", config.getSchemaRegistry());
         }
