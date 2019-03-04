@@ -371,7 +371,7 @@ public class Controller {
                 Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
                 TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(true)
+                TraceInputDialog.show(true, topicMessageTypeConfig.getKeyType() == MessageType.AVRO)
                         .ifPresent(traceKeyInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing key: " + traceKeyInput.getSearch());
                             Integer partition = null;
@@ -393,7 +393,7 @@ public class Controller {
                 Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
                 TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(false)
+                TraceInputDialog.show(false, false)
                         .ifPresent(traceInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing in Value: " + traceInput.getSearch());
                             Pattern pattern = Pattern.compile(traceInput.getSearch());
@@ -786,10 +786,7 @@ public class Controller {
 
     @FXML
     public void editClusterConfigsClick(ActionEvent actionEvent) {
-        ClusterConfigDialog.show(selectedCluster()).ifPresent(clusterConfig -> {
-
-            configHandler.saveConfigs();
-        });
+        ClusterConfigDialog.show(selectedCluster()).ifPresent(clusterConfig -> configHandler.saveConfigs());
     }
 
     @FXML

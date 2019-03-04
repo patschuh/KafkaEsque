@@ -4,14 +4,20 @@ import at.esque.kafka.Main;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.util.converter.LongStringConverter;
 
 import java.util.Optional;
 
 public class TraceInputDialog {
-    public static Optional<TraceInput> show(boolean isKeyTrace) {
+    public static Optional<TraceInput> show(boolean isKeyTrace, boolean isAvroKeyType) {
         Dialog<TraceInput> dialog = new Dialog<>();
         Main.applyIcon(dialog);
         Main.applyStylesheet(dialog.getDialogPane().getScene());
@@ -36,10 +42,12 @@ public class TraceInputDialog {
         Label startTimeLabel = new Label("start Epoch Timestamp");
 
         if (isKeyTrace) {
-            Label fastTraceLabel = new Label("use fast trace:");
-            fastTraceLabel.setTooltip(new Tooltip("Fast Trace traces in one partition determined by the default partitioning"));
-            grid.add(fastTraceLabel, 0, 1);
-            grid.add(fastTraceFlag, 1, 1);
+            if (!isAvroKeyType) {
+                Label fastTraceLabel = new Label("use fast trace:");
+                fastTraceLabel.setTooltip(new Tooltip("Fast Trace traces in one partition determined by the default partitioning"));
+                grid.add(fastTraceLabel, 0, 1);
+                grid.add(fastTraceFlag, 1, 1);
+            }
             key.setPromptText("search");
             grid.add(new Label("Key:"), 0, 0);
         } else {
