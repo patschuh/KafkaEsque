@@ -14,11 +14,11 @@ import javafx.stage.Stage;
 public class Main extends Application {
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage primaryStage) throws Exception {
         Injector injector = Guice.createInjector(new GuiceEsqueModule());
         FXMLLoader loader = injector.getInstance(FXMLLoader.class);
         loader.setLocation(getClass().getResource("/fxml/mainScene.fxml"));
-        Parent root =  loader.load();
+        Parent root = loader.load();
         Controller controller = loader.getController();
         controller.setup(primaryStage);
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));

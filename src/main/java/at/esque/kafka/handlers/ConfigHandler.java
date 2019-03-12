@@ -1,4 +1,4 @@
-package at.esque.kafka;
+package at.esque.kafka.handlers;
 
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.cluster.ClusterConfigs;

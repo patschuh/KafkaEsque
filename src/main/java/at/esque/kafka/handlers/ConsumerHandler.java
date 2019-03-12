@@ -1,8 +1,9 @@
-package at.esque.kafka;
+package at.esque.kafka.handlers;
 
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.cluster.ClusterConfig;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
+import at.esque.kafka.serialization.KafkaEsqueDeserializer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -51,9 +52,11 @@ public class ConsumerHandler {
         UUID consumerId = UUID.randomUUID();
         consumerProps.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "kafkaesque-" + consumerId);
         consumerProps.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-        consumerProps.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getKeyType().equals(MessageType.AVRO) ? "at.esque.kafka.serialization.ForgivingKafkaAvroDeserializer" : "org.apache.kafka.common.serialization.StringDeserializer");
-        consumerProps.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, topicMessageTypeConfig.getValueType().equals(MessageType.AVRO) ? "at.esque.kafka.serialization.ForgivingKafkaAvroDeserializer" : "org.apache.kafka.common.serialization.StringDeserializer");
-        if(config.getSchemaRegistry() != null && !config.getSchemaRegistry().isEmpty()) {
+        consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, KafkaEsqueDeserializer.class);
+        consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaEsqueDeserializer.class);
+        consumerProps.setProperty("kafkaesque.cluster.id", config.getIdentifier());
+        consumerProps.put("kafkaesque.confighandler", configHandler);
+        if (config.getSchemaRegistry() != null && !config.getSchemaRegistry().isEmpty()) {
             consumerProps.setProperty("schema.registry.url", config.getSchemaRegistry());
         }
 

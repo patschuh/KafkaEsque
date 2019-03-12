@@ -13,6 +13,9 @@ import at.esque.kafka.dialogs.DeleteClustersDialog;
 import at.esque.kafka.dialogs.TopicMessageTypeConfigDialog;
 import at.esque.kafka.dialogs.TopicTemplatePartitionAndReplicationInputDialog;
 import at.esque.kafka.dialogs.TraceInputDialog;
+import at.esque.kafka.handlers.ConfigHandler;
+import at.esque.kafka.handlers.ConsumerHandler;
+import at.esque.kafka.handlers.ProducerHandler;
 import at.esque.kafka.topics.CreateTopicController;
 import at.esque.kafka.topics.DescribeTopicController;
 import at.esque.kafka.topics.DescribeTopicWrapper;
@@ -23,9 +26,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -65,10 +70,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.header.Header;
@@ -102,7 +104,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -117,8 +119,6 @@ public class Controller {
 
     private KafkaesqueAdminClient adminClient;
 
-    private KafkaProducer<String, String> topicProducer;
-
     private static final Logger LOGGER = LoggerFactory.getLogger(Controller.class);
 
     //Guice
@@ -127,7 +127,12 @@ public class Controller {
     @Inject
     private ConsumerHandler consumerHandler;
     @Inject
+    private ProducerHandler producerHandler;
+    @Inject
     private ConfigHandler configHandler;
+    @Inject
+    private Injector injector;
+
     //FXML
     @FXML
     private TextArea keyTextArea;
@@ -447,10 +452,6 @@ public class Controller {
             stopWatch.start();
             LOGGER.info("Starting producer setup process");
             backGroundTaskHolder.setIsInProgress(true);
-            if (topicProducer != null) {
-                LOGGER.info("Closing producer");
-                topicProducer.close();
-            }
             ObservableList<String> topics = FXCollections.observableArrayList(adminClient.getTopics());
             FilteredList<String> filteredTopics = new FilteredList<>(topics.sorted(), t -> true);
             Platform.runLater(() -> topicListView.setItems(filteredTopics));
@@ -460,7 +461,6 @@ public class Controller {
             props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
             props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
             LOGGER.info("Creating new Producer with properties: [{}]", props);
-            topicProducer = new KafkaProducer<>(props);
 
         } finally {
             stopWatch.stop();
@@ -820,16 +820,17 @@ public class Controller {
     private void showPublishMessageDialog(KafkaMessage kafkaMessage) {
         try {
             List<Integer> partitions = adminClient.getTopicPatitions(selectedTopic());
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/publishMessage.fxml"));
+            FXMLLoader fxmlLoader = injector.getInstance(FXMLLoader.class);
+            fxmlLoader.setLocation(getClass().getResource("/fxml/publishMessage.fxml"));
             Parent root1 = fxmlLoader.load();
             PublisherController controller = fxmlLoader.getController();
-            ClusterConfig selectedCluster = selectedCluster();
-            controller.setup(selectedCluster, configHandler.readProducerConfigs(selectedCluster.getIdentifier()), configHandler.getConfigForTopic(selectedCluster.getIdentifier(), selectedTopic()), FXCollections.observableArrayList(partitions), kafkaMessage);
+            controller.setup(selectedCluster(), selectedTopic(), FXCollections.observableArrayList(partitions), kafkaMessage);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Publish Message");
             stage.setScene(Main.createStyledScene(root1, -1, -1));
+            stage.setOnCloseRequest(event -> controller.cleanup());
             stage.show();
         } catch (Exception e) {
             ErrorAlert.show(e);
@@ -970,6 +971,7 @@ public class Controller {
                 stopWatch.start();
                 try {
                     backGroundTaskHolder.setIsInProgress(true);
+                    UUID producerId = producerHandler.registerProducer(selectedCluster());
                     List<File> listedFiles = Arrays.asList(Objects.requireNonNull(selectedFolder.listFiles()));
                     Map<String, String> replacementMap = new HashMap<>();
                     List<KafkaMessagBookWrapper> messagesToSend = new ArrayList<>();
@@ -988,11 +990,10 @@ public class Controller {
                     AtomicInteger counter = new AtomicInteger(0);
                     messagesToSend.stream().sorted(Comparator.comparing(KafkaMessagBookWrapper::getTimestamp, Comparator.nullsLast(Comparator.naturalOrder())))
                             .forEach(message -> {
-                                Future<RecordMetadata> future = topicProducer.send(new ProducerRecord<>(message.getTargetTopic(), message.getPartition() == -1 ? null : message.getPartition(), message.getKey(), message.getValue()));
                                 try {
-                                    future.get();
+                                    producerHandler.sendMessage(producerId, message.getTargetTopic(), message.getPartition() == -1 ? null : message.getPartition(), message.getKey(), message.getValue());
                                     Platform.runLater(() -> backGroundTaskHolder.setProgressMessage("published " + counter.incrementAndGet() + " messages"));
-                                } catch (InterruptedException | ExecutionException e) {
+                                } catch (InterruptedException | ExecutionException | TimeoutException | IOException | RestClientException e) {
                                     throw new RuntimeException(e);
                                 }
                             });
