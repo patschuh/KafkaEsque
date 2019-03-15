@@ -4,13 +4,7 @@ import at.esque.kafka.Main;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.util.converter.LongStringConverter;
 
@@ -34,16 +28,18 @@ public class TraceInputDialog {
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
+        grid.setPadding(new Insets(20, 20, 20, 20));
 
         TextField key = new TextField();
+        key.setPrefWidth(500);
         CheckBox fastTraceFlag = new CheckBox();
         TextField epochTimestampText = new TextField();
-        Label startTimeLabel = new Label("start Epoch Timestamp");
+        epochTimestampText.setMaxWidth(250);
+        Label startTimeLabel = new Label("Start Epoch Timestamp");
 
         if (isKeyTrace) {
             if (!isAvroKeyType) {
-                Label fastTraceLabel = new Label("use fast trace:");
+                Label fastTraceLabel = new Label("Use fast trace:");
                 fastTraceLabel.setTooltip(new Tooltip("Fast Trace traces in one partition determined by the default partitioning"));
                 grid.add(fastTraceLabel, 0, 1);
                 grid.add(fastTraceFlag, 1, 1);
