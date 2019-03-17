@@ -1,6 +1,5 @@
-package at.esque.kafka.dialog;
+package at.esque.kafka.dialogs;
 
-import at.esque.kafka.dialogs.TraceInputDialog;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
