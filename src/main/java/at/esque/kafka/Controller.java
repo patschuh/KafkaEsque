@@ -23,7 +23,6 @@ import at.esque.kafka.topics.KafkaMessagBookWrapper;
 import at.esque.kafka.topics.KafkaMessage;
 import at.esque.kafka.topics.model.Topic;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -198,9 +197,7 @@ public class Controller {
     private Button editClusterButton;
 
     private Stage controlledStage;
-    private ObjectMapper objectMapper = new ObjectMapper();
     private YAMLMapper yamlMapper = new YAMLMapper();
-
 
     private String selectedTopic() {
         return topicListView.getSelectionModel().getSelectedItem();
