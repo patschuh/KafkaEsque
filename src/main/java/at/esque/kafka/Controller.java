@@ -69,7 +69,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.header.Header;
@@ -100,7 +99,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -440,31 +438,23 @@ public class Controller {
         Platform.runLater(() -> topicListView.getItems().clear());
 
         backGroundTaskHolder.setBackGroundTaskDescription("getting Topics...");
-        runInDaemonThread(() -> setupProducerAndConsumerForCluster(newValue));
+        runInDaemonThread(() -> getTopicsForCluster(newValue));
     }
 
-    private void setupProducerAndConsumerForCluster(ClusterConfig clusterConfig) {
+    private void getTopicsForCluster(ClusterConfig clusterConfig) {
         StopWatch stopWatch = new StopWatch();
         try {
             stopWatch.start();
-            LOGGER.info("Starting producer setup process");
+            LOGGER.info("Started getting topics for cluster");
             backGroundTaskHolder.setIsInProgress(true);
             ObservableList<String> topics = FXCollections.observableArrayList(adminClient.getTopics());
             FilteredList<String> filteredTopics = new FilteredList<>(topics.sorted(), t -> true);
             Platform.runLater(() -> topicListView.setItems(filteredTopics));
-            Properties props = new Properties();
-            props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, clusterConfig.getBootStrapServers());
-            props.setProperty(ProducerConfig.CLIENT_ID_CONFIG, "kafkaesque-" + UUID.randomUUID());
-            props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
-            props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
-            LOGGER.info("Creating new Producer with properties: [{}]", props);
-
         } finally {
             stopWatch.stop();
-            LOGGER.info("Finished producer setup process [{}]", stopWatch);
+            LOGGER.info("Finished getting topics for cluster [{}]", stopWatch);
             backGroundTaskHolder.backgroundTaskStopped();
         }
-
     }
 
     @FXML
