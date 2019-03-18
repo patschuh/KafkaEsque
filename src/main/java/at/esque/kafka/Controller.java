@@ -548,6 +548,25 @@ public class Controller {
         }
     }
 
+    @FXML
+    public void crossClusterClick(ActionEvent actionEvent) {
+        try {
+            FXMLLoader fxmlLoader = injector.getInstance(FXMLLoader.class);
+            fxmlLoader.setLocation(getClass().getResource("/fxml/crossClusterOperation.fxml"));
+            Parent root1 = fxmlLoader.load();
+            CrossClusterController controller = fxmlLoader.getController();
+            controller.setup();
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Cross Cluster Operations");
+            stage.setScene(Main.createStyledScene(root1, 1000, 500));
+            stage.show();
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
+    }
+
     private void getOldestMessages(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
         runInDaemonThread(() -> {
             UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
