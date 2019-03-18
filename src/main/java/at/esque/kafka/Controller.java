@@ -411,10 +411,10 @@ public class Controller {
         deleteItem.setGraphic(new FontIcon(FontAwesome.TRASH));
         deleteItem.textProperty().set("delete");
         deleteItem.setOnAction(event -> {
-            if (ConfirmationAlert.show("Delete Topic", "Topic [" + cell.itemProperty().get() + "] will be marked for deleteion.", "Are you sure you want to delete this topic")) {
+            if (ConfirmationAlert.show("Delete Topic", "Topic [" + cell.itemProperty().get() + "] will be marked for deletion.", "Are you sure you want to delete this topic")) {
                 try {
                     adminClient.deleteTopic(cell.itemProperty().get());
-                    SuccessAlert.show("Delete Topic", null, "Topic [" + cell.itemProperty().get() + "] marked for deleteion.");
+                    SuccessAlert.show("Delete Topic", null, "Topic [" + cell.itemProperty().get() + "] marked for deletion.");
                 } catch (Exception e) {
                     ErrorAlert.show(e);
                 }
@@ -459,9 +459,9 @@ public class Controller {
 
     @FXML
     public void refreshButtonClick(ActionEvent e) {
-        ClusterConfig selecctedCluster = selectedCluster();
-        if (selecctedCluster != null) {
-            refreshTopicList(selecctedCluster);
+        ClusterConfig selectedCluster = selectedCluster();
+        if (selectedCluster != null) {
+            refreshTopicList(selectedCluster);
         }
     }
 
