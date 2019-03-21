@@ -7,7 +7,13 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.GridPane;
 import javafx.util.converter.IntegerStringConverter;
 
@@ -38,7 +44,7 @@ public class CreateTopicController {
     public void createTopicClick(ActionEvent event) {
         try {
             adminClient.createTopic(topicName.getText(), Integer.parseInt(numberOfPartitions.getText()), Short.parseShort(replicationFactor.getText()), configsAsMap());
-            SuccessAlert.show("Topic Created", null, "creation of topic [" + topicName.getText() + "] successfull");
+            SuccessAlert.show("Topic Created", null, "creation of topic [" + topicName.getText() + "] successful");
         } catch (Exception e) {
             ErrorAlert.show(e);
         }
