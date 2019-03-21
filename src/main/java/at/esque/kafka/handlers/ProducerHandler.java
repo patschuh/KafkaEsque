@@ -110,6 +110,10 @@ public class ProducerHandler {
         return publishRecord(producerWrapper, record);
     }
 
+    public RecordMetadata sendRecord(UUID producerId, ProducerRecord producerRecord) throws InterruptedException, ExecutionException, TimeoutException {
+        return publishRecord(registeredProducers.get(producerId), producerRecord);
+    }
+
     private RecordMetadata publishRecord(ProducerWrapper producerWrapper, ProducerRecord record) throws InterruptedException, ExecutionException, TimeoutException {
         Future<RecordMetadata> future = producerWrapper.getProducer().send(record);
         RecordMetadata metadata = future.get(1, TimeUnit.MINUTES);

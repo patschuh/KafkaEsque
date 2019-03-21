@@ -1,5 +1,9 @@
 package at.esque.kafka.cluster;
 
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.util.UUID;
@@ -15,11 +19,15 @@ public class CrossClusterOperation {
     private AtomicBoolean stop = new AtomicBoolean(false);
     private UUID operationId;
 
+    private StringProperty status = new SimpleStringProperty("Created");
+    private LongProperty startTimestampMs = new SimpleLongProperty(-1);
+    private LongProperty limit = new SimpleLongProperty(-1);
+
     public CrossClusterOperation(ClusterConfig fromCluster, ClusterConfig toCluster, TopicMessageTypeConfig fromTopic, TopicMessageTypeConfig toTopic, Predicate<ConsumerRecord> filterFunction) {
-        this.fromCluster = fromCluster;
-        this.toCluster = toCluster;
-        this.fromTopic = fromTopic;
-        this.toTopic = toTopic;
+        setFromCluster(fromCluster);
+        setToCluster(toCluster);
+        setFromTopic(fromTopic);
+        setToTopic(toTopic);
         this.filterFunction = filterFunction;
     }
 
@@ -79,8 +87,39 @@ public class CrossClusterOperation {
         this.stop = stop;
     }
 
-    @Override
-    public String toString() {
-        return fromCluster.getIdentifier() + " / " + fromTopic.getName() + " --> " + toCluster.getIdentifier() + " / " + toTopic.getName();
+    public String getStatus() {
+        return status.get();
+    }
+
+    public StringProperty statusProperty() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status.set(status);
+    }
+
+    public long getStartTimestampMs() {
+        return startTimestampMs.get();
+    }
+
+    public LongProperty startTimestampMsProperty() {
+        return startTimestampMs;
+    }
+
+    public void setStartTimestampMs(long startTimestampMs) {
+        this.startTimestampMs.set(startTimestampMs);
+    }
+
+    public long getLimit() {
+        return limit.get();
+    }
+
+    public LongProperty limitProperty() {
+        return limit;
+    }
+
+    public void setLimit(long limit) {
+        this.limit.set(limit);
     }
 }
