@@ -11,8 +11,13 @@ import java.util.Map;
 
 public class KafkaEsqueDeserializer implements Deserializer<Object> {
 
-    private static ForgivingKafkaAvroDeserializer avroDeserializer = new ForgivingKafkaAvroDeserializer();
-    private static StringDeserializer stringDeserializer = new StringDeserializer();
+    private static ForgivingKafkaAvroDeserializer avroDeserializer;
+    private static StringDeserializer stringDeserializer;
+
+    public KafkaEsqueDeserializer() {
+        avroDeserializer = new ForgivingKafkaAvroDeserializer();
+        stringDeserializer = new StringDeserializer();
+    }
 
     private String clusterId;
     private boolean isKey;
