@@ -11,8 +11,8 @@ import java.util.Map;
 
 public class KafkaEsqueDeserializer implements Deserializer<Object> {
 
-    private static ForgivingKafkaAvroDeserializer avroDeserializer;
-    private static StringDeserializer stringDeserializer;
+    private ForgivingKafkaAvroDeserializer avroDeserializer;
+    private StringDeserializer stringDeserializer;
 
     public KafkaEsqueDeserializer() {
         avroDeserializer = new ForgivingKafkaAvroDeserializer();
