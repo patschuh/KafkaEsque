@@ -3,6 +3,7 @@ package at.esque.kafka.handlers;
 import at.esque.kafka.MessageType;
 import at.esque.kafka.cluster.ClusterConfig;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
+import at.esque.kafka.serialization.ExtendedJsonDecoder;
 import at.esque.kafka.serialization.KafkaEsqueSerializer;
 import com.google.inject.Inject;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
@@ -11,8 +12,7 @@ import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientExcept
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.JsonDecoder;
+import org.apache.avro.io.Decoder;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -128,7 +128,7 @@ public class ProducerHandler {
 
         org.apache.avro.Schema avroSchema = new org.apache.avro.Schema.Parser().parse(schema.getSchema());
 
-        JsonDecoder jsonDecoder = DecoderFactory.get().jsonDecoder(avroSchema, json);
+        Decoder jsonDecoder = new ExtendedJsonDecoder(avroSchema, json);
         DatumReader<GenericRecord> reader = new GenericDatumReader<>(avroSchema);
 
         return reader.read(null, jsonDecoder);
