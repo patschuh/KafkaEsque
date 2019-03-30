@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import at.esque.kafka.controls.FilterableListView?>
 <?import at.esque.kafka.controls.JsonTreeView?>
+<?import java.lang.String?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ProgressIndicator?>
-<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
@@ -25,19 +25,14 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
-<?import java.lang.String?>
-<SplitPane dividerPositions="0.6929460580912863" orientation="VERTICAL" prefHeight="533.0" prefWidth="961.0"
-           xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="at.esque.kafka.Controller">
+
+<SplitPane dividerPositions="0.6929460580912863" orientation="VERTICAL" prefHeight="533.0" prefWidth="961.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.Controller">
     <items>
         <BorderPane>
             <center>
                 <SplitPane dividerPositions="0.32533889468196037" prefHeight="200.0" prefWidth="200.0">
                     <items>
                         <BorderPane prefHeight="200.0" prefWidth="200.0">
-                            <center>
-                                <ListView fx:id="topicListView" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
-                            </center>
                             <top>
                                 <ToolBar maxWidth="1.7976931348623157E308" BorderPane.alignment="CENTER">
                                     <items>
@@ -85,38 +80,14 @@
                                                         <ComboBox fx:id="clusterComboBox" prefWidth="150.0" promptText="Select Cluster" styleClass="last" />
                                                     </children>
                                                 </HBox>
-                                                <Separator prefWidth="200.0" />
-                                                <HBox>
-                                                    <children>
-                                                        <Button maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" mnemonicParsing="false" onAction="#createTopicButtonClick" prefWidth="30.0">
-                                                            <tooltip>
-                                                                <Tooltip text="Create Topic" />
-                                                            </tooltip>
-                                                            <styleClass>
-                                                                <String fx:value="first" />
-                                                                <String fx:value="success" />
-                                                            </styleClass>
-                                                            <graphic>
-                                                                <FontIcon iconColor="WHITE" iconLiteral="fa-plus" iconSize="20" />
-                                                            </graphic>
-                                                        </Button>
-                                                        <Button fx:id="refreshTopicListButton" maxHeight="-Infinity" minHeight="-Infinity" mnemonicParsing="false" onAction="#refreshButtonClick">
-                                                            <styleClass>
-                                                                <String fx:value="last" />
-                                                                <String fx:value="btn" />
-                                                            </styleClass>
-                                                            <graphic>
-                                                                <FontIcon iconLiteral="fa-refresh" />
-                                                            </graphic>
-                                                        </Button>
-                                                        <TextField fx:id="topicFilterTextField" prefHeight="25.0" prefWidth="118.0" promptText="Filter" />
-                                                    </children>
-                                                </HBox>
                                             </children>
                                         </VBox>
                                     </items>
                                 </ToolBar>
                             </top>
+                     <center>
+                        <FilterableListView fx:id="topicListView" onAddAction="#createTopicButtonClick" onRefreshAction="#refreshButtonClick" BorderPane.alignment="CENTER" />
+                     </center>
                         </BorderPane>
                         <BorderPane prefHeight="200.0" prefWidth="200.0">
                             <center>
@@ -210,10 +181,9 @@
                                         <FontIcon iconLiteral="fa-registered" />
                                     </graphic>
                                 </MenuItem>
-                                <MenuItem mnemonicParsing="false" onAction="#crossClusterClick"
-                                          text="Cross Cluster Operations">
+                                <MenuItem mnemonicParsing="false" onAction="#crossClusterClick" text="Cross Cluster Operations">
                                     <graphic>
-                                        <FontIcon iconLiteral="fa-copy"/>
+                                        <FontIcon iconLiteral="fa-copy" />
                                     </graphic>
                                 </MenuItem>
                             </items>

@@ -23,5 +23,5 @@ Mesages displayed in the message list can be exportet in csv format and played i
 Allows for defining and configurating topics once and apply them to different clusters with one file, see the [Wiki]("https://github.com/patschuh/KafkaEsque/wiki/Topic-Templates") for Details
 ***
 ### Message Books
-Allows for playing a set of Messages over different topics into a cluster, see [Wiki]("https://github.com/patschuh/KafkaEsque/wiki/Message-Books") for details
+Allows for playing a set of Messages over different topics into a cluster, see the [Wiki]("https://github.com/patschuh/KafkaEsque/wiki/Message-Books") for details
 ***

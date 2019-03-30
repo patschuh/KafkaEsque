@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<fx:root type="javafx.scene.layout.VBox" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <ToolBar maxWidth="1.7976931348623157E308" VBox.vgrow="NEVER">
+         <items>
+            <HBox fx:id="toolbarBox" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+               <children>
+                  <Button fx:id="addButton" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" mnemonicParsing="false" prefWidth="30.0">
+                     <styleClass>
+                        <String fx:value="first" />
+                        <String fx:value="success" />
+                     </styleClass>
+                     <graphic>
+                        <FontIcon iconColor="WHITE" iconLiteral="fa-plus" iconSize="20" />
+                     </graphic>
+                  </Button>
+                  <Button fx:id="refreshButton" maxHeight="-Infinity" minHeight="-Infinity" mnemonicParsing="false">
+                     <styleClass>
+                        <String fx:value="last" />
+                        <String fx:value="btn" />
+                     </styleClass>
+                     <graphic>
+                        <FontIcon iconLiteral="fa-refresh" />
+                     </graphic>
+                  </Button>
+                  <TextField fx:id="filtertextField" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="22.0" promptText="Filter" HBox.hgrow="ALWAYS" />
+               </children>
+            </HBox>
+         </items>
+      </ToolBar>
+      <ListView fx:id="listView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="SOMETIMES" />
+   </children>
+</fx:root>

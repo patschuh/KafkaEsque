@@ -9,11 +9,12 @@
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.BorderPane?>
 
+<?import at.esque.kafka.controls.FilterableListView?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.SchemaRegistryBrowserController">
     <center>
         <SplitPane dividerPositions="0.23244147157190637" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
             <items>
-                <ListView fx:id="subjectListView" prefHeight="200.0" prefWidth="200.0" />
+                <FilterableListView fx:id="subjectListView" prefHeight="200.0" prefWidth="200.0" addButtonVisible="false" refreshButtonVisible="false"/>
                 <BorderPane prefHeight="200.0" prefWidth="200.0">
                     <center>
                   <SplitPane dividerPositions="0.5" BorderPane.alignment="CENTER">

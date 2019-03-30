@@ -6,6 +6,7 @@ import at.esque.kafka.cluster.ClusterConfigs;
 import at.esque.kafka.cluster.CrossClusterOperation;
 import at.esque.kafka.cluster.KafkaesqueAdminClient;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
+import at.esque.kafka.controls.FilterableListView;
 import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.handlers.ConsumerHandler;
 import at.esque.kafka.handlers.CrossClusterOperationHandler;
@@ -52,9 +53,9 @@ public class CrossClusterController {
     private TextField amountLimit;
 
     @FXML
-    private ListView<String> fromClusterTopicsList;
+    private FilterableListView fromClusterTopicsList;
     @FXML
-    private ListView<String> toClusterTopicsList;
+    private FilterableListView toClusterTopicsList;
     @FXML
     private ListView<CrossClusterOperation> runningOperationsList;
     @FXML
@@ -123,7 +124,7 @@ public class CrossClusterController {
         refreshOperationList(null);
     }
 
-    private void setupClusterControls(ClusterConfig clusterConfig, KafkaesqueAdminClient adminClient, ListView topicList) {
+    private void setupClusterControls(ClusterConfig clusterConfig, KafkaesqueAdminClient adminClient, FilterableListView topicList) {
         if (adminClient != null) {
             adminClient.close();
         }
@@ -131,7 +132,7 @@ public class CrossClusterController {
         KafkaesqueAdminClient finalAdminClient = adminClient;
         runInDaemonThread(() -> {
             ObservableList<String> topics = FXCollections.observableArrayList(finalAdminClient.getTopics());
-            Platform.runLater(() -> topicList.setItems(topics.sorted()));
+            Platform.runLater(() -> topicList.setItems(topics));
         });
     }
 
@@ -198,8 +199,8 @@ public class CrossClusterController {
             ClusterConfig fromCluster = fromClusterComboBox.getSelectionModel().getSelectedItem();
             ClusterConfig toCluster = toClusterComboBox.getSelectionModel().getSelectedItem();
 
-            String fromTopicName = fromClusterTopicsList.getSelectionModel().getSelectedItem();
-            String toTopicName = toClusterTopicsList.getSelectionModel().getSelectedItem();
+            String fromTopicName = fromClusterTopicsList.getListView().getSelectionModel().getSelectedItem();
+            String toTopicName = toClusterTopicsList.getListView().getSelectionModel().getSelectedItem();
 
             TopicMessageTypeConfig fromTopic = configHandler.getConfigForTopic(fromCluster.getIdentifier(), fromTopicName);
             TopicMessageTypeConfig toTopic = configHandler.getConfigForTopic(toCluster.getIdentifier(), toTopicName);
