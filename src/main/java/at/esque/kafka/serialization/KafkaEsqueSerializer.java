@@ -11,8 +11,8 @@ import java.util.Map;
 
 public class KafkaEsqueSerializer implements Serializer<Object> {
 
-    private static KafkaAvroSerializer avroSerialier = new KafkaAvroSerializer();
-    private static StringSerializer stringSerializer = new StringSerializer();
+    private KafkaAvroSerializer avroSerialier = new KafkaAvroSerializer();
+    private StringSerializer stringSerializer = new StringSerializer();
 
     private String clusterId;
     private boolean isKey;
