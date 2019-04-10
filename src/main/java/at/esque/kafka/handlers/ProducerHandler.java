@@ -6,6 +6,7 @@ import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.serialization.ExtendedJsonDecoder;
 import at.esque.kafka.serialization.KafkaEsqueSerializer;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
@@ -33,6 +34,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+@Singleton
 public class ProducerHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProducerHandler.class);
 
