@@ -178,7 +178,10 @@ public class CrossClusterController {
                                 count.incrementAndGet();
                             }
                         } catch (Exception e) {
-                            Platform.runLater(() -> operation.setStatus("Error"));
+                            Platform.runLater(() -> {
+                                operation.setStatus("Error");
+                                trayHandler.showErrorNotification("Operation stopped with an error!", e.getMessage());
+                            });
                         }
                     });
                 }
