@@ -76,9 +76,7 @@ public class TrayHandler {
     }
 
     public void shutdown() {
-        if (traySupported) {
-            systemTray.remove(trayIcon);
-        }
+        System.exit(0);
     }
 
     public Stage getPrimaryStage() {
