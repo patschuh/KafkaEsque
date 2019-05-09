@@ -16,8 +16,9 @@
     <center>
         <SplitPane dividerPositions="0.23244147157190637" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
             <items>
-                <FilterableListView fx:id="subjectListView" addButtonVisible="false" prefHeight="200.0"
-                                    prefWidth="200.0" refreshButtonVisible="false"/>
+                <FilterableListView fx:id="subjectListView" addButtonVisible="true" onAddAction="#addSubjectAndSchema"
+                                    refreshButtonVisible="true" onRefreshAction="#refreshSubjects" prefHeight="200.0"
+                                    prefWidth="200.0"/>
                 <BorderPane prefHeight="200.0" prefWidth="200.0">
                     <center>
                   <SplitPane dividerPositions="0.5" BorderPane.alignment="CENTER">
@@ -32,6 +33,20 @@
                             <items>
                                 <Label text="Version:" />
                                 <ComboBox fx:id="versionComboBox" prefWidth="150.0" styleClass="first"/>
+                                <Button maxHeight="-Infinity" maxWidth="-Infinity" minHeight="30.0"
+                                        mnemonicParsing="false" onAction="#addSchemaClick" prefWidth="30.0">
+                                    <tooltip>
+                                        <Tooltip text="Add Cluster Config"/>
+                                    </tooltip>
+                                    <styleClass>
+                                        <String fx:value="btn"/>
+                                        <String fx:value="success"/>
+                                        <String fx:value="middle"/>
+                                    </styleClass>
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fa-plus" iconSize="20"/>
+                                    </graphic>
+                                </Button>
                                 <Button minHeight="30.0" mnemonicParsing="false" onAction="#deleteSchema"
                                         prefWidth="30.0">
                                     <styleClass>

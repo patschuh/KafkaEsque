@@ -6,12 +6,18 @@ import at.esque.kafka.controls.FilterableListView;
 import at.esque.kafka.controls.JsonTreeView;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
+import javafx.scene.image.Image;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -50,7 +56,11 @@ public class SchemaRegistryBrowserController {
 
             subjectListView.getListView().getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 try {
-                    versionComboBox.setItems(FXCollections.observableArrayList(schemaRegistryRestService.getAllVersions(newValue)));
+                    if (newValue != null) {
+                        versionComboBox.setItems(FXCollections.observableArrayList(schemaRegistryRestService.getAllVersions(newValue)));
+                    } else {
+                        versionComboBox.setItems(FXCollections.emptyObservableList());
+                    }
                     if (versionComboBox.getItems().size() > 0) {
                         versionComboBox.getSelectionModel().select(versionComboBox.getItems().size() - 1);
                     }
@@ -118,4 +128,38 @@ public class SchemaRegistryBrowserController {
     }
 
 
+    public void addSubjectAndSchema(ActionEvent actionEvent) {
+        showCreateSchemaDialog(null);
+    }
+
+    public void addSchemaClick(ActionEvent actionEvent) {
+        showCreateSchemaDialog(subjectListView.getListView().getSelectionModel().getSelectedItem());
+    }
+
+    private void showCreateSchemaDialog(String selectedSubject) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/createSchema.fxml"));
+            Parent root1 = fxmlLoader.load();
+            CreateSchemaController controller = fxmlLoader.getController();
+            Stage stage = new Stage();
+            controller.setup(selectedSubject, schemaRegistryRestService, stage);
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Add Schema");
+            stage.setScene(Main.createStyledScene(root1, -1, -1));
+            stage.setOnCloseRequest(event -> controller.cleanup());
+            stage.show();
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
+    }
+
+    public void refreshSubjects(ActionEvent actionEvent) {
+        try {
+            subjectListView.getListView().getSelectionModel().select(null);
+            subjectListView.setItems(FXCollections.observableArrayList(schemaRegistryRestService.getAllSubjects()));
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
+    }
 }
