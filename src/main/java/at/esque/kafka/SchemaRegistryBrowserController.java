@@ -1,17 +1,21 @@
 package at.esque.kafka;
 
+import at.esque.kafka.alerts.ConfirmationAlert;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.controls.FilterableListView;
 import at.esque.kafka.controls.JsonTreeView;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import javafx.collections.FXCollections;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListView;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
+import org.kordamp.ikonli.fontawesome.FontAwesome;
+import org.kordamp.ikonli.javafx.FontIcon;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 
 public class SchemaRegistryBrowserController {
@@ -41,6 +45,9 @@ public class SchemaRegistryBrowserController {
                     ErrorAlert.show(e);
                 }
             }));
+
+            subjectListView.getListView().setCellFactory(param -> subjectListCellFactory());
+
             subjectListView.getListView().getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 try {
                     versionComboBox.setItems(FXCollections.observableArrayList(schemaRegistryRestService.getAllVersions(newValue)));
@@ -58,4 +65,57 @@ public class SchemaRegistryBrowserController {
             ErrorAlert.show(e);
         }
     }
+
+    public void deleteSchema() {
+        String subject = subjectListView.getListView().getSelectionModel().getSelectedItem();
+        Integer version = versionComboBox.getSelectionModel().getSelectedItem();
+        if (subject != null && version != null && ConfirmationAlert.show("Delete Version", "Version [" + version + "] of subject [" + subject + "] will be deleted.", "Are you sure you want to delete this version?")) {
+            try {
+                schemaRegistryRestService.deleteSchemaVersion(Collections.emptyMap(), subject, "" + version);
+                subjectListView.setItems(FXCollections.observableArrayList(schemaRegistryRestService.getAllSubjects()));
+            } catch (Exception e) {
+                ErrorAlert.show(e);
+            }
+        }
+    }
+
+    public void deleteSubject() {
+        String subject = subjectListView.getListView().getSelectionModel().getSelectedItem();
+        if (subject != null && ConfirmationAlert.show("Delete Subject", "Subject [" + subject + "] will be deleted.", "Are you sure you want to delete this subject?")) {
+            try {
+                schemaRegistryRestService.deleteSubject(Collections.emptyMap(), subject);
+                subjectListView.setItems(FXCollections.observableArrayList(schemaRegistryRestService.getAllSubjects()));
+            } catch (Exception e) {
+                ErrorAlert.show(e);
+            }
+        }
+    }
+
+
+    private ListCell<String> subjectListCellFactory() {
+        ListCell<String> cell = new ListCell<>();
+
+        ContextMenu contextMenu = new ContextMenu();
+
+        MenuItem deleteItem = new MenuItem();
+        deleteItem.setGraphic(new FontIcon(FontAwesome.TRASH));
+        deleteItem.textProperty().set("delete");
+        deleteItem.setOnAction(event -> {
+            deleteSubject();
+        });
+        contextMenu.getItems().addAll(deleteItem);
+
+        cell.textProperty().bind(cell.itemProperty());
+
+        cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
+            if (isNowEmpty) {
+                cell.setContextMenu(null);
+            } else {
+                cell.setContextMenu(contextMenu);
+            }
+        });
+        return cell;
+    }
+
+
 }
