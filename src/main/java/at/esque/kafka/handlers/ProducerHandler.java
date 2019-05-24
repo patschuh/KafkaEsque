@@ -124,10 +124,10 @@ public class ProducerHandler {
     }
 
     private GenericRecord createRecord(ProducerWrapper producerWrapper, String json, String topic, boolean isKey) throws IOException, RestClientException {
-
-
+        if (json == null) {
+            return null;
+        }
         Schema schema = getSchemaFromRegistry(producerWrapper.getSchemaRegistryRestService(), topic + (isKey ? "-key" : "-value"));
-
         org.apache.avro.Schema avroSchema = new org.apache.avro.Schema.Parser().parse(schema.getSchema());
 
         Decoder jsonDecoder = new ExtendedJsonDecoder(avroSchema, json);
