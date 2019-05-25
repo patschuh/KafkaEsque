@@ -1,0 +1,70 @@
+buildscript {
+    dependencies {
+        classpath group: 'de.dynamicfiles.projects.gradle.plugins', name: 'javafx-gradle-plugin', version: '8.8.2'
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+apply plugin: 'javafx-gradle-plugin'
+
+jfx {
+    mainClass = 'at.esque.kafka.Main'
+    jfxAppOutputDir = "build/jfx/app"
+    jfxMainAppJarName = "KafkaEsque-jfx.jar"
+    // minimal requirement for jfxNative-task
+    vendor = 'patschuh'
+
+    appName = "KafkaEsque"
+}
+
+repositories {
+    mavenLocal()
+    
+    maven {
+        url = 'http://repo1.maven.org/maven2'
+    }
+
+    maven {
+        url = 'http://packages.confluent.io/maven/'
+    }
+}
+
+dependencies {
+    compile 'org.apache.kafka:kafka-clients:2.0.0'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
+    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.9'
+    compile 'org.slf4j:slf4j-simple:1.7.25'
+    compile 'org.apache.commons:commons-lang3:3.7'
+    compile 'org.kordamp.ikonli:ikonli-javafx:2.4.0'
+    compile 'org.kordamp.ikonli:ikonli-fontawesome-pack:2.4.0'
+    compile 'com.opencsv:opencsv:4.0'
+    compile 'io.confluent:kafka-schema-registry:5.0.0'
+    compile 'io.confluent:kafka-avro-serializer:5.0.0'
+    compile 'com.google.inject:guice:4.2.2'
+    
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.springframework.kafka:spring-kafka-test:2.2.0.RELEASE'
+    testCompile 'com.google.code.tempus-fugit:tempus-fugit:1.1'
+    testCompile 'org.testfx:testfx-junit:4.0.15-alpha'
+}
+
+group = 'at.esque.kafka'
+version = '0.13.0-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from(components.java)
+        }
+    }
+}
