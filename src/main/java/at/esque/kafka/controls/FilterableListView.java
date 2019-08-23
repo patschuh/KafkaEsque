@@ -1,5 +1,6 @@
 package at.esque.kafka.controls;
 
+import at.esque.kafka.SystemUtils;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -16,6 +17,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -67,6 +72,7 @@ public class FilterableListView extends VBox {
                     || StringUtils.containsIgnoreCase(item, newValue));
         });
         sortedList.setComparator(String::compareTo);
+        listView.setOnKeyPressed(new ListKeyEventHandler());
 
         bindButtonProperties();
     }
@@ -122,11 +128,21 @@ public class FilterableListView extends VBox {
         this.refreshButtonVisible.set(refreshButtonVisible);
     }
 
-    public final ObjectProperty<EventHandler<ActionEvent>> onAddActionProperty() { return onAddAction; }
-    public final void setOnAddAction(EventHandler<ActionEvent> value) { onAddActionProperty().set(value); }
-    public final EventHandler<ActionEvent> getOnAddAction() { return onAddActionProperty().get(); }
+    public final ObjectProperty<EventHandler<ActionEvent>> onAddActionProperty() {
+        return onAddAction;
+    }
+
+    public final void setOnAddAction(EventHandler<ActionEvent> value) {
+        onAddActionProperty().set(value);
+    }
+
+    public final EventHandler<ActionEvent> getOnAddAction() {
+        return onAddActionProperty().get();
+    }
+
     private ObjectProperty<EventHandler<ActionEvent>> onAddAction = new ObjectPropertyBase<EventHandler<ActionEvent>>() {
-        @Override protected void invalidated() {
+        @Override
+        protected void invalidated() {
             setEventHandler(ActionEvent.ACTION, get());
         }
 
@@ -141,11 +157,21 @@ public class FilterableListView extends VBox {
         }
     };
 
-    public final ObjectProperty<EventHandler<ActionEvent>> onRefreshActionProperty() { return onRefreshAction; }
-    public final void setOnRefreshAction(EventHandler<ActionEvent> value) { onRefreshActionProperty().set(value); }
-    public final EventHandler<ActionEvent> getOnRefreshAction() { return onRefreshActionProperty().get(); }
+    public final ObjectProperty<EventHandler<ActionEvent>> onRefreshActionProperty() {
+        return onRefreshAction;
+    }
+
+    public final void setOnRefreshAction(EventHandler<ActionEvent> value) {
+        onRefreshActionProperty().set(value);
+    }
+
+    public final EventHandler<ActionEvent> getOnRefreshAction() {
+        return onRefreshActionProperty().get();
+    }
+
     private ObjectProperty<EventHandler<ActionEvent>> onRefreshAction = new ObjectPropertyBase<EventHandler<ActionEvent>>() {
-        @Override protected void invalidated() {
+        @Override
+        protected void invalidated() {
             setEventHandler(ActionEvent.ACTION, get());
         }
 
@@ -159,4 +185,18 @@ public class FilterableListView extends VBox {
             return "onRefreshAction";
         }
     };
+
+    public static class ListKeyEventHandler implements EventHandler<KeyEvent> {
+
+        KeyCodeCombination copyCombination = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_ANY);
+
+        @Override
+        public void handle(final KeyEvent keyEvent) {
+            if (keyEvent.getSource() instanceof ListView) {
+                if(copyCombination.match(keyEvent)) {
+                    SystemUtils.copySelectionToClipboard(() -> String.valueOf(((ListView) keyEvent.getSource()).getSelectionModel().getSelectedItem()));
+                }
+            }
+        }
+    }
 }
