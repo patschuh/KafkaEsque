@@ -188,7 +188,7 @@ public class FilterableListView extends VBox {
 
     public static class ListKeyEventHandler implements EventHandler<KeyEvent> {
 
-        KeyCodeCombination copyCombination = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_ANY);
+        KeyCodeCombination copyCombination = new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN);
 
         @Override
         public void handle(final KeyEvent keyEvent) {
