@@ -14,6 +14,7 @@ import at.esque.kafka.dialogs.DeleteClustersDialog;
 import at.esque.kafka.dialogs.TopicMessageTypeConfigDialog;
 import at.esque.kafka.dialogs.TopicTemplatePartitionAndReplicationInputDialog;
 import at.esque.kafka.dialogs.TraceInputDialog;
+import at.esque.kafka.exception.MissingSchemaRegistryException;
 import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.handlers.ConsumerHandler;
 import at.esque.kafka.handlers.ProducerHandler;
@@ -55,7 +56,6 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
@@ -501,7 +501,7 @@ public class Controller {
         try {
             ClusterConfig selectedConfig = selectedCluster();
             if (StringUtils.isEmpty(selectedConfig.getSchemaRegistry())) {
-                Optional<String> input = showInputDialog("http://localhost:8081", "Add schema-registry url", "this cluster config is missing a schema registry url please add it now", "schema-registry URL");
+                Optional<String> input = SystemUtils.showInputDialog("http://localhost:8081", "Add schema-registry url", "this cluster config is missing a schema registry url please add it now", "schema-registry URL");
                 if (!input.isPresent()) {
                     return;
                 }
@@ -547,7 +547,13 @@ public class Controller {
 
     private void getOldestMessages(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
         runInDaemonThread(() -> {
-            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
+            UUID consumerId = null;
+            try {
+                consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
+            } catch (MissingSchemaRegistryException e) {
+                Platform.runLater(() -> ErrorAlert.show(e));
+                return;
+            }
             try {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
                 backGroundTaskHolder.setIsInProgress(true);
@@ -589,7 +595,15 @@ public class Controller {
 
     private void getNewestMessages(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
         runInDaemonThread(() -> {
-            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
+            UUID tempconsumerId = null;
+            try {
+                tempconsumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
+            } catch (MissingSchemaRegistryException e) {
+                Platform.runLater(() -> ErrorAlert.show(e));
+                ;
+                return;
+            }
+            UUID consumerId = tempconsumerId;
             try {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
                 backGroundTaskHolder.setIsInProgress(true);
@@ -622,7 +636,14 @@ public class Controller {
     }
 
     private <KT, VT> void getMessagesContinuously(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
-        UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
+        UUID tempconsumerId = null;
+        try {
+            tempconsumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
+        } catch (MissingSchemaRegistryException e) {
+            Platform.runLater(() -> ErrorAlert.show(e));
+            return;
+        }
+        UUID consumerId = tempconsumerId;
         runInDaemonThread(() -> {
             try {
                 AtomicLong messagesConsumed = new AtomicLong(0);
@@ -649,7 +670,13 @@ public class Controller {
 
     private <KT, VT> void trace(TopicMessageTypeConfig topic, Map<String, String> consumerConfig, Predicate<ConsumerRecord> predicate, Integer fasttracePartition, Long epoch) {
         runInDaemonThread(() -> {
-            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
+            UUID consumerId = null;
+            try {
+                consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
+            } catch (MissingSchemaRegistryException e) {
+                Platform.runLater(() -> ErrorAlert.show(e));
+                return;
+            }
             try {
                 backGroundTaskHolder.setIsInProgress(true);
                 if (fasttracePartition != null) {
@@ -712,7 +739,13 @@ public class Controller {
 
     private void getMessagesFromSpecificOffset(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
         runInDaemonThread(() -> {
-            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
+            UUID consumerId = null;
+            try {
+                consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
+            } catch (MissingSchemaRegistryException e) {
+                ErrorAlert.show(e);
+                return;
+            }
             try {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
                 long specifiedOffset = Long.parseLong(specificOffsetTextField.getText());
@@ -881,20 +914,6 @@ public class Controller {
         Thread daemonThread = new Thread(runnable);
         daemonThread.setDaemon(true);
         daemonThread.start();
-    }
-
-    private Optional<String> showInputDialog(String defaultValue, String title, String header, String requestedInputLabel) {
-        TextInputDialog dialog = new TextInputDialog(defaultValue);
-        Stage stage = (Stage) dialog.getDialogPane().getScene().getWindow();
-        stage.getIcons().add(new Image(this.getClass().getResource("/icons/kafkaesque.png").toString()));
-
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.setTitle(title);
-        dialog.setHeaderText(header);
-        dialog.setContentText(requestedInputLabel);
-        Main.applyStylesheet(dialog.getDialogPane().getScene());
-
-        return dialog.showAndWait();
     }
 
     // Experimental Area

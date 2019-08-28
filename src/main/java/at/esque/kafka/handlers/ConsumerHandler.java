@@ -1,11 +1,14 @@
 package at.esque.kafka.handlers;
 
+import at.esque.kafka.SystemUtils;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.cluster.ClusterConfig;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
+import at.esque.kafka.exception.MissingSchemaRegistryException;
 import at.esque.kafka.serialization.KafkaEsqueDeserializer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
@@ -46,7 +49,7 @@ public class ConsumerHandler {
         this.registeredConsumers = registeredConsumers;
     }
 
-    public UUID registerConsumer(ClusterConfig config, TopicMessageTypeConfig topicMessageTypeConfig, Map<String, String> consumerConfigs) {
+    public UUID registerConsumer(ClusterConfig config, TopicMessageTypeConfig topicMessageTypeConfig, Map<String, String> consumerConfigs) throws MissingSchemaRegistryException {
         Properties consumerProps = new Properties();
         consumerProps.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, config.getBootStrapServers());
         UUID consumerId = UUID.randomUUID();
@@ -56,7 +59,17 @@ public class ConsumerHandler {
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaEsqueDeserializer.class);
         consumerProps.setProperty("kafkaesque.cluster.id", config.getIdentifier());
         consumerProps.put("kafkaesque.confighandler", configHandler);
-        if (config.getSchemaRegistry() != null && !config.getSchemaRegistry().isEmpty()) {
+        if (topicMessageTypeConfig.containsAvro() && StringUtils.isEmpty(config.getSchemaRegistry())) {
+            Optional<String> input = SystemUtils.showInputDialog("http://localhost:8081", "Add schema-registry url", "this cluster config is missing a schema registry url please add it now", "schema-registry URL");
+            if (!input.isPresent()) {
+                throw new MissingSchemaRegistryException(config.getIdentifier());
+            }
+            input.ifPresent(url -> {
+                config.setSchemaRegistry(url);
+                configHandler.saveConfigs();
+            });
+        }
+        if (StringUtils.isNotEmpty(config.getSchemaRegistry())) {
             consumerProps.setProperty("schema.registry.url", config.getSchemaRegistry());
         }
 

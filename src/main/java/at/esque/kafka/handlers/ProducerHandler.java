@@ -14,6 +14,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -69,11 +70,10 @@ public class ProducerHandler {
         props.setProperty("auto.register.schemas", "false");
         props.setProperty("kafkaesque.cluster.id", clusterConfig.getIdentifier());
         props.put("kafkaesque.confighandler", configHandler);
-        if (clusterConfig.getSchemaRegistry() != null) {
+        if (StringUtils.isNotEmpty(clusterConfig.getSchemaRegistry())) {
             props.setProperty("schema.registry.url", clusterConfig.getSchemaRegistry());
             schemaRegistryRestService = new RestService(clusterConfig.getSchemaRegistry());
         }
-
         props.putAll(configHandler.readProducerConfigs(clusterConfig.getIdentifier()));
 
         LOGGER.info("Creating new Producer with properties: [{}]", props);

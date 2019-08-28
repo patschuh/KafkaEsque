@@ -7,6 +7,7 @@ import at.esque.kafka.cluster.CrossClusterOperation;
 import at.esque.kafka.cluster.KafkaesqueAdminClient;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.controls.FilterableListView;
+import at.esque.kafka.exception.MissingSchemaRegistryException;
 import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.handlers.ConsumerHandler;
 import at.esque.kafka.handlers.CrossClusterOperationHandler;
@@ -157,7 +158,7 @@ public class CrossClusterController {
                 } else {
                     consumerHandler.seekToOffset(consumerId, -2);
                 }
-            } catch (IOException e) {
+            } catch (IOException | MissingSchemaRegistryException e) {
                 ErrorAlert.show(e);
                 return;
             }
