@@ -48,14 +48,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Stack;
 
 /**
  * Original code is from: https://github.com/Celos/avro-json-decoder
- *
+ * <p>
  * Additional change for KafkaEsque: a NullNode.getInstance() is returned for fields that are missing from the JSON,
  * meaning they are not explicitly set to null in the JSON.
- *
+ * <p>
  * A {@link Decoder} for Avro's JSON data encoding.
  * </p>
  * Construct using {@link DecoderFactory}.
@@ -109,10 +110,10 @@ public class ExtendedJsonDecoder extends ParsingDecoder
      * <p/>
      * Otherwise, this JsonDecoder will reset its state and then
      * reconfigure its input.
-     * @param in
-     *   The IntputStream to read from. Cannot be null.
-     * @throws IOException
+     *
+     * @param in The IntputStream to read from. Cannot be null.
      * @return this JsonDecoder
+     * @throws IOException
      */
     public ExtendedJsonDecoder configure(InputStream in) throws IOException {
         if (null == in) {
@@ -131,10 +132,10 @@ public class ExtendedJsonDecoder extends ParsingDecoder
      * <p/>
      * Otherwise, this JsonDecoder will reset its state and then
      * reconfigure its input.
-     * @param in
-     *   The String to read from. Cannot be null.
-     * @throws IOException
+     *
+     * @param in The String to read from. Cannot be null.
      * @return this JsonDecoder
+     * @throws IOException
      */
     public ExtendedJsonDecoder configure(String in) throws IOException {
         if (null == in) {
@@ -756,6 +757,9 @@ public class ExtendedJsonDecoder extends ParsingDecoder
     }
 
     private static Field findField(Schema schema, String name) {
+        if (schema.getType() != Type.RECORD) {
+            return null;
+        }
         if (schema.getField(name) != null) {
             return schema.getField(name);
         }
@@ -770,6 +774,9 @@ public class ExtendedJsonDecoder extends ParsingDecoder
                 foundField = findField(fieldSchema.getElementType(), name);
             } else if (Type.MAP.equals(fieldSchema.getType())) {
                 foundField = findField(fieldSchema.getValueType(), name);
+            } else if (Type.UNION.equals(fieldSchema.getType())) {
+                foundField = fieldSchema.getTypes().stream().map(schema1 -> findField(schema1, name)).filter(Objects::nonNull)
+                        .findFirst().orElse(null);
             }
 
             if (foundField != null) {
