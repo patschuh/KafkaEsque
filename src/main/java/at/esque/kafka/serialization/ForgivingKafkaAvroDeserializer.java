@@ -13,7 +13,7 @@ public class ForgivingKafkaAvroDeserializer extends KafkaAvroDeserializer {
         try {
             return super.deserialize(bytes);
         } catch (Exception e) {
-            logger.warn("Failed Avro deserialization");
+            logger.warn("Failed Avro deserialization", e);
         }
         return "Failed Avro deserialization! Content as String: " + new String(bytes);
     }

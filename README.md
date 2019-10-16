@@ -1,5 +1,5 @@
 # KafkaEsque
-
+:information_source: This is a JavaFX application and therfore requires OpenJFX to be installed when using OpenJDK
 ### Create, remove and describe Topics
 ![Create Topic Screenshot](https://kafka.esque.at/images/screenshots/CreateTopic.png "Create Topics")
 
