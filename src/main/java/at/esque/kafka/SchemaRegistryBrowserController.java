@@ -36,6 +36,7 @@ public class SchemaRegistryBrowserController {
     @FXML
     private JsonTreeView jsonTreeView;
 
+
     public void setup(String schemaregistryUrl) {
         schemaRegistryRestService = new RestService(schemaregistryUrl);
         jsonTreeView.jsonStringProperty().bind(schemaTextArea.textProperty());
@@ -136,6 +137,10 @@ public class SchemaRegistryBrowserController {
         showCreateSchemaDialog(subjectListView.getListView().getSelectionModel().getSelectedItem());
     }
 
+    public void checkSchemaClick(ActionEvent actionEvent) {
+        showSchemaCompatibilityCheckDialog(subjectListView.getListView().getSelectionModel().getSelectedItem(), versionComboBox.getSelectionModel().getSelectedItem());
+    }
+
     private void showCreateSchemaDialog(String selectedSubject) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/createSchema.fxml"));
@@ -146,6 +151,24 @@ public class SchemaRegistryBrowserController {
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Add Schema");
+            stage.setScene(Main.createStyledScene(root1, -1, -1));
+            stage.setOnCloseRequest(event -> controller.cleanup());
+            stage.show();
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
+    }
+
+    private void showSchemaCompatibilityCheckDialog(String selectedSubject, Integer selectedVersion) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/compatibilityCheckSchema.fxml"));
+            Parent root1 = fxmlLoader.load();
+            SchemaCompatibilityCheckController controller = fxmlLoader.getController();
+            Stage stage = new Stage();
+            controller.setup(selectedSubject, selectedVersion.toString(), schemaRegistryRestService, stage);
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Check Schema Compatibility");
             stage.setScene(Main.createStyledScene(root1, -1, -1));
             stage.setOnCloseRequest(event -> controller.cleanup());
             stage.show();

@@ -36,7 +36,7 @@
                                 <Button maxHeight="-Infinity" maxWidth="-Infinity" minHeight="30.0"
                                         mnemonicParsing="false" onAction="#addSchemaClick" prefWidth="30.0">
                                     <tooltip>
-                                        <Tooltip text="Add Cluster Config"/>
+                                        <Tooltip text="Add Schema"/>
                                     </tooltip>
                                     <styleClass>
                                         <String fx:value="btn"/>
@@ -45,6 +45,20 @@
                                     </styleClass>
                                     <graphic>
                                         <FontIcon iconColor="WHITE" iconLiteral="fa-plus" iconSize="20"/>
+                                    </graphic>
+                                </Button>
+                                <Button maxHeight="-Infinity" maxWidth="-Infinity" minHeight="30.0"
+                                        mnemonicParsing="false" onAction="#checkSchemaClick" prefWidth="30.0">
+                                    <tooltip>
+                                        <Tooltip text="Check Schema Compatibility"/>
+                                    </tooltip>
+                                    <styleClass>
+                                        <String fx:value="btn"/>
+                                        <String fx:value="success"/>
+                                        <String fx:value="middle"/>
+                                    </styleClass>
+                                    <graphic>
+                                        <FontIcon iconColor="WHITE" iconLiteral="fa-copy" iconSize="20"/>
                                     </graphic>
                                 </Button>
                                 <Button minHeight="30.0" mnemonicParsing="false" onAction="#deleteSchema"
@@ -57,7 +71,7 @@
                                         <FontIcon iconColor="WHITE" iconLiteral="fa-trash" iconSize="20"/>
                                     </graphic>
                                     <tooltip>
-                                        <Tooltip text="remove cluster configs"/>
+                                        <Tooltip text="Remove Schema"/>
                                     </tooltip>
                                 </Button>
                             </items>

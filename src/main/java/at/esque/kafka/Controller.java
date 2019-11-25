@@ -18,6 +18,7 @@ import at.esque.kafka.exception.MissingSchemaRegistryException;
 import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.handlers.ConsumerHandler;
 import at.esque.kafka.handlers.ProducerHandler;
+import at.esque.kafka.handlers.Settings;
 import at.esque.kafka.topics.CreateTopicController;
 import at.esque.kafka.topics.DescribeTopicController;
 import at.esque.kafka.topics.DescribeTopicWrapper;
@@ -49,6 +50,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableColumn;
@@ -189,6 +191,8 @@ public class Controller {
     private Button interruptMessagePollingButton;
     @FXML
     private Button editClusterButton;
+    @FXML
+    private MenuBar menuBar;
 
     private Stage controlledStage;
     private YAMLMapper yamlMapper = new YAMLMapper();
@@ -205,6 +209,10 @@ public class Controller {
     public void setup(Stage controlledStage) {
         this.controlledStage = controlledStage;
         setUpLoadingIndicator();
+        String useSystemMenuBar = configHandler.getSettingsProperties().get(Settings.USE_SYSTEM_MENU_BAR);
+        if (Boolean.parseBoolean(useSystemMenuBar)) {
+            menuBar.setUseSystemMenuBar(true);
+        }
 
         messageTable.setRowFactory(
                 tableView -> {

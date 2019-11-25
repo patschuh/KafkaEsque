@@ -35,6 +35,8 @@ public class ConfigHandler {
 
     private Map<String, Map<String, TopicMessageTypeConfig>> cachedConfigs = new ConcurrentHashMap<>();
 
+    private Map<String, String> settings;
+
     public ConfigHandler() {
     }
 
@@ -77,6 +79,30 @@ public class ConfigHandler {
         return cachedConfigs.get(clusterIdentification);
     }
 
+    public Map<String, String> getSettingsProperties() {
+        if (settings != null) {
+            return settings;
+        }
+        File configFile = new File(String.format(CONFIG_DIRECTORY, "settings.yaml"));
+        if (!configFile.exists()) {
+            configFile.getParentFile().mkdirs();
+            settings = new HashMap<>();
+            settings.put(Settings.USE_SYSTEM_MENU_BAR, "true");
+            try {
+                yamlMapper.writeValue(configFile, settings);
+            } catch (IOException e) {
+                ErrorAlert.show(e);
+            }
+        }
+        try {
+            settings = yamlMapper.readValue(configFile, new TypeReference<Map<String, String>>() {
+            });
+        } catch (IOException e) {
+            ErrorAlert.show(e);
+        }
+        return settings;
+    }
+
     public Map<String, String> readConsumerConfigs(String clusterIdentification) throws IOException {
         return readConfigsMap(clusterIdentification, "consumer");
     }
@@ -108,8 +134,7 @@ public class ConfigHandler {
         clusterConfig = new File(String.format(CONFIG_DIRECTORY, "clusters.json"));
         if (clusterConfigs != null) {
             return clusterConfigs;
-        }
-        if (clusterConfig.exists()) {
+        } else if (clusterConfig.exists()) {
             try {
                 clusterConfigs = objectMapper.readValue(clusterConfig, ClusterConfigs.class);
                 return clusterConfigs;
@@ -117,7 +142,7 @@ public class ConfigHandler {
                 ErrorAlert.show(e);
             }
         } else {
-            ClusterConfigs clusterConfigs = new ClusterConfigs();
+            clusterConfigs = new ClusterConfigs();
             try {
                 clusterConfig.getParentFile().mkdirs();
                 objectMapper.writeValue(clusterConfig, clusterConfigs);
@@ -126,7 +151,8 @@ public class ConfigHandler {
                 ErrorAlert.show(e);
             }
         }
-        return new ClusterConfigs();
+        clusterConfigs = new ClusterConfigs();
+        return clusterConfigs;
     }
 
     public void saveConfigs() {
