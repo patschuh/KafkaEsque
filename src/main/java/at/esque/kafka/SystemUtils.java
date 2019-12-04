@@ -16,7 +16,7 @@ import java.util.concurrent.FutureTask;
 
 public class SystemUtils {
 
-    public static void copySelectionToClipboard(Callable<String> stringExtractor) {
+    public static void copyStringSelectionToClipboard(Callable<String> stringExtractor) {
 
         final ClipboardContent clipboardContent = new ClipboardContent();
         try {
@@ -25,7 +25,9 @@ public class SystemUtils {
             ErrorAlert.show(e);
         }
 
-        Clipboard.getSystemClipboard().setContent(clipboardContent);
+        if (clipboardContent.getString() != null) {
+            Clipboard.getSystemClipboard().setContent(clipboardContent);
+        }
     }
 
     public static Optional<String> showInputDialog(String defaultValue, String title, String header, String requestedInputLabel) {

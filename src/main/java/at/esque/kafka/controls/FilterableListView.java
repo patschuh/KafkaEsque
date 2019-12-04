@@ -17,9 +17,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -186,15 +183,13 @@ public class FilterableListView extends VBox {
         }
     };
 
-    public static class ListKeyEventHandler implements EventHandler<KeyEvent> {
-
-        KeyCodeCombination copyCombination = new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN);
+    private static class ListKeyEventHandler implements EventHandler<KeyEvent> {
 
         @Override
         public void handle(final KeyEvent keyEvent) {
             if (keyEvent.getSource() instanceof ListView) {
-                if(copyCombination.match(keyEvent)) {
-                    SystemUtils.copySelectionToClipboard(() -> String.valueOf(((ListView) keyEvent.getSource()).getSelectionModel().getSelectedItem()));
+                if (KeyCodeCombinations.COPY.getCombination().match(keyEvent)) {
+                    SystemUtils.copyStringSelectionToClipboard(() -> String.valueOf(((ListView) keyEvent.getSource()).getSelectionModel().getSelectedItem()));
                 }
             }
         }

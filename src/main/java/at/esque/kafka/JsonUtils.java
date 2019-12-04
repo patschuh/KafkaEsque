@@ -1,8 +1,8 @@
 package at.esque.kafka;
 
+import at.esque.kafka.controls.JsonTreeItem;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javafx.scene.control.TreeItem;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,34 +37,34 @@ public final class JsonUtils {
         }
     }
 
-    public static TreeItem<String> buildTreeFromJson(String value) throws IOException {
+    public static JsonTreeItem buildTreeFromJson(String value) throws IOException {
         Map<String, Object> json = objectMapper.readValue(value, new TypeReference<Map<String, Object>>() {
         });
         if (json == null) {
-            return new TreeItem<>("null");
+            return new JsonTreeItem(null, null);
         }
-        TreeItem<String> root = new TreeItem<>("root");
+        JsonTreeItem root = new JsonTreeItem("root", null);
         root.setExpanded(true);
         recursivelyAddElements(json, root);
         return root;
     }
 
-    private static void recursivelyAddElements(Map<String, Object> jsonNode, TreeItem<String> treeItem) {
+    private static void recursivelyAddElements(Map<String, Object> jsonNode, JsonTreeItem treeItem) {
         Set<Map.Entry<String, Object>> entries = jsonNode.entrySet();
 
         if (!entries.isEmpty()) {
             for (Map.Entry<String, Object> entry : entries) {
-                TreeItem<String> newItem = new TreeItem<>(entry.getKey());
+                JsonTreeItem newItem = new JsonTreeItem(entry.getKey(), null);
                 treeItem.getChildren().add(newItem);
                 applyCorrectAdder(entry.getValue(), newItem);
             }
         }
     }
 
-    private static void recursivelyAddElements(ArrayList values, TreeItem<String> treeItem) {
+    private static void recursivelyAddElements(ArrayList values, JsonTreeItem treeItem) {
         int i = 1;
         for (Object val : values) {
-            TreeItem<String> newItem = new TreeItem<>(i + "");
+            JsonTreeItem newItem = new JsonTreeItem(i + "", null);
             treeItem.getChildren().add(newItem);
             treeItem.setExpanded(true);
             applyCorrectAdder(val, newItem);
@@ -72,12 +72,13 @@ public final class JsonUtils {
         }
     }
 
-    private static void recursivelyAddElements(String val, TreeItem<String> treeItem) {
-        treeItem.setValue(treeItem.getValue() + ": " + val);
+    private static void recursivelyAddElements(String val, JsonTreeItem treeItem) {
+        treeItem.setPropertyName(treeItem.getValue());
+        treeItem.setPropertyValue(val);
     }
 
     @SuppressWarnings("unchecked")
-    private static void applyCorrectAdder(Object value, TreeItem<String> treeItem) {
+    private static void applyCorrectAdder(Object value, JsonTreeItem treeItem) {
         if (value instanceof Map) {
             recursivelyAddElements((Map<String, Object>) value, treeItem);
         } else if (value instanceof ArrayList) {
