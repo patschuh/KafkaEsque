@@ -259,6 +259,7 @@ public class Controller {
         headerValueColumn.setCellValueFactory(param -> new SimpleStringProperty(new String(param.getValue().value())));
 
         fetchModeCombobox.setItems(FXCollections.observableArrayList(FetchTypes.values()));
+        fetchModeCombobox.getSelectionModel().select(FetchTypes.NEWEST);
 
         fetchModeCombobox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
                 specificOffsetTextField.setVisible(newValue == FetchTypes.SPECIFIC_OFFSET));

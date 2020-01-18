@@ -12,7 +12,6 @@ import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.handlers.ConsumerHandler;
 import at.esque.kafka.handlers.CrossClusterOperationHandler;
 import at.esque.kafka.handlers.ProducerHandler;
-import at.esque.kafka.handlers.TrayHandler;
 import com.google.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -76,8 +75,6 @@ public class CrossClusterController {
     private ProducerHandler producerHandler;
     @Inject
     private ConsumerHandler consumerHandler;
-    @Inject
-    private TrayHandler trayHandler;
 
     public void setup() {
         ClusterConfigs clusterConfigs = configHandler.loadOrCreateConfigs();
@@ -100,10 +97,6 @@ public class CrossClusterController {
                 } else {
                     cell.textProperty().set(MessageFormat.format("{0} / {1} ---> {2} / {3}", newValue.getFromCluster().getIdentifier(), newValue.getFromTopic().getName(), newValue.getToCluster().getIdentifier(), newValue.getToTopic().getName()));
                     cell.getItem().statusProperty().addListener((observable1, oldValue1, newValue1) -> {
-                        if (newValue1 != null && newValue1.equals("Finished")) {
-                            trayHandler.showInfoNotification("Operation Finished!",
-                                    MessageFormat.format("{0} / {1} ---> {2} / {3}", newValue.getFromCluster().getIdentifier(), newValue.getFromTopic().getName(), newValue.getToCluster().getIdentifier(), newValue.getToTopic().getName()));
-                        }
                     });
                     cell.graphicProperty().bind(Bindings.createObjectBinding(() -> {
                         if (cell.getItem() != null) {
@@ -181,7 +174,6 @@ public class CrossClusterController {
                         } catch (Exception e) {
                             Platform.runLater(() -> {
                                 operation.setStatus("Error");
-                                trayHandler.showErrorNotification("Operation stopped with an error!", e.getMessage());
                             });
                         }
                     });
