@@ -111,6 +111,9 @@ public class CrossClusterController {
                                 case "Stopped":
                                     return FontIcon.of(FontAwesome.STOP_CIRCLE);
                                 default:
+                                    if(cell.getItem().finishedExceptionaly()) {
+                                        cell.setOnMouseClicked(mouseEvent -> ErrorAlert.show(cell.getItem().getException()));
+                                    }
                                     return FontIcon.of(FontAwesome.WARNING);
                             }
                         }
@@ -173,6 +176,7 @@ public class CrossClusterController {
                             }
                         } catch (Exception e) {
                             Platform.runLater(() -> {
+                                operation.setException(e);
                                 operation.setStatus("Error");
                             });
                         }

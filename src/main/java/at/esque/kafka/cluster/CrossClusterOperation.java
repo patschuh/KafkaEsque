@@ -18,6 +18,7 @@ public class CrossClusterOperation {
     private Predicate<ConsumerRecord> filterFunction;
     private AtomicBoolean stop = new AtomicBoolean(false);
     private UUID operationId;
+    private Exception exception;
 
     private StringProperty status = new SimpleStringProperty("Created");
     private LongProperty startTimestampMs = new SimpleLongProperty(-1);
@@ -121,5 +122,17 @@ public class CrossClusterOperation {
 
     public void setLimit(long limit) {
         this.limit.set(limit);
+    }
+
+    public Exception getException() {
+        return exception;
+    }
+
+    public void setException(Exception exception) {
+        this.exception = exception;
+    }
+
+    public boolean finishedExceptionaly(){
+        return exception != null;
     }
 }

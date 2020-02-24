@@ -292,17 +292,21 @@ public class Controller {
     }
 
     private void openInTextEditor(KafkaMessage value, String suffix) {
-        File temp;
-        try {
-            temp = File.createTempFile("kafkaEsque-export", "." + suffix);
+        if (Desktop.isDesktopSupported()) {
+            new Thread(() -> {
+                File temp;
+                try {
+                    temp = File.createTempFile("kafkaEsque-export", "." + suffix);
 
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(temp))) {
-                bw.write(value.getValue());
-            }
+                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(temp))) {
+                        bw.write(value.getValue());
+                    }
 
-            Desktop.getDesktop().open(temp);
-        } catch (IOException e) {
-            ErrorAlert.show(e);
+                    Desktop.getDesktop().open(temp);
+                } catch (IOException e) {
+                    Platform.runLater(() -> ErrorAlert.show(e));
+                }
+            }).start();
         }
 
 

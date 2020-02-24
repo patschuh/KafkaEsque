@@ -128,7 +128,7 @@
                                                     </children>
                                                 </HBox>
                                                 <ComboBox id="fetchModeCombobox" fx:id="fetchModeCombobox" prefHeight="25.0" promptText="Mode" />
-                                                <TextField fx:id="numberOfMessagesToGetField" prefHeight="25.0" prefWidth="77.0" promptText="Messages Per Partition" text="1000">
+                                                <TextField fx:id="numberOfMessagesToGetField" prefHeight="25.0" prefWidth="77.0" promptText="Messages Per Partition" text="10">
                                                     <tooltip>
                                                         <Tooltip text="Messages per partition to get" />
                                                     </tooltip>
