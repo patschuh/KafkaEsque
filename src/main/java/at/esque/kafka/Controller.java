@@ -19,6 +19,7 @@ import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.handlers.ConsumerHandler;
 import at.esque.kafka.handlers.ProducerHandler;
 import at.esque.kafka.handlers.Settings;
+import at.esque.kafka.lag.viewer.LagViewerController;
 import at.esque.kafka.topics.CreateTopicController;
 import at.esque.kafka.topics.DescribeTopicController;
 import at.esque.kafka.topics.DescribeTopicWrapper;
@@ -162,7 +163,7 @@ public class Controller {
     @FXML
     private TableColumn<KafkaMessage, String> messageTimestampColumn;
     @FXML
-    private FilterableListView topicListView;
+    private FilterableListView<String> topicListView;
     @FXML
     private ComboBox<ClusterConfig> clusterComboBox;
     @FXML
@@ -270,6 +271,7 @@ public class Controller {
         });
 
         topicListView.getListView().setCellFactory(lv -> topicListCellFactory());
+        topicListView.setListComparator(String::compareTo);
 
         messageSearchTextField.textProperty().addListener((observable, oldValue, newValue) -> filteredMessages.setPredicate(km -> (km.getKey() != null && StringUtils.containsIgnoreCase(km.getKey(), newValue) || (km.getValue() != null && StringUtils.containsIgnoreCase(km.getValue(), newValue)))));
 
@@ -534,6 +536,7 @@ public class Controller {
             stage.setTitle("Browse Schema Registry");
             stage.setScene(Main.createStyledScene(root1, -1, -1));
             stage.show();
+            centerStageOnControlledStage(stage);
         } catch (Exception e) {
             ErrorAlert.show(e);
         }
@@ -553,6 +556,34 @@ public class Controller {
             stage.setTitle("Cross Cluster Operations");
             stage.setScene(Main.createStyledScene(root1, 1000, 500));
             stage.show();
+            centerStageOnControlledStage(stage);
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
+    }
+
+    @FXML
+    public void lagViewerClick(ActionEvent actionEvent) {
+        try {
+            FXMLLoader fxmlLoader = injector.getInstance(FXMLLoader.class);
+            fxmlLoader.setLocation(getClass().getResource("/fxml/lagViewer.fxml"));
+            Parent root1 = fxmlLoader.load();
+            LagViewerController controller = fxmlLoader.getController();
+            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), new TopicMessageTypeConfig(), new HashMap<>());
+            KafkaConsumer consumer = consumerHandler.getConsumer(consumerId).orElseThrow(() -> new RuntimeException("Error getting consumer"));
+            controller.setup(adminClient, consumer);
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initOwner(controlledStage);
+            stage.initModality(Modality.NONE);
+            stage.setTitle("Lag Viewer - "+selectedCluster().getIdentifier());
+            stage.setScene(Main.createStyledScene(root1, 1000, 500));
+            stage.show();
+            centerStageOnControlledStage(stage);
+            stage.setOnCloseRequest(windowEvent -> {
+                controller.stop();
+                consumerHandler.deregisterConsumer(consumerId);
+            });
         } catch (Exception e) {
             ErrorAlert.show(e);
         }
@@ -867,11 +898,13 @@ public class Controller {
             controller.setup(selectedCluster(), selectedTopic(), FXCollections.observableArrayList(partitions), kafkaMessage);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initOwner(controlledStage);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Publish Message");
             stage.setScene(Main.createStyledScene(root1, -1, -1));
             stage.setOnCloseRequest(event -> controller.cleanup());
             stage.show();
+            centerStageOnControlledStage(stage);
         } catch (Exception e) {
             ErrorAlert.show(e);
         }
@@ -893,6 +926,7 @@ public class Controller {
             stage.setTitle("Create Topic");
             stage.setScene(Main.createStyledScene(root1, -1, -1));
             stage.show();
+            centerStageOnControlledStage(stage);
         } catch (Exception e) {
             ErrorAlert.show(e);
         }
@@ -910,6 +944,7 @@ public class Controller {
             stage.setTitle("Topic Description");
             stage.setScene(Main.createStyledScene(root1, -1, -1));
             stage.show();
+            centerStageOnControlledStage(stage);
         } catch (Exception e) {
             ErrorAlert.show(e);
         }
@@ -1079,5 +1114,10 @@ public class Controller {
 
         }
 
+    }
+
+    private void centerStageOnControlledStage(Stage stage) {
+        stage.setX(controlledStage.getX() + controlledStage.getWidth() / 2 - stage.getWidth() / 2);
+        stage.setY(controlledStage.getY() + controlledStage.getHeight() / 2 - stage.getHeight() / 2);
     }
 }

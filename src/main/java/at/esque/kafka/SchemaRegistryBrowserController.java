@@ -28,7 +28,7 @@ public class SchemaRegistryBrowserController {
 
     private RestService schemaRegistryRestService;
     @FXML
-    private FilterableListView subjectListView;
+    private FilterableListView<String> subjectListView;
     @FXML
     private TextArea schemaTextArea;
     @FXML
@@ -54,6 +54,7 @@ public class SchemaRegistryBrowserController {
             }));
 
             subjectListView.getListView().setCellFactory(param -> subjectListCellFactory());
+            subjectListView.setListComparator(String::compareTo);
 
             subjectListView.getListView().getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 try {

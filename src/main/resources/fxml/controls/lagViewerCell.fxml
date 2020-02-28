@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<fx:root type="javafx.scene.layout.VBox" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Label fx:id="titleLabel" text="Label" VBox.vgrow="ALWAYS">
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font></Label>
+      <StackPane prefWidth="200.0" VBox.vgrow="ALWAYS">
+         <children>
+            <ProgressBar fx:id="offsetProgressBar" maxWidth="1.7976931348623157E308" progress="0.0" />
+            <Label fx:id="currentOffsetToEndOffsetLabel" text="Label" />
+         </children>
+      </StackPane>
+      <Label fx:id="messagesBehindLabel" text="Label" />
+   </children>
+</fx:root>

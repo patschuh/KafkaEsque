@@ -17,6 +17,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -25,12 +28,14 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.function.Function;
 
-public class FilterableListView extends VBox {
+public class FilterableListView<T> extends VBox {
     @FXML
     private TextField filtertextField;
     @FXML
-    private ListView<String> listView;
+    private ListView<T> listView;
     @FXML
     private HBox toolbarBox;
     @FXML
@@ -38,12 +43,13 @@ public class FilterableListView extends VBox {
     @FXML
     private Button refreshButton;
 
-    private ObservableList<String> baseList;
-    private FilteredList<String> filteredList;
-    private SortedList<String> sortedList;
+    private ObservableList<T> baseList;
+    private FilteredList<T> filteredList;
+    private SortedList<T> sortedList;
 
     public BooleanProperty addButtonVisible = new SimpleBooleanProperty(true);
     public BooleanProperty refreshButtonVisible = new SimpleBooleanProperty(true);
+    private Function<T, String> stringifierFunction = String::valueOf;
 
     public FilterableListView() {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(
@@ -65,11 +71,17 @@ public class FilterableListView extends VBox {
         listView.setItems(sortedList);
 
         filtertextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredList.setPredicate(item -> StringUtils.isEmpty(newValue)
-                    || StringUtils.containsIgnoreCase(item, newValue));
+            if (StringUtils.isEmpty(newValue)) {
+                filteredList.setPredicate(i -> true);
+            } else {
+                filteredList.setPredicate(item -> {
+                    String stringifiedItem = getSelectedItemStringified(item);
+
+                    return StringUtils.containsIgnoreCase(stringifiedItem, newValue);
+                });
+            }
         });
-        sortedList.setComparator(String::compareTo);
-        listView.setOnKeyPressed(new ListKeyEventHandler());
+        listView.setOnKeyPressed(generateListEventHandler());
 
         bindButtonProperties();
     }
@@ -84,20 +96,20 @@ public class FilterableListView extends VBox {
         refreshButton.minWidthProperty().bind(Bindings.when(refreshButtonVisibleProperty()).then(Region.USE_COMPUTED_SIZE).otherwise(0));
     }
 
-    public ObservableList<String> getBaseList() {
+    public ObservableList<T> getBaseList() {
         return baseList;
     }
 
-    public void setItems(Collection<String> items) {
+    public void setItems(Collection<T> items) {
         baseList.clear();
         baseList.addAll(items);
     }
 
-    public void addItems(Collection<String> items) {
+    public void addItems(Collection<T> items) {
         baseList.addAll(items);
     }
 
-    public ListView<String> getListView() {
+    public ListView<T> getListView() {
         return listView;
     }
 
@@ -183,15 +195,44 @@ public class FilterableListView extends VBox {
         }
     };
 
-    private static class ListKeyEventHandler implements EventHandler<KeyEvent> {
+    public void setListComparator(Comparator<T> comparator) {
+        this.sortedList.setComparator(comparator);
+    }
 
-        @Override
-        public void handle(final KeyEvent keyEvent) {
+    public void setStringifierFunction(Function<T, String> stringifierFunction) {
+        this.stringifierFunction = stringifierFunction;
+    }
+
+    private EventHandler<? super KeyEvent> generateListEventHandler() {
+        KeyCodeCombination copyCombination = new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN);
+
+        return keyEvent -> {
             if (keyEvent.getSource() instanceof ListView) {
-                if (KeyCodeCombinations.COPY.getCombination().match(keyEvent)) {
-                    SystemUtils.copyStringSelectionToClipboard(() -> String.valueOf(((ListView) keyEvent.getSource()).getSelectionModel().getSelectedItem()));
+                if (copyCombination.match(keyEvent)) {
+                    String selectedItem = getSelectedItemStringified(getSelectedItem());
+                    SystemUtils.copyStringSelectionToClipboard(() -> selectedItem);
                 }
             }
-        }
+        };
+    }
+
+    public BooleanProperty refreshButtonDisableProperty(){
+        return refreshButton.disableProperty();
+    }
+
+    public BooleanProperty addButtonDisableProperty(){
+        return refreshButton.disableProperty();
+    }
+
+    public BooleanProperty filterTextFieldDisableProperty(){
+        return filtertextField.disableProperty();
+    }
+
+    private String getSelectedItemStringified(T selectedItem) {
+        return stringifierFunction.apply(selectedItem);
+    }
+
+    public T getSelectedItem() {
+        return listView.getSelectionModel().getSelectedItem();
     }
 }

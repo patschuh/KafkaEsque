@@ -54,9 +54,9 @@ public class CrossClusterController {
     private TextField amountLimit;
 
     @FXML
-    private FilterableListView fromClusterTopicsList;
+    private FilterableListView<String> fromClusterTopicsList;
     @FXML
-    private FilterableListView toClusterTopicsList;
+    private FilterableListView<String> toClusterTopicsList;
     @FXML
     private ListView<CrossClusterOperation> runningOperationsList;
     @FXML
@@ -78,6 +78,10 @@ public class CrossClusterController {
 
     public void setup() {
         ClusterConfigs clusterConfigs = configHandler.loadOrCreateConfigs();
+
+        fromClusterTopicsList.setListComparator(String::compareTo);
+        toClusterTopicsList.setListComparator(String::compareTo);
+
         fromClusterComboBox.setItems(clusterConfigs.getClusterConfigs());
         toClusterComboBox.setItems(clusterConfigs.getClusterConfigs());
 

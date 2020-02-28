@@ -1,14 +1,18 @@
 package at.esque.kafka.cluster;
 
 import at.esque.kafka.alerts.ErrorAlert;
+import at.esque.kafka.lag.viewer.Lag;
 import at.esque.kafka.topics.DescribeTopicWrapper;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.Config;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DeleteTopicsResult;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
+import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsResult;
+import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -16,6 +20,7 @@ import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.ConfigResource;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -89,6 +94,25 @@ public class KafkaesqueAdminClient {
             ErrorAlert.show(e);
         }
         return null;
+    }
+
+    public List<Lag> getConsumerGroups(){
+        ListConsumerGroupsResult result = adminClient.listConsumerGroups();
+        try {
+            Collection<ConsumerGroupListing> consumerGroupListings = result.all().get();
+            return consumerGroupListings.stream().map(consumerGroupListing -> {
+                Lag lag = new Lag();
+                lag.setTitle(consumerGroupListing.groupId());
+                return lag;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
+        return Collections.EMPTY_LIST;
+    }
+
+    public ListConsumerGroupOffsetsResult listConsumerGroupOffsets(String groupId){
+        return adminClient.listConsumerGroupOffsets(groupId);
     }
 
     public void close() {
