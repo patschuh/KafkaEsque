@@ -54,6 +54,8 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tab;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
@@ -137,6 +139,10 @@ public class Controller {
     @FXML
     private TextArea keyTextArea;
     @FXML
+    private Tab valueTab;
+    @FXML
+    private SplitPane valueSplitPane;
+    @FXML
     private TextArea valueTextArea;
     @FXML
     public JsonTreeView jsonTreeView;
@@ -194,6 +200,8 @@ public class Controller {
     private Button editClusterButton;
     @FXML
     private MenuBar menuBar;
+
+    private double[] cachedValueTabDividerPositions = null;
 
     private Stage controlledStage;
     private YAMLMapper yamlMapper = new YAMLMapper();
@@ -284,6 +292,7 @@ public class Controller {
             KafkaMessage selectedItem = messageTable.getSelectionModel().getSelectedItem();
             updateKeyValueTextArea(selectedItem, newValue);
         });
+        updateValueTabLayout(formatJsonToggle.isSelected());
 
         setupClusterCombobox();
         clusterComboBox.setItems(configHandler.loadOrCreateConfigs().getClusterConfigs());
@@ -325,6 +334,7 @@ public class Controller {
     }
 
     private void updateKeyValueTextArea(KafkaMessage selectedMessage, boolean formatJson) {
+        updateValueTabLayout(formatJson);
         if (selectedMessage == null) {
             return;
         }
@@ -335,6 +345,22 @@ public class Controller {
         } else {
             keyTextArea.setText(selectedMessage.getKey());
             valueTextArea.setText(selectedMessage.getValue());
+        }
+    }
+
+    private void updateValueTabLayout(boolean formatJson) {
+        if (formatJson) {
+            if (!valueSplitPane.getItems().contains(valueTextArea)) {
+                valueSplitPane.getItems().add(valueTextArea);
+            }
+            if (cachedValueTabDividerPositions != null && cachedValueTabDividerPositions.length > 0) {
+                valueSplitPane.setDividerPositions(cachedValueTabDividerPositions);
+            }
+            valueTab.setContent(valueSplitPane);
+        } else {
+            cachedValueTabDividerPositions = valueSplitPane.getDividerPositions();
+            valueSplitPane.getItems().remove(valueTextArea);
+            valueTab.setContent(valueTextArea);
         }
     }
 
@@ -576,7 +602,7 @@ public class Controller {
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.NONE);
-            stage.setTitle("Lag Viewer - "+selectedCluster().getIdentifier());
+            stage.setTitle("Lag Viewer - " + selectedCluster().getIdentifier());
             stage.setScene(Main.createStyledScene(root1, 1000, 500));
             stage.show();
             centerStageOnControlledStage(stage);

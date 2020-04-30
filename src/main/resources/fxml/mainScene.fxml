@@ -190,12 +190,12 @@
                                 <TextArea fx:id="keyTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
                             </content>
                         </Tab>
-                        <Tab text="Value">
+                        <Tab fx:id="valueTab" text="Value">
                             <content>
-                                <HBox>
+                                <SplitPane fx:id="valueSplitPane" dividerPositions="0.32533889468196037" prefHeight="200.0" prefWidth="200.0">
                                     <JsonTreeView fx:id="jsonTreeView" maxWidth="1.7976931348623157E308" />
                                     <TextArea fx:id="valueTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
-                                </HBox>
+                                </SplitPane>
                             </content>
                         </Tab>
                         <Tab text="Header">

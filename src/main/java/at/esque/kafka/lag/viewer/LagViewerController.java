@@ -77,8 +77,10 @@ public class LagViewerController {
     @FXML
     private void startRefreshList() {
         runInDaemonThread(() -> {
-                Platform.runLater(() -> refreshRunning.setValue(true));
-            consumerGroupList.setItems(FXCollections.observableArrayList(adminClient.getConsumerGroups()));
+                Platform.runLater(() -> {
+                    refreshRunning.setValue(true);
+                    consumerGroupList.setItems(FXCollections.observableArrayList(adminClient.getConsumerGroups()));
+                });
             consumerGroupList.getListView().getItems().forEach(lag -> {
                     try {
                         adminClient.listConsumerGroupOffsets(lag.getTitle()).partitionsToOffsetAndMetadata().thenApply(topicPartitionOffsetAndMetadataMap -> {
@@ -86,9 +88,9 @@ public class LagViewerController {
                                 Map<TopicPartition, Long> offsetMap = getEndOffsets(topicPartitionOffsetAndMetadataMap);
                                 long endOffsets = offsetMap.values().stream().mapToLong(Long::longValue).sum();
                                 long currentOffsets = topicPartitionOffsetAndMetadataMap.values().stream().mapToLong(OffsetAndMetadata::offset).sum();
-                                Platform.runLater(() -> lag.setEndOffset(endOffsets));
-                                Platform.runLater(() -> lag.setCurrentOffset(currentOffsets));
                                 Platform.runLater(() -> {
+                                    lag.setEndOffset(endOffsets);
+                                    lag.setCurrentOffset(currentOffsets);
                                     Collection<Lag> subEntites = createSubEntites(lag, topicPartitionOffsetAndMetadataMap, offsetMap);
                                     lag.getSubEntities().clear();
                                     lag.getSubEntities().addAll(subEntites);
