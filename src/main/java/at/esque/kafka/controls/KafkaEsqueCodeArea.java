@@ -220,7 +220,9 @@ public class KafkaEsqueCodeArea extends BorderPane {
             String text = codeArea.getText();
             int lastKwEnd = 0;
             StyleSpansBuilder<Collection<String>> syntaxSpanBuilder = new StyleSpansBuilder<>();
+            boolean syntaxMatches = false;
             while (syntaxMatcher.find()) {
+                syntaxMatches = true;
                 String styleClass =
                         syntaxMatcher.group("PAREN") != null ? "paren" :
                                 syntaxMatcher.group("BRACE") != null ? "brace" :
@@ -234,7 +236,10 @@ public class KafkaEsqueCodeArea extends BorderPane {
                 syntaxSpanBuilder.add(Collections.singleton(styleClass), syntaxMatcher.end() - syntaxMatcher.start());
                 lastKwEnd = syntaxMatcher.end();
             }
-            StyleSpans<Collection<String>> syntaxSpans = syntaxSpanBuilder.create();
+            StyleSpans<Collection<String>> syntaxSpans = null;
+            if(syntaxMatches){
+                syntaxSpans = syntaxSpanBuilder.create();
+            }
 
             StyleSpans<Collection<String>> searchSpans = null;
             if (!StringUtils.isEmpty(regex)) {
@@ -253,18 +258,22 @@ public class KafkaEsqueCodeArea extends BorderPane {
                 searchSpans = searchSpanBuilder.create();
             }
 
-            if (searchSpans == null) {
+            if (searchSpans == null && syntaxSpans != null) {
                 codeArea.setStyleSpans(0, syntaxSpans);
                 return;
             }
+            if(searchSpans != null && syntaxSpans != null) {
+                StyleSpans<Collection<String>> combinedHighlighting = syntaxSpans.overlay(searchSpans, (strings, strings2) -> {
+                    ArrayList<String> combined = new ArrayList<>(strings);
+                    combined.addAll(strings2);
+                    return combined;
+                });
+                codeArea.setStyleSpans(0, combinedHighlighting);
+            }
+            if(searchSpans != null && syntaxSpans == null){
+                codeArea.setStyleSpans(0, searchSpans);
+            }
 
-            StyleSpans<Collection<String>> combinedHighlighting = syntaxSpans.overlay(searchSpans, (strings, strings2) -> {
-                ArrayList<String> combined = new ArrayList<>(strings);
-                combined.addAll(strings2);
-                return combined;
-            });
-
-            codeArea.setStyleSpans(0, combinedHighlighting);
         }
     }
 

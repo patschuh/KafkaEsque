@@ -28,6 +28,7 @@ import at.esque.kafka.topics.KafkaMessagBookWrapper;
 import at.esque.kafka.topics.KafkaMessage;
 import at.esque.kafka.topics.model.Topic;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -69,6 +70,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Pair;
+import net.thisptr.jackson.jq.BuiltinFunctionLoader;
+import net.thisptr.jackson.jq.JsonQuery;
+import net.thisptr.jackson.jq.Scope;
+import net.thisptr.jackson.jq.Version;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -122,6 +127,10 @@ public class Controller {
     private KafkaesqueAdminClient adminClient;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Controller.class);
+
+    Scope rootScope = Scope.newEmptyScope();
+
+    // Use BuiltinFunctionLoader to load built-in functions from the classpath.
 
     //Guice
     @Inject
@@ -187,6 +196,8 @@ public class Controller {
     @FXML
     private ToggleButton formatJsonToggle;
     @FXML
+    private TextField jqQueryField;
+    @FXML
     private ProgressIndicator loadingIndicator;
     @FXML
     private Label backgroundTaskDescription;
@@ -216,6 +227,7 @@ public class Controller {
     }
 
     public void setup(Stage controlledStage) {
+        BuiltinFunctionLoader.getInstance().loadFunctions(Version.LATEST, rootScope);
         this.controlledStage = controlledStage;
         setUpLoadingIndicator();
         String useSystemMenuBar = configHandler.getSettingsProperties().get(Settings.USE_SYSTEM_MENU_BAR);
@@ -288,11 +300,7 @@ public class Controller {
 
         messageTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> updateKeyValueTextArea(newValue, formatJsonToggle.isSelected()));
 
-        formatJsonToggle.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            KafkaMessage selectedItem = messageTable.getSelectionModel().getSelectedItem();
-            updateKeyValueTextArea(selectedItem, newValue);
-        });
-        updateValueTabLayout(formatJsonToggle.isSelected());
+        setupJsonFormatToggle();
 
         setupClusterCombobox();
         clusterComboBox.setItems(configHandler.loadOrCreateConfigs().getClusterConfigs());
@@ -300,6 +308,26 @@ public class Controller {
         jsonTreeView.jsonStringProperty().bind(valueTextArea.textProperty());
         jsonTreeView.visibleProperty().bind(formatJsonToggle.selectedProperty());
         bindDisableProperties();
+    }
+
+    private void setupJsonFormatToggle() {
+        formatJsonToggle.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            KafkaMessage selectedItem = messageTable.getSelectionModel().getSelectedItem();
+            updateKeyValueTextArea(selectedItem, newValue);
+        });
+        jqQueryField.textProperty().addListener((observable, oldValue, newValue) -> {
+            KafkaMessage selectedItem = messageTable.getSelectionModel().getSelectedItem();
+            updateKeyValueTextArea(selectedItem, formatJsonToggle.isSelected());
+        });
+        jqQueryField.visibleProperty().bind(Bindings.createBooleanBinding(() -> {
+            if(formatJsonToggle.isSelected()){
+                jqQueryField.setMaxWidth(-1);
+                return true;
+            }
+            jqQueryField.setMaxWidth(0);
+            return false;
+        }, formatJsonToggle.selectedProperty()));
+        updateValueTabLayout(formatJsonToggle.isSelected());
     }
 
     private void openInTextEditor(KafkaMessage value, String suffix) {
@@ -341,7 +369,22 @@ public class Controller {
         headerTableView.setItems(selectedMessage.getHeaders());
         if (formatJson) {
             keyTextArea.setText(JsonUtils.formatJson(selectedMessage.getKey()));
-            valueTextArea.setText(JsonUtils.formatJson(selectedMessage.getValue()));
+            String prettyPrintText = JsonUtils.formatJson(selectedMessage.getValue());
+
+            try {
+                JsonQuery jqQuery = JsonQuery.compile(StringUtils.isEmpty(jqQueryField.getText()) ? "." : jqQueryField.getText(), Version.LATEST);
+                final List<JsonNode> out = new ArrayList<>();
+                jqQuery.apply(Scope.newChildScope(rootScope), JsonUtils.readStringAsNode(selectedMessage.getValue()), out::add);
+                if(out.size() == 1){
+                    prettyPrintText = JsonUtils.formatJson(out.get(0));
+                }else {
+                    prettyPrintText = JsonUtils.formatJson(out);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            valueTextArea.setText(prettyPrintText);
         } else {
             keyTextArea.setText(selectedMessage.getKey());
             valueTextArea.setText(selectedMessage.getValue());
