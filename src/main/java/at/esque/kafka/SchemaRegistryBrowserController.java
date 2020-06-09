@@ -4,6 +4,7 @@ import at.esque.kafka.alerts.ConfirmationAlert;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.controls.FilterableListView;
 import at.esque.kafka.controls.JsonTreeView;
+import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -14,7 +15,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -30,7 +30,7 @@ public class SchemaRegistryBrowserController {
     @FXML
     private FilterableListView<String> subjectListView;
     @FXML
-    private TextArea schemaTextArea;
+    private KafkaEsqueCodeArea schemaTextArea;
     @FXML
     private ComboBox<Integer> versionComboBox;
     @FXML

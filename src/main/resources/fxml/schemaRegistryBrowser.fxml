@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import java.lang.String?>
+<?import at.esque.kafka.controls.KafkaEsqueCodeArea?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.SchemaRegistryBrowserController">
     <center>
         <SplitPane dividerPositions="0.23244147157190637" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
@@ -24,7 +25,7 @@
                   <SplitPane dividerPositions="0.5" BorderPane.alignment="CENTER">
                      <items>
                               <JsonTreeView fx:id="jsonTreeView" maxWidth="1.7976931348623157E308" prefHeight="358.0" prefWidth="166.0" />
-                              <TextArea fx:id="schemaTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
+                              <KafkaEsqueCodeArea fx:id="schemaTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
                      </items>
                   </SplitPane>
                     </center>

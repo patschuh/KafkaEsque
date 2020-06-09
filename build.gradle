@@ -30,11 +30,11 @@ repositories {
     mavenLocal()
     
     maven {
-        url = 'http://repo1.maven.org/maven2'
+        url = 'https://repo1.maven.org/maven2'
     }
 
     maven {
-        url = 'http://packages.confluent.io/maven/'
+        url = 'https://packages.confluent.io/maven/'
     }
 }
 
@@ -50,6 +50,7 @@ dependencies {
     compile 'io.confluent:kafka-schema-registry:5.0.0'
     compile 'io.confluent:kafka-avro-serializer:5.0.0'
     compile 'com.google.inject:guice:4.2.2'
+    compile 'org.fxmisc.richtext:richtextfx:0.10.5'
     
     testCompile 'junit:junit:4.12'
     testCompile 'org.springframework.kafka:spring-kafka-test:2.2.0.RELEASE'

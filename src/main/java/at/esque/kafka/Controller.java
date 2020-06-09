@@ -9,6 +9,7 @@ import at.esque.kafka.cluster.KafkaesqueAdminClient;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.controls.FilterableListView;
 import at.esque.kafka.controls.JsonTreeView;
+import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import at.esque.kafka.dialogs.ClusterConfigDialog;
 import at.esque.kafka.dialogs.DeleteClustersDialog;
 import at.esque.kafka.dialogs.TopicMessageTypeConfigDialog;
@@ -59,7 +60,6 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -137,13 +137,13 @@ public class Controller {
 
     //FXML
     @FXML
-    private TextArea keyTextArea;
+    private KafkaEsqueCodeArea keyTextArea;
     @FXML
     private Tab valueTab;
     @FXML
     private SplitPane valueSplitPane;
     @FXML
-    private TextArea valueTextArea;
+    private KafkaEsqueCodeArea valueTextArea;
     @FXML
     public JsonTreeView jsonTreeView;
     @FXML

@@ -56,6 +56,7 @@ public class FilterableListView<T> extends VBox {
                 "/fxml/controls/filterableListView.fxml"));
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
+        fxmlLoader.setClassLoader(getClass().getClassLoader());
         try {
             fxmlLoader.load();
         } catch (IOException exception) {

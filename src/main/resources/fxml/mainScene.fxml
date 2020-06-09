@@ -187,14 +187,14 @@
                     <tabs>
                         <Tab text="Key">
                             <content>
-                                <TextArea fx:id="keyTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
+                                <KafkaEsqueCodeArea fx:id="keyTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
                             </content>
                         </Tab>
                         <Tab fx:id="valueTab" text="Value">
                             <content>
                                 <SplitPane fx:id="valueSplitPane" dividerPositions="0.32533889468196037" prefHeight="200.0" prefWidth="200.0">
                                     <JsonTreeView fx:id="jsonTreeView" maxWidth="1.7976931348623157E308" />
-                                    <TextArea fx:id="valueTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+                                    <KafkaEsqueCodeArea fx:id="valueTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
                                 </SplitPane>
                             </content>
                         </Tab>

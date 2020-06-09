@@ -3,6 +3,7 @@ package at.esque.kafka;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.alerts.SuccessAlert;
 import at.esque.kafka.cluster.ClusterConfig;
+import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import at.esque.kafka.handlers.ProducerHandler;
 import at.esque.kafka.topics.KafkaMessage;
 import com.google.inject.Inject;
@@ -14,7 +15,6 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.TextFieldTableCell;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.header.Header;
@@ -30,9 +30,9 @@ public class PublisherController {
     @FXML
     private ComboBox<Integer> partitionCombobox;
     @FXML
-    private TextArea keyTextArea;
+    private KafkaEsqueCodeArea keyTextArea;
     @FXML
-    private TextArea valueTextArea;
+    private KafkaEsqueCodeArea valueTextArea;
     @FXML
     private CheckBox nullMessageToggle;
     @FXML

@@ -2,10 +2,10 @@ package at.esque.kafka;
 
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.alerts.SuccessAlert;
+import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -22,7 +22,7 @@ public class CreateSchemaController {
     @FXML
     private TextField subjectTextField;
     @FXML
-    private TextArea schemaTextArea;
+    private KafkaEsqueCodeArea schemaTextArea;
 
     private RestService restService;
 

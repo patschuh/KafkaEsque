@@ -1,11 +1,11 @@
 package at.esque.kafka;
 
 import at.esque.kafka.alerts.ErrorAlert;
+import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -27,7 +27,7 @@ public class SchemaCompatibilityCheckController {
     private TextField versionTextField;
 
     @FXML
-    private TextArea schemaTextArea;
+    private KafkaEsqueCodeArea schemaTextArea;
 
     @FXML
     private Label resultLabel;

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.fxmisc.flowless.VirtualizedScrollPane?>
+<?import org.fxmisc.richtext.CodeArea?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<fx:root prefHeight="406.0" prefWidth="459.0" type="javafx.scene.layout.BorderPane" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1">
+            <center>
+                <VirtualizedScrollPane hPolicy="AS_NEEDED" vPolicy="AS_NEEDED" BorderPane.alignment="CENTER">
+                    <content>
+                        <CodeArea fx:id="codeArea" />
+                    </content>
+                </VirtualizedScrollPane>
+            </center>
+            <top>
+                <ToolBar fx:id="searchTool" prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                    <items>
+            <FontIcon iconLiteral="fa-search" />
+                        <TextField fx:id="searchField" promptText="Search..." HBox.hgrow="ALWAYS" />
+            <VBox prefHeight="0.0" prefWidth="11.0">
+               <children>
+                              <Button fx:id="backButton" maxHeight="16.0" maxWidth="16.0" minHeight="16.0" minWidth="16.0" mnemonicParsing="false" prefHeight="16.0" prefWidth="16.0" styleClass="first">
+                                  <graphic>
+                                      <FontIcon iconLiteral="fa-arrow-up" strokeType="OUTSIDE" strokeWidth="0.0" />
+                                  </graphic>
+                              </Button>
+                              <Button fx:id="nextButton" maxHeight="16.0" maxWidth="16.0" minHeight="16.0" minWidth="16.0" mnemonicParsing="false" prefHeight="16.0" prefWidth="16.0" styleClass="last">
+                                  <graphic>
+                                      <FontIcon iconLiteral="fa-arrow-down" strokeType="OUTSIDE" strokeWidth="0.0" />
+                                  </graphic>
+                              </Button>
+               </children>
+            </VBox>
+            <ToggleButton fx:id="caseSensitiveButton" ellipsisString="Aa" mnemonicParsing="false" style="-fx-font-weight: bold;" styleClass="button" text="Aa" textAlignment="CENTER">
+               <tooltip>
+                  <Tooltip text="Case Sensitiv" />
+               </tooltip></ToggleButton>
+                        <Pane HBox.hgrow="ALWAYS" />
+            <Label text="Result" />
+            <Label fx:id="currentSearchHitIndexLabel" text="0" />
+            <Label text="/" />
+                        <Label fx:id="searchHitsLabel" text="0" />
+            <FontIcon fx:id="closeIcon" iconLiteral="fa-close" />
+                    </items>
+                </ToolBar>
+            </top>
+</fx:root>

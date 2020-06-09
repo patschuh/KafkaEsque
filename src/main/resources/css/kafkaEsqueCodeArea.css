@@ -1,0 +1,37 @@
+.selection{
+    -fx-fill: #aacfff !important;
+}
+
+.searchHit {
+    -rtfx-background-color: #d7efff;
+    -fx-fill: black !important;
+}
+
+.string {
+    -fx-fill: #0088ff
+}
+
+.fieldname {
+    -fx-fill: #af00ff;
+    -fx-font-weight: bold;
+}
+
+.paren {
+    -fx-fill: blue;
+    -fx-font-weight: bold;
+}
+
+.semicolon {
+    -fx-fill: #0000ff
+}
+
+.bracket {
+    -fx-fill: purple;
+    -fx-font-weight: bold;
+}
+
+.brace {
+    -fx-fill: #7f3380;
+    -fx-font-weight: bold;
+
+}
