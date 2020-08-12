@@ -320,7 +320,7 @@ public class Controller {
             updateKeyValueTextArea(selectedItem, formatJsonToggle.isSelected());
         });
         jqQueryField.visibleProperty().bind(Bindings.createBooleanBinding(() -> {
-            if(formatJsonToggle.isSelected()){
+            if (formatJsonToggle.isSelected()) {
                 jqQueryField.setMaxWidth(-1);
                 return true;
             }
@@ -375,9 +375,9 @@ public class Controller {
                 JsonQuery jqQuery = JsonQuery.compile(StringUtils.isEmpty(jqQueryField.getText()) ? "." : jqQueryField.getText(), Version.LATEST);
                 final List<JsonNode> out = new ArrayList<>();
                 jqQuery.apply(Scope.newChildScope(rootScope), JsonUtils.readStringAsNode(selectedMessage.getValue()), out::add);
-                if(out.size() == 1){
+                if (out.size() == 1) {
                     prettyPrintText = JsonUtils.formatJson(out.get(0));
-                }else {
+                } else {
                     prettyPrintText = JsonUtils.formatJson(out);
                 }
             } catch (Exception e) {
@@ -669,13 +669,15 @@ public class Controller {
             }
             try {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
+                Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("preparing consumer..."));
                 backGroundTaskHolder.setIsInProgress(true);
                 consumerHandler.subscribe(consumerId, selectedTopic());
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 consumerHandler.seekToOffset(consumerId, -1);
+                Map<TopicPartition, Long> currentOffsets = consumerHandler.getCurrentOffsets(consumerId);
                 baseList.clear();
-                Map<TopicPartition, Long> currentOffsets = new HashMap<>();
+                Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("getting messages..."));
                 consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
                     while (!backGroundTaskHolder.getStopBackGroundTask() && !reachedMaxOffsetForAllPartitionsOrGotEnoughMessages(maxOffsets, minOffsets, currentOffsets, messagesConsumed, getNumberOfMessagesToConsume())) {
                         receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume());
@@ -713,29 +715,37 @@ public class Controller {
                 tempconsumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
             } catch (MissingSchemaRegistryException e) {
                 Platform.runLater(() -> ErrorAlert.show(e));
-                ;
                 return;
             }
             UUID consumerId = tempconsumerId;
             try {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
+                Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("preparing consumer..."));
                 backGroundTaskHolder.setIsInProgress(true);
                 consumerHandler.subscribe(consumerId, topic.getName());
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
+
                 maxOffsets.forEach((topicPartition, maxOffset) -> {
                     long numberToLookBack = getNumberOfMessagesToConsume();
                     consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
-                        if (maxOffset - numberToLookBack > 0) {
-                            topicConsumer.seek(topicPartition, maxOffset - numberToLookBack);
+                        long offsetToSeekTo = maxOffset - numberToLookBack;
+                        if (offsetToSeekTo > 0) {
+                            Long minOffset = minOffsets.get(topicPartition);
+                            if (offsetToSeekTo < minOffset) {
+                                topicConsumer.seek(topicPartition, minOffset);
+                            } else {
+                                topicConsumer.seek(topicPartition, offsetToSeekTo);
+                            }
                         } else {
                             topicConsumer.seekToBeginning(Collections.singletonList(topicPartition));
                         }
                     });
 
                 });
+                Map<TopicPartition, Long> currentOffsets = consumerHandler.getCurrentOffsets(consumerId);
                 baseList.clear();
-                Map<TopicPartition, Long> currentOffsets = new HashMap<>();
+                Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("getting messages..."));
                 consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
                     while (!backGroundTaskHolder.getStopBackGroundTask() && !reachedMaxOffsetForAllPartitions(maxOffsets, minOffsets, currentOffsets)) {
                         receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume());
@@ -862,13 +872,15 @@ public class Controller {
             try {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
                 long specifiedOffset = Long.parseLong(specificOffsetTextField.getText());
+                Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("preparing consumer..."));
                 backGroundTaskHolder.setIsInProgress(true);
                 consumerHandler.subscribe(consumerId, selectedTopic());
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 consumerHandler.seekToOffset(consumerId, specifiedOffset);
                 baseList.clear();
-                Map<TopicPartition, Long> currentOffsets = new HashMap<>();
+                Map<TopicPartition, Long> currentOffsets = consumerHandler.getCurrentOffsets(consumerId);
+                Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("getting messages..."));
                 consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
                     while (!backGroundTaskHolder.getStopBackGroundTask() && !reachedMaxOffsetForAllPartitionsOrGotEnoughMessages(maxOffsets, minOffsets, currentOffsets, messagesConsumed, getNumberOfMessagesToConsume())) {
                         receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume());
@@ -884,21 +896,18 @@ public class Controller {
     private boolean reachedMaxOffsetForAllPartitions
             (Map<TopicPartition, Long> maxOffsets, Map<TopicPartition, Long> minOffsets, Map<TopicPartition, Long> currentOffsets) {
         return maxOffsets.entrySet().stream()
-                .filter(maxOffset -> (maxOffset.getValue() > -1 && maxOffset.getValue() > minOffsets.get(maxOffset.getKey()) && (currentOffsets.get(maxOffset.getKey()) == null || (maxOffset.getValue() - 1 > currentOffsets.get(maxOffset.getKey())))))
-                .collect(Collectors.toList()).size() == 0;
+                .noneMatch(maxOffset -> (maxOffset.getValue() > -1 && maxOffset.getValue() > minOffsets.get(maxOffset.getKey()) && (currentOffsets.get(maxOffset.getKey()) == null || (maxOffset.getValue() - 1 > (currentOffsets.get(maxOffset.getKey()) == null ? 0L : currentOffsets.get(maxOffset.getKey()))))));
 
     }
 
     private boolean reachedMaxOffsetForAllPartitionsOrGotEnoughMessages
             (Map<TopicPartition, Long> maxOffsets, Map<TopicPartition, Long> minOffsets, Map<TopicPartition, Long> currentOffsets, Map<Integer, AtomicLong> messagesConsumedPerPartition, long numberOfMessagesToConsume) {
-        return maxOffsets.entrySet().stream()
-                .filter(maxOffset -> {
-                    AtomicLong atomicLong = messagesConsumedPerPartition.get(maxOffset.getKey().partition());
-                    boolean enoughMessagesConsumed = atomicLong != null && atomicLong.get() < numberOfMessagesToConsume;
-                    boolean reachedMaxOffset = maxOffset.getValue() > -1 && maxOffset.getValue() > minOffsets.get(maxOffset.getKey()) && (currentOffsets.get(maxOffset.getKey()) == null || (maxOffset.getValue() - 1 > currentOffsets.get(maxOffset.getKey())));
-                    return reachedMaxOffset || enoughMessagesConsumed;
-                })
-                .collect(Collectors.toList()).size() == 0;
+        return maxOffsets.entrySet().stream().noneMatch(maxOffset -> {
+            AtomicLong atomicLong = messagesConsumedPerPartition.get(maxOffset.getKey().partition());
+            boolean notEnoughMessagesConsumed = (atomicLong == null ? 0L : atomicLong.get()) < numberOfMessagesToConsume;
+            boolean notReachedMaxOffset = maxOffset.getValue() > -1 && maxOffset.getValue() > minOffsets.get(maxOffset.getKey()) && (currentOffsets.get(maxOffset.getKey()) == null || (maxOffset.getValue() - 1 > currentOffsets.get(maxOffset.getKey())));
+            return notReachedMaxOffset && notEnoughMessagesConsumed;
+        });
 
     }
 

@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -103,6 +104,19 @@ public class ConsumerHandler {
 
     public Map<TopicPartition, Long> getMaxOffsets(KafkaConsumer<String, String> currentConsumer) {
         return currentConsumer.endOffsets(currentConsumer.assignment());
+    }
+
+    public Map<TopicPartition, Long> getCurrentOffsets(UUID consumerId) {
+        KafkaConsumer<String, String> currentConsumer = registeredConsumers.get(consumerId);
+        return getCurrentOffsets(currentConsumer);
+    }
+
+    public Map<TopicPartition, Long> getCurrentOffsets(KafkaConsumer<String, String> currentConsumer) {
+        Map<TopicPartition, Long> currentOffsets = new HashMap();
+        currentConsumer.assignment().forEach(topicPartition -> {
+            currentOffsets.put(topicPartition, currentConsumer.position(topicPartition) - 1);
+        });
+        return currentOffsets;
     }
 
     public Map<TopicPartition, Long> getMinOffsets(UUID consumerId) {

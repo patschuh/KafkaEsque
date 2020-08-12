@@ -8,6 +8,7 @@ import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.TopicPartitionInfo;
 
 import java.util.Collection;
+import java.util.Comparator;
 
 public class DescribeTopicController {
 
@@ -35,6 +36,7 @@ public class DescribeTopicController {
         configurations.stream()
                 .map(configEntry -> new TopicConfig(configEntry.name(), configEntry.value()))
                 .forEach(configValueList.getItems()::add);
+        configValueList.getItems().sort(Comparator.comparing(TopicConfig::getKey));
     }
 
 
