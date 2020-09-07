@@ -1,12 +1,16 @@
 package at.esque.kafka.handlers;
 
 import at.esque.kafka.alerts.ErrorAlert;
+import at.esque.kafka.cluster.ClusterConfig;
 import at.esque.kafka.cluster.ClusterConfigs;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.Singleton;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.common.config.SslConfigs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -172,5 +176,23 @@ public class ConfigHandler {
         }
     }
 
-
+    public Map<String, String> getSslProperties(ClusterConfig config) {
+        Map<String, String> props = new HashMap<>();
+        if (config.isSslEnabled()) {
+            props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+        }
+        if (StringUtils.isNotEmpty(config.getKeyStoreLocation())) {
+            props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, config.getKeyStoreLocation());
+        }
+        if (StringUtils.isNotEmpty(config.getKeyStorePassword())) {
+            props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.getKeyStorePassword());
+        }
+        if (StringUtils.isNotEmpty(config.getTrustStoreLocation())) {
+            props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, config.getTrustStoreLocation());
+        }
+        if (StringUtils.isNotEmpty(config.getTrustStorePassword())) {
+            props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, config.getTrustStorePassword());
+        }
+        return props;
+    }
 }

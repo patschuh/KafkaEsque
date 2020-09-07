@@ -286,7 +286,7 @@ public class Controller {
                 specificOffsetTextField.setVisible(newValue == FetchTypes.SPECIFIC_OFFSET));
 
         clusterComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            adminClient = new KafkaesqueAdminClient(newValue.getBootStrapServers());
+            adminClient = new KafkaesqueAdminClient(newValue.getBootStrapServers(), configHandler.getSslProperties(selectedCluster()));
             refreshTopicList(newValue);
         });
 
