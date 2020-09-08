@@ -182,17 +182,35 @@ public class ConfigHandler {
             props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         }
         if (StringUtils.isNotEmpty(config.getKeyStoreLocation())) {
-            props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, config.getKeyStoreLocation());
-        }
-        if (StringUtils.isNotEmpty(config.getKeyStorePassword())) {
-            props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.getKeyStorePassword());
+            String keyStoreLocation = getJksStoreLocation(config.getIdentifier(), config.getKeyStoreLocation());
+            if (keyStoreLocation != null) {
+                props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreLocation);
+                if (StringUtils.isNotEmpty(config.getKeyStorePassword())) {
+                    props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.getKeyStorePassword());
+                }
+            }
         }
         if (StringUtils.isNotEmpty(config.getTrustStoreLocation())) {
-            props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, config.getTrustStoreLocation());
-        }
-        if (StringUtils.isNotEmpty(config.getTrustStorePassword())) {
-            props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, config.getTrustStorePassword());
+            String trustStoreLocation = getJksStoreLocation(config.getIdentifier(), config.getTrustStoreLocation());
+            if (trustStoreLocation != null) {
+                props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, trustStoreLocation);
+                if (StringUtils.isNotEmpty(config.getTrustStorePassword())) {
+                    props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, config.getTrustStorePassword());
+                }
+            }
         }
         return props;
+    }
+
+    private String getJksStoreLocation(String clusterIdentification, String location) {
+        File jksStore = new File(location);
+        if (jksStore.exists() && jksStore.isFile()) {
+            return location;
+        }
+        jksStore = new File(String.format(CONFIG_DIRECTORY, clusterIdentification), location);
+        if (jksStore.exists() && jksStore.isFile()) {
+            return jksStore.getAbsolutePath();
+        }
+        return null;
     }
 }
