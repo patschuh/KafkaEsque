@@ -35,10 +35,11 @@ import java.util.stream.Collectors;
 public class KafkaesqueAdminClient {
     private AdminClient adminClient;
 
-    public KafkaesqueAdminClient(String bootstrapServers) {
+    public KafkaesqueAdminClient(String bootstrapServers, Map<String, String> sslProps) {
         Properties props = new Properties();
         props.setProperty(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.setProperty(AdminClientConfig.CLIENT_ID_CONFIG, String.format("kafkaesque-%s", UUID.randomUUID()));
+        props.putAll(sslProps);
 
         this.adminClient = AdminClient.create(props);
     }

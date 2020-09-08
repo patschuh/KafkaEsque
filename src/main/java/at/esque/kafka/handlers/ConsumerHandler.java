@@ -73,7 +73,7 @@ public class ConsumerHandler {
         if (StringUtils.isNotEmpty(config.getSchemaRegistry())) {
             consumerProps.setProperty("schema.registry.url", config.getSchemaRegistry());
         }
-
+        consumerProps.putAll(configHandler.getSslProperties(config));
         consumerProps.putAll(consumerConfigs);
 
         LOGGER.info("Creating new Consumer with properties: [{}]", consumerProps);

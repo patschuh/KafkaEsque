@@ -74,6 +74,7 @@ public class ProducerHandler {
             props.setProperty("schema.registry.url", clusterConfig.getSchemaRegistry());
             schemaRegistryRestService = new RestService(clusterConfig.getSchemaRegistry());
         }
+        props.putAll(configHandler.getSslProperties(clusterConfig));
         props.putAll(configHandler.readProducerConfigs(clusterConfig.getIdentifier()));
 
         LOGGER.info("Creating new Producer with properties: [{}]", props);
