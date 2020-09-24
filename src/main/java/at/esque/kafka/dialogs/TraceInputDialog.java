@@ -1,6 +1,7 @@
 package at.esque.kafka.dialogs;
 
 import at.esque.kafka.Main;
+import at.esque.kafka.controls.InstantPicker;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -9,10 +10,12 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
-import javafx.util.converter.LongStringConverter;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.Optional;
 
@@ -39,8 +42,16 @@ public class TraceInputDialog {
         TextField key = new TextField();
         key.setPrefWidth(500);
         CheckBox fastTraceFlag = new CheckBox();
-        TextField epochTimestampText = new TextField();
-        epochTimestampText.setMaxWidth(250);
+        HBox hBox = new HBox();
+        InstantPicker instantPicker = new InstantPicker();
+        instantPicker.setInstantValue(null);
+        instantPicker.setMaxWidth(Double.MAX_VALUE);
+        ToggleButton displayEpochMillis = new ToggleButton();
+        displayEpochMillis.setGraphic(new FontIcon("fa-exchange"));
+        displayEpochMillis.setMinHeight(30);
+        instantPicker.displayAsEpochProperty().bind(displayEpochMillis.selectedProperty());
+        HBox.setHgrow(instantPicker, Priority.ALWAYS);
+        hBox.getChildren().addAll(instantPicker, displayEpochMillis);
         Label startTimeLabel = new Label("Start Epoch Timestamp");
 
         if (isKeyTrace) {
@@ -56,10 +67,9 @@ public class TraceInputDialog {
             key.setPromptText("regex");
             grid.add(new Label("regex:"), 0, 0);
         }
-        epochTimestampText.setTextFormatter(new TextFormatter<>(new LongStringConverter()));
         grid.add(key, 1, 0);
         grid.add(startTimeLabel, 0, 2);
-        grid.add(epochTimestampText, 1, 2);
+        grid.add(hBox, 1, 2);
 
         dialog.getDialogPane().setContent(grid);
 
@@ -70,8 +80,7 @@ public class TraceInputDialog {
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == ButtonType.OK) {
-                String epochTime = epochTimestampText.getText();
-                return new TraceInput(key.getText(), fastTraceFlag.isSelected(), epochTime.isEmpty() ? null : Long.parseLong(epochTime));
+                return new TraceInput(key.getText(), fastTraceFlag.isSelected(), instantPicker.getInstantValue() == null ? null : instantPicker.getInstantValue().toEpochMilli());
             }
             return null;
         });

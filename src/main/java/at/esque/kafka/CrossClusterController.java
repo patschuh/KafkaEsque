@@ -7,6 +7,7 @@ import at.esque.kafka.cluster.CrossClusterOperation;
 import at.esque.kafka.cluster.KafkaesqueAdminClient;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.controls.FilterableListView;
+import at.esque.kafka.controls.InstantPicker;
 import at.esque.kafka.exception.MissingSchemaRegistryException;
 import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.handlers.ConsumerHandler;
@@ -23,6 +24,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -45,7 +47,9 @@ import java.util.regex.Pattern;
 public class CrossClusterController {
 
     @FXML
-    private TextField startTimestampMsField;
+    public InstantPicker instantPicker;
+    @FXML
+    public ToggleButton displayEpochToggle;
     @FXML
     private TextField specificKeyFIlterField;
     @FXML
@@ -78,6 +82,9 @@ public class CrossClusterController {
 
     public void setup() {
         ClusterConfigs clusterConfigs = configHandler.loadOrCreateConfigs();
+
+        instantPicker.setInstantValue(null);
+        instantPicker.displayAsEpochProperty().bind(displayEpochToggle.selectedProperty());
 
         fromClusterTopicsList.setListComparator(String::compareTo);
         toClusterTopicsList.setListComparator(String::compareTo);
@@ -153,8 +160,8 @@ public class CrossClusterController {
                 producerId = producerHandler.registerProducer(operation.getToCluster());
                 consumerId = consumerHandler.registerConsumer(operation.getFromCluster(), operation.getFromTopic(), configHandler.readConsumerConfigs(operation.getToCluster().getIdentifier()));
                 consumerHandler.subscribe(consumerId, operation.getFromTopic().getName());
-                if (!StringUtils.isEmpty(startTimestampMsField.getText())) {
-                    consumerHandler.seekToTime(consumerId, Long.parseLong(startTimestampMsField.getText()));
+                if (instantPicker.getInstantValue() != null) {
+                    consumerHandler.seekToTime(consumerId, instantPicker.getInstantValue().toEpochMilli());
                 } else {
                     consumerHandler.seekToOffset(consumerId, -2);
                 }
