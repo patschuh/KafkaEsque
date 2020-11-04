@@ -39,21 +39,11 @@
                                 <Insets left="20.0"/>
                             </GridPane.margin>
                         </Label>
-                        <Label text="Configurations:" GridPane.halignment="CENTER" GridPane.rowIndex="3"
-                               GridPane.valignment="CENTER">
-                            <GridPane.margin>
-                                <Insets left="20.0"/>
-                            </GridPane.margin>
-                        </Label>
                         <Label fx:id="topicName" text="TopicName" GridPane.columnIndex="1"/>
                         <Label fx:id="partitions" text="Number of paritions" GridPane.columnIndex="1"
                                GridPane.rowIndex="1"/>
                         <Label fx:id="isInternal" text="is an internal topic" GridPane.columnIndex="1"
                                GridPane.rowIndex="2"/>
-                        <ListView fx:id="partitionInfoList" prefHeight="200.0" prefWidth="200.0"
-                                  GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-                        <Label text="Partition Info" GridPane.columnIndex="1" GridPane.halignment="CENTER"
-                               GridPane.rowIndex="3" GridPane.valignment="CENTER"/>
                     </children>
                 </GridPane>
             </items>

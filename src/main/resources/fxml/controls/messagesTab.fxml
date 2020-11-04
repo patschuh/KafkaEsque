@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import at.esque.kafka.controls.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.*?>
+
+<fx:root maxHeight="Infinity" maxWidth="Infinity" minHeight="-Infinity" minWidth="-Infinity" type="VBox" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1">
+    <BorderPane maxHeight="Infinity" maxWidth="Infinity" VBox.vgrow="ALWAYS">
+        <top>
+            <ToolBar maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" nodeOrientation="RIGHT_TO_LEFT" BorderPane.alignment="CENTER_LEFT">
+                <items>
+                    <HBox nodeOrientation="LEFT_TO_RIGHT">
+                        <children>
+                            <TextField fx:id="messageSearchTextField" promptText="Search" styleClass="first" />
+                            <Button maxHeight="-Infinity" minHeight="-Infinity" mnemonicParsing="false" onAction="#exportCsvClick">
+                                <graphic>
+                                    <FontIcon iconColor="WHITE" iconLiteral="fa-share" />
+                                </graphic>
+                                <tooltip>
+                                    <Tooltip text="Export as CSV" />
+                                </tooltip>
+                                <styleClass>
+                                    <String fx:value="last" />
+                                    <String fx:value="info" />
+                                </styleClass>
+                            </Button>
+                            <FontIcon />
+                        </children>
+                    </HBox>
+                </items>
+            </ToolBar>
+        </top>
+        <center>
+            <KafkaMessageTableView fx:id="messageTableView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
+        </center>
+    </BorderPane>
+</fx:root>
