@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
             prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="at.esque.kafka.topics.DescribeTopicController">
@@ -39,11 +44,21 @@
                                 <Insets left="20.0"/>
                             </GridPane.margin>
                         </Label>
+                        <Label text="Configurations:" GridPane.halignment="CENTER" GridPane.rowIndex="3"
+                               GridPane.valignment="CENTER">
+                            <GridPane.margin>
+                                <Insets left="20.0"/>
+                            </GridPane.margin>
+                        </Label>
                         <Label fx:id="topicName" text="TopicName" GridPane.columnIndex="1"/>
                         <Label fx:id="partitions" text="Number of paritions" GridPane.columnIndex="1"
                                GridPane.rowIndex="1"/>
                         <Label fx:id="isInternal" text="is an internal topic" GridPane.columnIndex="1"
                                GridPane.rowIndex="2"/>
+                        <ListView fx:id="partitionInfoList" prefHeight="200.0" prefWidth="200.0"
+                                  GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                        <Label text="Partition Info" GridPane.columnIndex="1" GridPane.halignment="CENTER"
+                               GridPane.rowIndex="3" GridPane.valignment="CENTER"/>
                     </children>
                 </GridPane>
             </items>
