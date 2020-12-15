@@ -74,6 +74,8 @@ public class ConsumerHandler {
             consumerProps.setProperty("schema.registry.url", config.getSchemaRegistry());
         }
         consumerProps.putAll(configHandler.getSslProperties(config));
+        consumerProps.putAll(configHandler.getSaslProperties(config));
+        consumerProps.putAll(configHandler.getSchemaRegistryAuthProperties(config));
         consumerProps.putAll(consumerConfigs);
 
         LOGGER.info("Creating new Consumer with properties: [{}]", consumerProps);

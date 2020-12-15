@@ -230,7 +230,7 @@ public class Controller {
                 specificOffsetTextField.setVisible(newValue == FetchTypes.SPECIFIC_OFFSET));
 
         clusterComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            adminClient = new KafkaesqueAdminClient(newValue.getBootStrapServers(), configHandler.getSslProperties(selectedCluster()));
+            adminClient = new KafkaesqueAdminClient(newValue.getBootStrapServers(), configHandler.getSslProperties(selectedCluster()), configHandler.getSaslProperties(selectedCluster()));
             refreshTopicList(newValue);
         });
 
@@ -536,7 +536,7 @@ public class Controller {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/schemaRegistryBrowser.fxml"));
             Parent root1 = fxmlLoader.load();
             SchemaRegistryBrowserController controller = fxmlLoader.getController();
-            controller.setup(selectedConfig.getSchemaRegistry());
+            controller.setup(selectedConfig,configHandler);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
             stage.initModality(Modality.APPLICATION_MODAL);

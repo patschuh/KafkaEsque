@@ -28,19 +28,16 @@ import org.apache.avro.io.parsing.JsonGrammarGenerator;
 import org.apache.avro.io.parsing.Parser;
 import org.apache.avro.io.parsing.Symbol;
 import org.apache.avro.util.Utf8;
-import org.codehaus.jackson.Base64Variant;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonLocation;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonStreamContext;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.ObjectCodec;
-import org.codehaus.jackson.node.NullNode;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 
+import javax.validation.constraints.Null;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -594,6 +591,11 @@ public class ExtendedJsonDecoder extends ParsingDecoder
             }
 
             @Override
+            public Version version() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public void close() throws IOException {
                 throw new UnsupportedOperationException();
             }
@@ -602,6 +604,11 @@ public class ExtendedJsonDecoder extends ParsingDecoder
             public JsonToken nextToken() throws IOException {
                 pos++;
                 return elements.get(pos).token;
+            }
+
+            @Override
+            public JsonToken nextValue() throws IOException {
+                throw new UnsupportedOperationException();
             }
 
             @Override
@@ -669,6 +676,11 @@ public class ExtendedJsonDecoder extends ParsingDecoder
             }
 
             @Override
+            public boolean hasTextCharacters() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Number getNumberValue() throws IOException {
                 throw new UnsupportedOperationException();
             }
@@ -715,8 +727,48 @@ public class ExtendedJsonDecoder extends ParsingDecoder
             }
 
             @Override
+            public String getValueAsString(String def) throws IOException {
+                return getText();
+            }
+
+            @Override
             public JsonToken getCurrentToken() {
                 return elements.get(pos).token;
+            }
+
+            @Override
+            public int getCurrentTokenId() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean hasCurrentToken() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean hasTokenId(int id) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean hasToken(JsonToken t) {
+                return false;
+            }
+
+            @Override
+            public void clearCurrentToken() {
+
+            }
+
+            @Override
+            public JsonToken getLastClearedToken() {
+                return null;
+            }
+
+            @Override
+            public void overrideCurrentName(String name) {
+
             }
         };
     }
@@ -733,7 +785,25 @@ public class ExtendedJsonDecoder extends ParsingDecoder
 
         boolean isNull = field == null;
 
-        JsonNode defVal = isNull ? NullNode.getInstance() : field.defaultValue();
+        /* Avro 1.9 changed the .defaultValue method to private - defaultVal should be used instead but that already returns
+         * an Object and not the JSONode as the defaultValue method did. It was quite hard to do a proper change of the method
+         * due lack of understanding and tests therefore we just used reflection to keep it working as it worked before
+         */
+        try{
+            Method method = field.getClass().getDeclaredMethod("defaultValue");
+            method.setAccessible(true);
+
+            JsonNode defVal = isNull ? NullNode.getInstance() : (JsonNode) method.invoke(field); //.defaultVal is the new one
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        JsonNode defVal = NullNode.getInstance();
+
         if (defVal == null) {
             throw new AvroTypeException("Expected field name not found: " + fieldName);
         }
@@ -754,6 +824,7 @@ public class ExtendedJsonDecoder extends ParsingDecoder
         }
         currentReorderBuffer.origParser = in;
         this.in = makeParser(result);
+
     }
 
     private static Field findField(Schema schema, String name) {

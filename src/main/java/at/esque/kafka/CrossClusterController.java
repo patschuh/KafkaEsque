@@ -143,7 +143,7 @@ public class CrossClusterController {
         if (adminClient != null) {
             adminClient.close();
         }
-        adminClient = new KafkaesqueAdminClient(clusterConfig.getBootStrapServers(), configHandler.getSslProperties(clusterConfig));
+        adminClient = new KafkaesqueAdminClient(clusterConfig.getBootStrapServers(), configHandler.getSslProperties(clusterConfig),configHandler.getSaslProperties(clusterConfig));
         KafkaesqueAdminClient finalAdminClient = adminClient;
         runInDaemonThread(() -> {
             ObservableList<String> topics = FXCollections.observableArrayList(finalAdminClient.getTopics());

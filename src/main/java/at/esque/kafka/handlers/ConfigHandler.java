@@ -8,8 +8,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.Singleton;
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClientConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,24 +183,71 @@ public class ConfigHandler {
         if (config.isSslEnabled()) {
             props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         }
+
+        if (config.isSchemaRegistryHttps()) {
+            props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+        }
+
         if (StringUtils.isNotEmpty(config.getKeyStoreLocation())) {
             String keyStoreLocation = getJksStoreLocation(config.getIdentifier(), config.getKeyStoreLocation());
             if (keyStoreLocation != null) {
                 props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreLocation);
+                props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keyStoreLocation);
+
                 if (StringUtils.isNotEmpty(config.getKeyStorePassword())) {
                     props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.getKeyStorePassword());
+                    props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.getKeyStorePassword());
                 }
             }
         }
         if (StringUtils.isNotEmpty(config.getTrustStoreLocation())) {
             String trustStoreLocation = getJksStoreLocation(config.getIdentifier(), config.getTrustStoreLocation());
+
             if (trustStoreLocation != null) {
                 props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, trustStoreLocation);
+                props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, trustStoreLocation);
+
                 if (StringUtils.isNotEmpty(config.getTrustStorePassword())) {
                     props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, config.getTrustStorePassword());
+                    props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, config.getTrustStorePassword());
                 }
             }
         }
+        return props;
+    }
+
+
+    public Map<String, String> getSaslProperties(ClusterConfig config) {
+        Map<String, String> props = new HashMap<>();
+
+        if (StringUtils.isNoneEmpty(config.getSaslSecurityProtocol()))
+        {
+            props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG,config.getSaslSecurityProtocol());
+        }
+
+        if (StringUtils.isNotEmpty(config.getSaslMechanism()))
+        {
+            props.put(SaslConfigs.SASL_MECHANISM,config.getSaslMechanism());
+        }
+
+
+        if (StringUtils.isNotEmpty(config.getSaslJaasConfig()))
+        {
+            props.put(SaslConfigs.SASL_JAAS_CONFIG,config.getSaslJaasConfig());
+        }
+
+        return props;
+    }
+
+    public Map<String, ?> getSchemaRegistryAuthProperties(ClusterConfig config) {
+        Map<String, String> props = new HashMap<>();
+
+        if (StringUtils.isNoneEmpty(config.getSchemaRegistryBasicAuthUserInfo()))
+        {
+            props.put(SchemaRegistryClientConfig.BASIC_AUTH_CREDENTIALS_SOURCE,"USER_INFO");
+            props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + SchemaRegistryClientConfig.USER_INFO_CONFIG, config.getSchemaRegistryBasicAuthUserInfo());
+        }
+
         return props;
     }
 

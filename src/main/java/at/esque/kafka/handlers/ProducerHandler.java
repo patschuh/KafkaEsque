@@ -72,9 +72,19 @@ public class ProducerHandler {
         props.put("kafkaesque.confighandler", configHandler);
         if (StringUtils.isNotEmpty(clusterConfig.getSchemaRegistry())) {
             props.setProperty("schema.registry.url", clusterConfig.getSchemaRegistry());
+            props.putAll(configHandler.getSchemaRegistryAuthProperties(clusterConfig));
             schemaRegistryRestService = new RestService(clusterConfig.getSchemaRegistry());
+
+            schemaRegistryRestService.configure(configHandler.getSchemaRegistryAuthProperties(clusterConfig));
+
+            if (clusterConfig.isSchemaRegistryHttps())
+            {
+                schemaRegistryRestService.setSslSocketFactory(clusterConfig.buildSSlSocketFactory());
+            }
         }
+
         props.putAll(configHandler.getSslProperties(clusterConfig));
+        props.putAll(configHandler.getSaslProperties(clusterConfig));
         props.putAll(configHandler.readProducerConfigs(clusterConfig.getIdentifier()));
 
         LOGGER.info("Creating new Producer with properties: [{}]", props);

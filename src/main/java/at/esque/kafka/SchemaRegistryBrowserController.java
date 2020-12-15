@@ -2,9 +2,11 @@ package at.esque.kafka;
 
 import at.esque.kafka.alerts.ConfirmationAlert;
 import at.esque.kafka.alerts.ErrorAlert;
+import at.esque.kafka.cluster.ClusterConfig;
 import at.esque.kafka.controls.FilterableListView;
 import at.esque.kafka.controls.JsonTreeView;
 import at.esque.kafka.controls.KafkaEsqueCodeArea;
+import at.esque.kafka.handlers.ConfigHandler;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -37,8 +39,16 @@ public class SchemaRegistryBrowserController {
     private JsonTreeView jsonTreeView;
 
 
-    public void setup(String schemaregistryUrl) {
-        schemaRegistryRestService = new RestService(schemaregistryUrl);
+    public void setup(ClusterConfig selectedConfig, ConfigHandler configHandler) {
+        schemaRegistryRestService = new RestService(selectedConfig.getSchemaRegistry());
+
+        if(selectedConfig.isSchemaRegistryHttps())
+        {
+            schemaRegistryRestService.setSslSocketFactory(selectedConfig.buildSSlSocketFactory());
+        }
+
+        schemaRegistryRestService.configure(configHandler.getSchemaRegistryAuthProperties(selectedConfig));
+
         jsonTreeView.jsonStringProperty().bind(schemaTextArea.textProperty());
         try {
             versionComboBox.getSelectionModel().selectedItemProperty().addListener(((observable1, oldValue1, newValue1) -> {
