@@ -1,11 +1,14 @@
 package at.esque.kafka.cluster;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ClusterConfig {
     private StringProperty identifier = new SimpleStringProperty();
     private StringProperty bootStrapServers = new SimpleStringProperty();
@@ -19,6 +22,25 @@ public class ClusterConfig {
     private StringProperty saslSecurityProtocol = new SimpleStringProperty();
     private StringProperty saslMechanism = new SimpleStringProperty();
     private StringProperty saslJaasConfig = new SimpleStringProperty();
+
+    public ClusterConfig(){}
+
+    public ClusterConfig(ClusterConfig existingConfig) {
+        if(existingConfig != null) {
+            this.identifier = existingConfig.identifier;
+            this.bootStrapServers = existingConfig.bootStrapServers;
+            this.schemaRegistry = existingConfig.schemaRegistry;
+            this.schemaRegistryBasicAuthUserInfo = existingConfig.schemaRegistryBasicAuthUserInfo;
+            this.sslEnabled = existingConfig.sslEnabled;
+            this.keyStoreLocation = existingConfig.keyStoreLocation;
+            this.keyStorePassword = existingConfig.keyStorePassword;
+            this.trustStoreLocation = existingConfig.trustStoreLocation;
+            this.trustStorePassword = existingConfig.trustStorePassword;
+            this.saslSecurityProtocol = existingConfig.saslSecurityProtocol;
+            this.saslMechanism = existingConfig.saslMechanism;
+            this.saslJaasConfig = existingConfig.saslJaasConfig;
+        }
+    }
 
     @JsonProperty("identifier")
     public String getIdentifier() {
@@ -169,9 +191,13 @@ public class ClusterConfig {
 
     public void setSchemaRegistryBasicAuthUserInfo(String schemaRegistryBasicAuthUserInfo) { this.schemaRegistryBasicAuthUserInfo.set(schemaRegistryBasicAuthUserInfo); }
 
+    @JsonIgnore
     public boolean isSchemaRegistryHttps()
     {
-        return this.getSchemaRegistry().toLowerCase().startsWith("https:");
+        if(schemaRegistry.get() == null){
+            return false;
+        }
+        return schemaRegistry.get().toLowerCase().startsWith("https:");
     }
 
     @Override
