@@ -1,20 +1,14 @@
 package at.esque.kafka.cluster;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManagerFactory;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.security.*;
-import java.security.cert.CertificateException;
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ClusterConfig {
     private StringProperty identifier = new SimpleStringProperty();
     private StringProperty bootStrapServers = new SimpleStringProperty();
@@ -28,6 +22,25 @@ public class ClusterConfig {
     private StringProperty saslSecurityProtocol = new SimpleStringProperty();
     private StringProperty saslMechanism = new SimpleStringProperty();
     private StringProperty saslJaasConfig = new SimpleStringProperty();
+
+    public ClusterConfig(){}
+
+    public ClusterConfig(ClusterConfig existingConfig) {
+        if(existingConfig != null) {
+            this.identifier = existingConfig.identifier;
+            this.bootStrapServers = existingConfig.bootStrapServers;
+            this.schemaRegistry = existingConfig.schemaRegistry;
+            this.schemaRegistryBasicAuthUserInfo = existingConfig.schemaRegistryBasicAuthUserInfo;
+            this.sslEnabled = existingConfig.sslEnabled;
+            this.keyStoreLocation = existingConfig.keyStoreLocation;
+            this.keyStorePassword = existingConfig.keyStorePassword;
+            this.trustStoreLocation = existingConfig.trustStoreLocation;
+            this.trustStorePassword = existingConfig.trustStorePassword;
+            this.saslSecurityProtocol = existingConfig.saslSecurityProtocol;
+            this.saslMechanism = existingConfig.saslMechanism;
+            this.saslJaasConfig = existingConfig.saslJaasConfig;
+        }
+    }
 
     @JsonProperty("identifier")
     public String getIdentifier() {
@@ -178,41 +191,18 @@ public class ClusterConfig {
 
     public void setSchemaRegistryBasicAuthUserInfo(String schemaRegistryBasicAuthUserInfo) { this.schemaRegistryBasicAuthUserInfo.set(schemaRegistryBasicAuthUserInfo); }
 
+    @JsonIgnore
     public boolean isSchemaRegistryHttps()
     {
-        return this.getSchemaRegistry().toLowerCase().startsWith("https:");
+        if(schemaRegistry.get() == null){
+            return false;
+        }
+        return schemaRegistry.get().toLowerCase().startsWith("https:");
     }
 
     @Override
     public String toString(){
         return String.format("%s (%s)", getIdentifier(), getBootStrapServers());
-    }
-
-
-
-    public SSLSocketFactory buildSSlSocketFactory() {
-        try {
-            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-            ks.load(new FileInputStream(this.getKeyStoreLocation()), this.getKeyStorePassword().toCharArray());
-
-            KeyStore ts = KeyStore.getInstance(KeyStore.getDefaultType());
-            ts.load(new FileInputStream(this.getTrustStoreLocation()), this.getTrustStorePassword().toCharArray());
-
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            kmf.init(ks, this.getKeyStorePassword().toCharArray());
-
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init(ts);
-
-            SSLContext sc = SSLContext.getInstance("TLSv1.2");
-            sc.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-
-            return sc.getSocketFactory();
-
-        } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException | KeyManagementException e) {
-            at.esque.kafka.alerts.ErrorAlert.show(e);
-            return null;
-        }
     }
 
 }

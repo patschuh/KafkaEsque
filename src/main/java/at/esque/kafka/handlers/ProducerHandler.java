@@ -2,6 +2,7 @@ package at.esque.kafka.handlers;
 
 import at.esque.kafka.MessageType;
 import at.esque.kafka.cluster.ClusterConfig;
+import at.esque.kafka.cluster.SslSocketFactoryCreator;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.serialization.ExtendedJsonDecoder;
 import at.esque.kafka.serialization.KafkaEsqueSerializer;
@@ -23,6 +24,7 @@ import org.apache.kafka.common.header.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +81,8 @@ public class ProducerHandler {
 
             if (clusterConfig.isSchemaRegistryHttps())
             {
-                schemaRegistryRestService.setSslSocketFactory(clusterConfig.buildSSlSocketFactory());
+                SSLSocketFactory sslSocketFactory = SslSocketFactoryCreator.buildSSlSocketFactory(clusterConfig);
+                schemaRegistryRestService.setSslSocketFactory(sslSocketFactory);
             }
         }
 

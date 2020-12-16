@@ -43,7 +43,6 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.codehaus.jackson', name: 'jackson-mapper-asl', version: '1.9.13'
     compile 'org.apache.kafka:kafka-clients:2.5.1'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.9'
@@ -57,6 +56,7 @@ dependencies {
     compile 'com.google.inject:guice:4.2.2'
     compile 'org.fxmisc.richtext:richtextfx:0.10.5'
     compile 'net.thisptr:jackson-jq:1.0.0-preview.20191208'
+    compile 'com.dlsc.formsfx:formsfx-core:8.4.0'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.springframework.kafka:spring-kafka-test:2.2.0.RELEASE'
@@ -65,7 +65,7 @@ dependencies {
 }
 
 group = 'at.esque.kafka'
-version = '1.1.0-SNAPSHOT'
+version = '1.2.0-SNAPSHOT'
 sourceCompatibility = '1.8'
 
 publishing {
