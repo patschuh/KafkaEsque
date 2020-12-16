@@ -6,15 +6,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManagerFactory;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.security.*;
-import java.security.cert.CertificateException;
-
 public class ClusterConfig {
     private StringProperty identifier = new SimpleStringProperty();
     private StringProperty bootStrapServers = new SimpleStringProperty();
@@ -186,33 +177,6 @@ public class ClusterConfig {
     @Override
     public String toString(){
         return String.format("%s (%s)", getIdentifier(), getBootStrapServers());
-    }
-
-
-
-    public SSLSocketFactory buildSSlSocketFactory() {
-        try {
-            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-            ks.load(new FileInputStream(this.getKeyStoreLocation()), this.getKeyStorePassword().toCharArray());
-
-            KeyStore ts = KeyStore.getInstance(KeyStore.getDefaultType());
-            ts.load(new FileInputStream(this.getTrustStoreLocation()), this.getTrustStorePassword().toCharArray());
-
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            kmf.init(ks, this.getKeyStorePassword().toCharArray());
-
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init(ts);
-
-            SSLContext sc = SSLContext.getInstance("TLSv1.2");
-            sc.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-
-            return sc.getSocketFactory();
-
-        } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException | KeyManagementException e) {
-            at.esque.kafka.alerts.ErrorAlert.show(e);
-            return null;
-        }
     }
 
 }

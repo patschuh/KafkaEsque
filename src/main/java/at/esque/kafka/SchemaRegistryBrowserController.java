@@ -3,6 +3,7 @@ package at.esque.kafka;
 import at.esque.kafka.alerts.ConfirmationAlert;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.cluster.ClusterConfig;
+import at.esque.kafka.cluster.SslSocketFactoryCreator;
 import at.esque.kafka.controls.FilterableListView;
 import at.esque.kafka.controls.JsonTreeView;
 import at.esque.kafka.controls.KafkaEsqueCodeArea;
@@ -23,6 +24,7 @@ import javafx.stage.Stage;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import javax.net.ssl.SSLSocketFactory;
 import java.util.Collections;
 
 
@@ -42,9 +44,9 @@ public class SchemaRegistryBrowserController {
     public void setup(ClusterConfig selectedConfig, ConfigHandler configHandler) {
         schemaRegistryRestService = new RestService(selectedConfig.getSchemaRegistry());
 
-        if(selectedConfig.isSchemaRegistryHttps())
-        {
-            schemaRegistryRestService.setSslSocketFactory(selectedConfig.buildSSlSocketFactory());
+        if(selectedConfig.isSchemaRegistryHttps()) {
+            SSLSocketFactory sslSocketFactory = SslSocketFactoryCreator.buildSSlSocketFactory(selectedConfig);
+            schemaRegistryRestService.setSslSocketFactory(sslSocketFactory);
         }
 
         schemaRegistryRestService.configure(configHandler.getSchemaRegistryAuthProperties(selectedConfig));
