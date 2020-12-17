@@ -187,6 +187,11 @@
                                         <FontIcon iconLiteral="fa-copy"/>
                                     </graphic>
                                 </MenuItem>
+                                <MenuItem mnemonicParsing="false" onAction="#aclViewer" text="AclViewer">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fa-lock"/>
+                                    </graphic>
+                                </MenuItem>
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Schema Registry">

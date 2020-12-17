@@ -3,22 +3,14 @@ package at.esque.kafka.cluster;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.lag.viewer.Lag;
 import at.esque.kafka.topics.DescribeTopicWrapper;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.apache.kafka.clients.admin.Config;
-import org.apache.kafka.clients.admin.ConsumerGroupListing;
-import org.apache.kafka.clients.admin.CreateTopicsResult;
-import org.apache.kafka.clients.admin.DeleteTopicsResult;
-import org.apache.kafka.clients.admin.DescribeConfigsResult;
-import org.apache.kafka.clients.admin.DescribeTopicsResult;
-import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsResult;
-import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
-import org.apache.kafka.clients.admin.ListTopicsOptions;
-import org.apache.kafka.clients.admin.ListTopicsResult;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.TopicPartitionInfo;
+import org.apache.kafka.common.acl.*;
 import org.apache.kafka.common.config.ConfigResource;
+import org.apache.kafka.common.resource.PatternType;
+import org.apache.kafka.common.resource.ResourcePattern;
+import org.apache.kafka.common.resource.ResourcePatternFilter;
+import org.apache.kafka.common.resource.ResourceType;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -107,6 +99,25 @@ public class KafkaesqueAdminClient {
                 lag.setTitle(consumerGroupListing.groupId());
                 return lag;
             }).collect(Collectors.toList());
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
+        return Collections.EMPTY_LIST;
+    }
+
+    public List<AclBinding> getACLs(ResourceType resourceType, PatternType resourcePattern, String resourceName)
+    {
+        try {
+            if ("".equals(resourceName))
+                resourceName = null;
+
+            AclBindingFilter aclBindingFilter = new AclBindingFilter(new ResourcePatternFilter(resourceType, resourceName, resourcePattern),
+                    new AccessControlEntryFilter(null, null, AclOperation.ANY, AclPermissionType.ANY));
+
+            DescribeAclsResult describeAclsResult = adminClient.describeAcls(aclBindingFilter);
+
+            return describeAclsResult.values().get().stream().collect(Collectors.toList());
+
         } catch (Exception e) {
             ErrorAlert.show(e);
         }
