@@ -16,6 +16,20 @@ import javafx.util.StringConverter;
 import java.util.Optional;
 
 public class ClusterConfigDialog {
+
+    public static final String LABEL_IDENTIFIER = "Identifier";
+    public static final String LABEL_BOOTSTRAP_SERVERS = "Bootstrap-Servers";
+    public static final String LABEL_SCHEMA_REGISTRY_URL = "Schema Registry URL";
+    public static final String LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO = "Schema Registry Basic Auth User Info";
+    public static final String LABEL_ENABLE_SSL = "Enable SSL";
+    public static final String LABEL_KEY_STORE_LOCATION = "Key Store Location";
+    public static final String LABEL_KEY_STORE_PASSWORD = "Key Store Password";
+    public static final String LABEL_TRUST_STORE_LOCATION = "Trust Store Location";
+    public static final String LABEL_TRUST_STORE_PASSWORD = "Trust Store Password";
+    public static final String LABEL_SASL_MECHANISM = "SASL Mechanism";
+    public static final String LABEL_SASL_JAAS_CONFIG = "SASL JAAS Config";
+    public static final String LABEL_SASL_SECURITY_PROTOCOL = "SASL Security Protocol";
+
     private ClusterConfigDialog(){}
 
     public static Optional<ClusterConfig> show() {
@@ -30,75 +44,81 @@ public class ClusterConfigDialog {
         Form form = Form.of(
                 Group.of(
                         Field.ofStringType(copy.getIdentifier()==null?"":copy.getIdentifier())
-                                .label("Identifier")
-                                .tooltip("Identifier")
-                                .placeholder("Identifier")
+                                .label(LABEL_IDENTIFIER)
+                                .tooltip(LABEL_IDENTIFIER)
+                                .placeholder(LABEL_IDENTIFIER)
                                 .required("This field is required")
                                 .editable(isCreatingNew)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.identifierProperty()),
                         Field.ofStringType(copy.getBootStrapServers()==null?"":copy.getBootStrapServers())
-                                .label("Bootstrap-Servers")
-                                .tooltip("Bootstrap-Servers")
-                                .placeholder("Bootstrap-Servers")
+                                .label(LABEL_BOOTSTRAP_SERVERS)
+                                .tooltip(LABEL_BOOTSTRAP_SERVERS)
+                                .placeholder(LABEL_BOOTSTRAP_SERVERS)
                                 .required("This field is required")
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.bootStrapServersProperty())
                         ),
                 Group.of(
                         Field.ofStringType(copy.getSchemaRegistry()==null?"":copy.getSchemaRegistry())
-                                .label("Schema Registry URL")
-                                .tooltip("Schema Registry URL")
-                                .placeholder("Schema Registry URL")
+                                .label(LABEL_SCHEMA_REGISTRY_URL)
+                                .tooltip(LABEL_SCHEMA_REGISTRY_URL)
+                                .placeholder(LABEL_SCHEMA_REGISTRY_URL)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.schemaRegistryProperty()),
                         Field.ofStringType(copy.getSchemaRegistryBasicAuthUserInfo()==null?"":copy.getSchemaRegistryBasicAuthUserInfo())
-                                .label("Schema Registry Basic Auth User Info")
-                                .tooltip("Schema Registry Basic Auth User Info")
-                                .placeholder("Schema Registry Basic Auth User Info")
+                                .label(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
+                                .tooltip(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
+                                .placeholder(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.schemaRegistryBasicAuthUserInfoProperty())
                 ),
                 Group.of(
                         Field.ofBooleanType(copy.isSslEnabled())
-                                .label("Enable SSL")
-                                .tooltip("Enable SSL"),
+                                .label(LABEL_ENABLE_SSL)
+                                .tooltip(LABEL_ENABLE_SSL),
                         Field.ofStringType(copy.getKeyStoreLocation()==null?"":copy.getKeyStoreLocation())
-                                .label("Key Store Location")
-                                .tooltip("Key Store Location")
-                                .placeholder("Key Store Location")
+                                .label(LABEL_KEY_STORE_LOCATION)
+                                .tooltip(LABEL_KEY_STORE_LOCATION)
+                                .placeholder(LABEL_KEY_STORE_LOCATION)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.keyStoreLocationProperty()),
                         Field.ofStringType(copy.getKeyStorePassword()==null?"":copy.getKeyStorePassword())
-                                .label("Key Store Password")
-                                .tooltip("Key Store Password")
-                                .placeholder("Key Store Password")
+                                .label(LABEL_KEY_STORE_PASSWORD)
+                                .tooltip(LABEL_KEY_STORE_PASSWORD)
+                                .placeholder(LABEL_KEY_STORE_PASSWORD)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.keyStorePasswordProperty()),
                         Field.ofStringType(copy.getTrustStoreLocation()==null?"":copy.getTrustStoreLocation())
-                                .label("Trust Store Location")
-                                .tooltip("Trust Store Location")
-                                .placeholder("Trust Store Location")
+                                .label(LABEL_TRUST_STORE_LOCATION)
+                                .tooltip(LABEL_TRUST_STORE_LOCATION)
+                                .placeholder(LABEL_TRUST_STORE_LOCATION)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.trustStoreLocationProperty()),
                         Field.ofStringType(copy.getTrustStorePassword()==null?"":copy.getTrustStorePassword())
-                                .label("Trust Store Password")
-                                .tooltip("Trust Store Password")
-                                .placeholder("Trust Store Password")
+                                .label(LABEL_TRUST_STORE_PASSWORD)
+                                .tooltip(LABEL_TRUST_STORE_PASSWORD)
+                                .placeholder(LABEL_TRUST_STORE_PASSWORD)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.trustStorePasswordProperty())
                 ),
                 Group.of(
+                        Field.ofStringType(copy.getSaslSecurityProtocol()==null?"":copy.getSaslSecurityProtocol())
+                                .label(LABEL_SASL_SECURITY_PROTOCOL)
+                                .tooltip(LABEL_SASL_SECURITY_PROTOCOL)
+                                .placeholder(LABEL_SASL_SECURITY_PROTOCOL)
+                                .format(new NullFormatStringConverter())
+                                .bind(copy.saslSecurityProtocolProperty()),
                         Field.ofStringType(copy.getSaslMechanism()==null?"":copy.getSaslMechanism())
-                                .label("SASL Mechanism")
-                                .tooltip("SASL Mechanism")
-                                .placeholder("SASL Mechanism")
+                                .label(LABEL_SASL_MECHANISM)
+                                .tooltip(LABEL_SASL_MECHANISM)
+                                .placeholder(LABEL_SASL_MECHANISM)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.saslMechanismProperty()),
                         Field.ofStringType(copy.getSaslJaasConfig()==null?"":copy.getSaslJaasConfig())
-                                .label("SASL JAAS Config")
-                                .tooltip("SASL JAAS Config")
-                                .placeholder("SASL JAAS Config")
+                                .label(LABEL_SASL_JAAS_CONFIG)
+                                .tooltip(LABEL_SASL_JAAS_CONFIG)
+                                .placeholder(LABEL_SASL_JAAS_CONFIG)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.saslJaasConfigProperty())
                 )
