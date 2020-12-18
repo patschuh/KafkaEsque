@@ -89,6 +89,12 @@ public class ClusterConfigDialog {
                                 .bind(copy.trustStorePasswordProperty())
                 ),
                 Group.of(
+                        Field.ofStringType(copy.getSaslSecurityProtocol()==null?"":copy.getSaslSecurityProtocol())
+                                .label("Security Protocol")
+                                .tooltip("SecurityProtocol")
+                                .placeholder("SASL_PLAIN")
+                                .format(new NullFormatStringConverter())
+                                .bind(copy.saslSecurityProtocolProperty()),
                         Field.ofStringType(copy.getSaslMechanism()==null?"":copy.getSaslMechanism())
                                 .label("SASL Mechanism")
                                 .tooltip("SASL Mechanism")

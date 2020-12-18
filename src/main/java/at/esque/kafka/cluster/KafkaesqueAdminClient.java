@@ -12,14 +12,7 @@ import org.apache.kafka.common.resource.ResourcePattern;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.apache.kafka.common.resource.ResourceType;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -122,6 +115,19 @@ public class KafkaesqueAdminClient {
             ErrorAlert.show(e);
         }
         return Collections.EMPTY_LIST;
+    }
+
+    public void deleteAcl(AclBinding aclBinding)
+    {
+        try {
+            AclBindingFilter aclBindingFilter = new AclBindingFilter(new ResourcePatternFilter(aclBinding.pattern().resourceType(), aclBinding.pattern().name(), aclBinding.pattern().patternType()),
+                    new AccessControlEntryFilter(aclBinding.entry().principal(), aclBinding.entry().host(), aclBinding.entry().operation(), aclBinding.entry().permissionType()));
+
+            adminClient.deleteAcls(Collections.singletonList(aclBindingFilter));
+
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
     }
 
     public ListConsumerGroupOffsetsResult listConsumerGroupOffsets(String groupId){

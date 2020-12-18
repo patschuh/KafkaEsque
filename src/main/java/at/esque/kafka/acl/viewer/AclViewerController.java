@@ -11,9 +11,11 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.util.Callback;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -22,6 +24,8 @@ import org.apache.kafka.common.resource.PatternType;
 import org.apache.kafka.common.resource.ResourcePattern;
 import org.apache.kafka.common.resource.ResourceType;
 
+import javax.swing.*;
+import java.awt.event.MouseEvent;
 import java.util.*;
 
 public class AclViewerController {
@@ -80,6 +84,44 @@ public class AclViewerController {
         permissionTypeColumn.setCellValueFactory(new PropertyValueFactory<>("permissionType"));
         hostColumn.setCellValueFactory(new PropertyValueFactory<>("host"));
 
+        MenuItem mi1 = new MenuItem("Menu item 1");
+        mi1.setOnAction((ActionEvent event) -> {
+            System.out.println("Menu item 1");
+            Object item = resultView.getSelectionModel().getSelectedItem();
+            System.out.println("Selected item: " + item);
+        });
+
+        // Add Delete Context Menu to Table Rows
+        resultView.setRowFactory(
+                new Callback<TableView<Acl>, TableRow<Acl>>() {
+                    @Override
+                    public TableRow<Acl> call(TableView<Acl> tableView) {
+                        final TableRow<Acl> row = new TableRow<>();
+                        final ContextMenu rowMenu = new ContextMenu();
+                        MenuItem removeItem = new MenuItem("Delete");
+                        removeItem.setOnAction(new EventHandler<ActionEvent>() {
+
+                            @Override
+                            public void handle(ActionEvent event) {
+                                Object item = resultView.getSelectionModel().getSelectedItem();
+
+                                if (item instanceof Acl)
+                                {
+                                    Acl selectedAcl = (Acl) item;
+                                    adminClient.deleteAcl(selectedAcl.getAclBinding());
+                                }
+
+                                startSearch(null);
+
+                            }
+                        });
+                        rowMenu.getItems().addAll(removeItem);
+                        row.contextMenuProperty().set(rowMenu);
+
+                        return row;
+                    }
+                });
+
     }
 
     public void setup(KafkaesqueAdminClient adminClient, KafkaConsumer kafkaConsumer) {
@@ -97,19 +139,14 @@ public class AclViewerController {
                     List<Acl> aclList = new ArrayList<>();
 
                     adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText())
-                            .forEach(acl -> aclList.add(new Acl(acl.pattern().resourceType(),
-                                                                acl.pattern().name(),
-                                                                acl.pattern().patternType(),
-                                                                acl.entry().principal(),
-                                                                acl.entry().operation(),
-                                                                acl.entry().permissionType(),
-                                                                acl.entry().host())));
+                            .forEach(acl -> aclList.add(new Acl(acl)));
 
                     resultView.setItems(FXCollections.observableArrayList(aclList));
                 });
             Platform.runLater(() -> refreshRunning.setValue(false));
         });
     }
+
 
     public void stop(){
         kafkaConsumer = null;
