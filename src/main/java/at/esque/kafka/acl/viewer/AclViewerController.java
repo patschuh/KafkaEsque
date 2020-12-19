@@ -23,6 +23,8 @@ import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.resource.PatternType;
 import org.apache.kafka.common.resource.ResourcePattern;
 import org.apache.kafka.common.resource.ResourceType;
+import org.kordamp.ikonli.fontawesome.FontAwesome;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import javax.swing.*;
 import java.awt.event.MouseEvent;
@@ -98,8 +100,10 @@ public class AclViewerController {
                     public TableRow<Acl> call(TableView<Acl> tableView) {
                         final TableRow<Acl> row = new TableRow<>();
                         final ContextMenu rowMenu = new ContextMenu();
-                        MenuItem removeItem = new MenuItem("Delete");
-                        removeItem.setOnAction(new EventHandler<ActionEvent>() {
+
+                        MenuItem deleteItem = new MenuItem("Delete");
+                        deleteItem.setGraphic(new FontIcon(FontAwesome.TRASH));
+                        deleteItem.setOnAction(new EventHandler<ActionEvent>() {
 
                             @Override
                             public void handle(ActionEvent event) {
@@ -115,7 +119,7 @@ public class AclViewerController {
 
                             }
                         });
-                        rowMenu.getItems().addAll(removeItem);
+                        rowMenu.getItems().addAll(deleteItem);
                         row.contextMenuProperty().set(rowMenu);
 
                         return row;
