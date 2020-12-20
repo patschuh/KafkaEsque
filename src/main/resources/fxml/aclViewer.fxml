@@ -5,41 +5,42 @@
 <?import javafx.scene.layout.*?>
 
 <?import org.kordamp.ikonli.javafx.FontIcon?>
-<SplitPane fx:controller="at.esque.kafka.acl.viewer.AclViewerController" dividerPositions="0.2236180904522613" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
-<items>
-    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="150.0" prefWidth="598.0">
-        <children>
-            <ComboBox fx:id="resourceTypeCombo" layoutX="109.0" layoutY="14.0" prefHeight="25.0" prefWidth="176.0" />
-            <Label layoutX="14.0" layoutY="18.0" text="Resource Type:" />
-            <Label layoutX="14.0" layoutY="52.0" text="Resource Name:" />
-            <TextField fx:id="resourceName" layoutX="109.0" layoutY="48.0" prefHeight="25.0" prefWidth="275.0" />
-            <Label layoutX="299.0" layoutY="18.0" prefHeight="17.0" prefWidth="100.0" text="Resource Pattern:" />
-            <ComboBox fx:id="resourcePatternCombo" layoutX="399.0" layoutY="14.0" prefHeight="25.0" prefWidth="176.0" />
-            <Button fx:id="searchButton" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" mnemonicParsing="false" prefWidth="30.0" layoutX="600.0" layoutY="16" onAction="#startSearch">
-                <styleClass>
-                    <String fx:value="success" />
-                </styleClass>
-                <graphic>
-                    <FontIcon iconColor="WHITE" iconLiteral="fa-search" iconSize="20" />
-                </graphic>
-            </Button>
-        </children>
-    </AnchorPane>
-     <AnchorPane  minHeight="0.0" minWidth="0.0" prefHeight="350.0" prefWidth="1000.0" maxHeight="-Infinity" maxWidth="-Infinity" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                  AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-         <children>
-             <TableView fx:id="resultView" prefHeight="350.0" prefWidth="1000.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity">
-                 <columns>
-                     <TableColumn fx:id="resourceTypeColumn" editable="false" prefWidth="70.0" text="Res. Type" />
-                     <TableColumn fx:id="resourceNameColumn" editable="false" prefWidth="350.0" text="Resource Name" />
-                     <TableColumn fx:id="patternTypeColumn" editable="false" prefWidth="75.0" text="Pattern Type" />
-                     <TableColumn fx:id="principalColumn" editable="false" prefWidth="300.0" text="Principal" />
-                     <TableColumn fx:id="operationColumn" editable="false" prefWidth="60.0" text="Oper." />
-                     <TableColumn fx:id="permissionTypeColumn" editable="false" prefWidth="60.0" text="PermTyp" />
-                     <TableColumn fx:id="hostColumn" editable="false" prefWidth="75.0" text="Host" />
-                 </columns>
-             </TableView>
-         </children>
-     </AnchorPane>
-</items>
+<SplitPane fx:controller="at.esque.kafka.acl.viewer.AclViewerController" dividerPositions="0.2236180904522613"
+           maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" orientation="VERTICAL"
+           prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+    <items>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="150.0" prefWidth="598.0">
+            <children>
+                <ComboBox fx:id="resourceTypeCombo" layoutX="109.0" layoutY="14.0" prefHeight="25.0" prefWidth="176.0"/>
+                <Label layoutX="14.0" layoutY="18.0" text="Resource Type:"/>
+                <Label layoutX="14.0" layoutY="52.0" text="Resource Name:"/>
+                <TextField fx:id="resourceName" layoutX="109.0" layoutY="48.0" prefHeight="25.0" prefWidth="275.0"/>
+                <Label layoutX="299.0" layoutY="18.0" prefHeight="17.0" prefWidth="100.0" text="Resource Pattern:"/>
+                <ComboBox fx:id="resourcePatternCombo" layoutX="399.0" layoutY="14.0" prefHeight="25.0"
+                          prefWidth="176.0"/>
+                <Button fx:id="searchButton" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+                        mnemonicParsing="false" prefWidth="30.0" layoutX="600.0" layoutY="16" onAction="#startSearch">
+                    <styleClass>
+                        <String fx:value="success"/>
+                    </styleClass>
+                    <graphic>
+                        <FontIcon iconColor="WHITE" iconLiteral="fa-search" iconSize="20"/>
+                    </graphic>
+                </Button>
+            </children>
+        </AnchorPane>
+
+        <TableView fx:id="resultView">
+            <columns>
+                <TableColumn fx:id="resourceTypeColumn" editable="false" prefWidth="70.0" text="Res. Type"/>
+                <TableColumn fx:id="resourceNameColumn" editable="false" prefWidth="350.0" text="Resource Name"/>
+                <TableColumn fx:id="patternTypeColumn" editable="false" prefWidth="75.0" text="Pattern Type"/>
+                <TableColumn fx:id="principalColumn" editable="false" prefWidth="300.0" text="Principal"/>
+                <TableColumn fx:id="operationColumn" editable="false" prefWidth="60.0" text="Oper."/>
+                <TableColumn fx:id="permissionTypeColumn" editable="false" prefWidth="60.0" text="PermTyp"/>
+                <TableColumn fx:id="hostColumn" editable="false" prefWidth="75.0" text="Host"/>
+            </columns>
+        </TableView>
+
+    </items>
 </SplitPane>

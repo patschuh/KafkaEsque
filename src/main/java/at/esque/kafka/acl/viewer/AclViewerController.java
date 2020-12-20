@@ -86,13 +86,6 @@ public class AclViewerController {
         permissionTypeColumn.setCellValueFactory(new PropertyValueFactory<>("permissionType"));
         hostColumn.setCellValueFactory(new PropertyValueFactory<>("host"));
 
-        MenuItem mi1 = new MenuItem("Menu item 1");
-        mi1.setOnAction((ActionEvent event) -> {
-            System.out.println("Menu item 1");
-            Object item = resultView.getSelectionModel().getSelectedItem();
-            System.out.println("Selected item: " + item);
-        });
-
         // Add Delete Context Menu to Table Rows
         resultView.setRowFactory(
                 new Callback<TableView<Acl>, TableRow<Acl>>() {
@@ -131,8 +124,6 @@ public class AclViewerController {
     public void setup(KafkaesqueAdminClient adminClient, KafkaConsumer kafkaConsumer) {
         this.adminClient = adminClient;
         this.kafkaConsumer = kafkaConsumer;
-
-        this.adminClient = adminClient;
     }
 
     @FXML
