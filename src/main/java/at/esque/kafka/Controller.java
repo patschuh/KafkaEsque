@@ -902,7 +902,11 @@ public class Controller {
 
     @FXML
     public void editClusterConfigsClick(ActionEvent actionEvent) {
-        ClusterConfigDialog.show(selectedCluster()).ifPresent(clusterConfig -> configHandler.saveConfigs());
+        ClusterConfig existingConfig = selectedCluster();
+        ClusterConfigDialog.show(existingConfig).ifPresent(clusterConfig -> {
+            existingConfig.update(clusterConfig);
+            configHandler.saveConfigs();
+        });
     }
 
     @FXML

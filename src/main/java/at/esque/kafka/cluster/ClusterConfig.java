@@ -26,19 +26,23 @@ public class ClusterConfig {
     public ClusterConfig(){}
 
     public ClusterConfig(ClusterConfig existingConfig) {
+        update(existingConfig);
+    }
+
+    public void update(ClusterConfig existingConfig) {
         if(existingConfig != null) {
-            this.identifier = existingConfig.identifier;
-            this.bootStrapServers = existingConfig.bootStrapServers;
-            this.schemaRegistry = existingConfig.schemaRegistry;
-            this.schemaRegistryBasicAuthUserInfo = existingConfig.schemaRegistryBasicAuthUserInfo;
-            this.sslEnabled = existingConfig.sslEnabled;
-            this.keyStoreLocation = existingConfig.keyStoreLocation;
-            this.keyStorePassword = existingConfig.keyStorePassword;
-            this.trustStoreLocation = existingConfig.trustStoreLocation;
-            this.trustStorePassword = existingConfig.trustStorePassword;
-            this.saslSecurityProtocol = existingConfig.saslSecurityProtocol;
-            this.saslMechanism = existingConfig.saslMechanism;
-            this.saslJaasConfig = existingConfig.saslJaasConfig;
+            this.setIdentifier(existingConfig.getIdentifier());
+            this.setBootStrapServers(existingConfig.getBootStrapServers());
+            this.setSchemaRegistry(existingConfig.getSchemaRegistry());
+            this.setSchemaRegistryBasicAuthUserInfo(existingConfig.getSchemaRegistryBasicAuthUserInfo());
+            this.setSslEnabled(existingConfig.isSslEnabled());
+            this.setKeyStoreLocation(existingConfig.getKeyStoreLocation());
+            this.setKeyStorePassword(existingConfig.getKeyStorePassword());
+            this.setTrustStoreLocation(existingConfig.getTrustStoreLocation());
+            this.setTrustStorePassword(existingConfig.getTrustStorePassword());
+            this.setSaslSecurityProtocol(existingConfig.getSaslSecurityProtocol());
+            this.setSaslMechanism(existingConfig.getSaslMechanism());
+            this.setSaslJaasConfig(existingConfig.getSaslJaasConfig());
         }
     }
 

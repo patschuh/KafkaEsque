@@ -76,14 +76,15 @@ public class ClusterConfigDialog {
                 Group.of(
                         Field.ofBooleanType(copy.isSslEnabled())
                                 .label(LABEL_ENABLE_SSL)
-                                .tooltip(LABEL_ENABLE_SSL),
+                                .tooltip(LABEL_ENABLE_SSL)
+                                .bind(copy.sslEnabledProperty()),
                         Field.ofStringType(copy.getKeyStoreLocation()==null?"":copy.getKeyStoreLocation())
                                 .label(LABEL_KEY_STORE_LOCATION)
                                 .tooltip(LABEL_KEY_STORE_LOCATION)
                                 .placeholder(LABEL_KEY_STORE_LOCATION)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.keyStoreLocationProperty()),
-                        Field.ofStringType(copy.getKeyStorePassword()==null?"":copy.getKeyStorePassword())
+                        Field.ofPasswordType(copy.getKeyStorePassword()==null?"":copy.getKeyStorePassword())
                                 .label(LABEL_KEY_STORE_PASSWORD)
                                 .tooltip(LABEL_KEY_STORE_PASSWORD)
                                 .placeholder(LABEL_KEY_STORE_PASSWORD)
@@ -95,7 +96,7 @@ public class ClusterConfigDialog {
                                 .placeholder(LABEL_TRUST_STORE_LOCATION)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.trustStoreLocationProperty()),
-                        Field.ofStringType(copy.getTrustStorePassword()==null?"":copy.getTrustStorePassword())
+                        Field.ofPasswordType(copy.getTrustStorePassword()==null?"":copy.getTrustStorePassword())
                                 .label(LABEL_TRUST_STORE_PASSWORD)
                                 .tooltip(LABEL_TRUST_STORE_PASSWORD)
                                 .placeholder(LABEL_TRUST_STORE_PASSWORD)
