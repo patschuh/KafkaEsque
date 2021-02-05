@@ -60,6 +60,26 @@ public class ClusterConfigDialog {
                                 .bind(copy.schemaRegistryBasicAuthUserInfoProperty())
                 ),
                 Group.of(
+                        Field.ofStringType(copy.getkafkaConnectUrl()==null?"":copy.getkafkaConnectUrl())
+                                .label("Kafka Connect URL")
+                                .tooltip("Kafka Connect URL")
+                                .placeholder("Kafka Connect URL")
+                                .format(new  NullFormatStringConverter())
+                                .bind(copy.kafkaConnectUrlProperty()),
+                        Field.ofStringType(copy.getkafkaConnectBasicAuthUser()==null?"":copy.getkafkaConnectBasicAuthUser())
+                                .label("Kafka Connect Basic Auth User")
+                                .tooltip("Kafka Connect Basic Auth User")
+                                .placeholder("Kafka Connect Basic Auth User")
+                                .format(new  NullFormatStringConverter())
+                                .bind(copy.kafkaConnectBasicAuthUserProperty()),
+                        Field.ofStringType(copy.getkafkaConnectBasicAuthPassword()==null?"":copy.getkafkaConnectBasicAuthPassword())
+                                .label("Kafka Connect Basic Auth Password")
+                                .tooltip("Kafka Connect Basic Auth Password")
+                                .placeholder("Kafka Connect Basic Auth Password")
+                                .format(new  NullFormatStringConverter())
+                                .bind(copy.kafkaConnectBasicAuthPasswordProperty())
+                ),
+                Group.of(
                         Field.ofBooleanType(copy.isSslEnabled())
                                 .label("Enable SSL")
                                 .tooltip("Enable SSL"),

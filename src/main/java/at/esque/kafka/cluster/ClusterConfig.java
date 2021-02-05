@@ -22,11 +22,15 @@ public class ClusterConfig {
     private StringProperty saslSecurityProtocol = new SimpleStringProperty();
     private StringProperty saslMechanism = new SimpleStringProperty();
     private StringProperty saslJaasConfig = new SimpleStringProperty();
+    private StringProperty kafkaConnectUrl = new SimpleStringProperty();
+    private StringProperty kafkaConnectBasicAuthUser = new SimpleStringProperty();
+    private StringProperty kafkaConnectBasicAuthPassword = new SimpleStringProperty();
 
-    public ClusterConfig(){}
+    public ClusterConfig() {
+    }
 
     public ClusterConfig(ClusterConfig existingConfig) {
-        if(existingConfig != null) {
+        if (existingConfig != null) {
             this.identifier = existingConfig.identifier;
             this.bootStrapServers = existingConfig.bootStrapServers;
             this.schemaRegistry = existingConfig.schemaRegistry;
@@ -39,6 +43,9 @@ public class ClusterConfig {
             this.saslSecurityProtocol = existingConfig.saslSecurityProtocol;
             this.saslMechanism = existingConfig.saslMechanism;
             this.saslJaasConfig = existingConfig.saslJaasConfig;
+            this.kafkaConnectUrl = existingConfig.kafkaConnectUrl;
+            this.kafkaConnectBasicAuthUser = existingConfig.kafkaConnectBasicAuthUser;
+            this.kafkaConnectBasicAuthPassword = existingConfig.kafkaConnectBasicAuthPassword;
         }
     }
 
@@ -148,13 +155,17 @@ public class ClusterConfig {
 
 
     @JsonProperty("saslSecurityProtocol")
-    public String getSaslSecurityProtocol() { return saslSecurityProtocol.get(); }
+    public String getSaslSecurityProtocol() {
+        return saslSecurityProtocol.get();
+    }
 
     public StringProperty saslSecurityProtocolProperty() {
         return saslSecurityProtocol;
     }
 
-    public void setSaslSecurityProtocol(String saslSecurityProtocol) { this.saslSecurityProtocol.set(saslSecurityProtocol); }
+    public void setSaslSecurityProtocol(String saslSecurityProtocol) {
+        this.saslSecurityProtocol.set(saslSecurityProtocol);
+    }
 
     @JsonProperty("saslMechanism")
     public String getSaslMechanism() {
@@ -178,7 +189,9 @@ public class ClusterConfig {
         return saslJaasConfig;
     }
 
-    public void setSaslJaasConfig(String saslJaasConfig) { this.saslJaasConfig.set(saslJaasConfig); }
+    public void setSaslJaasConfig(String saslJaasConfig) {
+        this.saslJaasConfig.set(saslJaasConfig);
+    }
 
     @JsonProperty("schemaRegistryBasicAuthUserInfo")
     public String getSchemaRegistryBasicAuthUserInfo() {
@@ -189,19 +202,69 @@ public class ClusterConfig {
         return schemaRegistryBasicAuthUserInfo;
     }
 
-    public void setSchemaRegistryBasicAuthUserInfo(String schemaRegistryBasicAuthUserInfo) { this.schemaRegistryBasicAuthUserInfo.set(schemaRegistryBasicAuthUserInfo); }
+    public void setSchemaRegistryBasicAuthUserInfo(String schemaRegistryBasicAuthUserInfo) {
+        this.schemaRegistryBasicAuthUserInfo.set(schemaRegistryBasicAuthUserInfo);
+    }
+
+    @JsonProperty("kafkaConnectUrl")
+    public String getkafkaConnectUrl() {
+        return kafkaConnectUrl.get();
+    }
+
+    public StringProperty kafkaConnectUrlProperty() {
+        return kafkaConnectUrl;
+    }
+
+    public void setkafkaConnectUrl(String kafkaConnectUrl) {
+        this.kafkaConnectUrl.set(kafkaConnectUrl);
+    }
+
+    @JsonProperty("kafkaConnectBasicAuthUser")
+    public String getkafkaConnectBasicAuthUser() {
+        return kafkaConnectBasicAuthUser.get();
+    }
+
+    public StringProperty kafkaConnectBasicAuthUserProperty() {
+        return kafkaConnectBasicAuthUser;
+    }
+
+    public void setkafkaConnectBasicAuthUser(String kafkaConnectBasicAuthUser) {
+        this.kafkaConnectBasicAuthUser.set(kafkaConnectBasicAuthUser);
+    }
+
+    @JsonProperty("kafkaConnectBasicAuthPassword")
+    public String getkafkaConnectBasicAuthPassword() {
+        return kafkaConnectBasicAuthPassword.get();
+    }
+
+    public StringProperty kafkaConnectBasicAuthPasswordProperty() {
+        return kafkaConnectBasicAuthPassword;
+    }
+
+    public void setkafkaConnectBasicAuthPassword(String kafkaConnectBasicAuthPassword) {
+        this.kafkaConnectBasicAuthPassword.set(kafkaConnectBasicAuthPassword);
+    }
 
     @JsonIgnore
-    public boolean isSchemaRegistryHttps()
-    {
-        if(schemaRegistry.get() == null){
+    public boolean isSchemaRegistryHttps() {
+        if (schemaRegistry.get() == null) {
             return false;
         }
         return schemaRegistry.get().toLowerCase().startsWith("https:");
     }
 
+
+    @JsonIgnore
+    public boolean isKafkaConnectHttps() {
+        if (kafkaConnectUrl.get() == null) {
+            return false;
+        }
+        return kafkaConnectUrl.get().toLowerCase().startsWith("https:");
+    }
+
+
     @Override
-    public String toString(){
+    public String toString() {
         return String.format("%s (%s)", getIdentifier(), getBootStrapServers());
     }
 
