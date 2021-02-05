@@ -7,29 +7,28 @@ import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.model.util.BindingMode;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
-import com.dlsc.formsfx.view.util.ColSpan;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import io.confluent.kafka.schemaregistry.client.rest.entities.Config;
-import io.confluent.kafka.schemaregistry.client.rest.entities.requests.ModeGetResponse;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
-import javafx.beans.property.*;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Optional;
 
 public class SubjectConfigDialog {
-    private SubjectConfigDialog(){}
+    private SubjectConfigDialog() {
+    }
 
     private enum schemaCompatibilityLevel {
-        BACKWARD, BACKWARD_TRANSITIVE,FORWARD,FORWARD_TRANSITIVE,FULL, FULL_TRANSITIVE, NONE;
+        BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE;
     }
 
     public static void show(RestService schemaRegistryRestService, String selectedSubject) {
@@ -48,17 +47,14 @@ public class SubjectConfigDialog {
 
                 schemaCompatibilityLevel configuredLevel = schemaCompatibilityLevel.valueOf(subjectConfig.getCompatibilityLevel());
 
-                if (configuredLevel == null)
-                {
-                    throw new IllegalArgumentException(String.format("Schema Registry returned an unknown compatibility level (%s)",subjectConfig.getCompatibilityLevel()));
+                if (configuredLevel == null) {
+                    throw new IllegalArgumentException(String.format("Schema Registry returned an unknown compatibility level (%s)", subjectConfig.getCompatibilityLevel()));
                 }
 
                 subjectCompatibilityLevel.set(configuredLevel);
-            }catch (RestClientException e)
-            {
+            } catch (RestClientException e) {
                 //Nothing configured on subject level
-                if(e.getErrorCode() == 40401)
-                {
+                if (e.getErrorCode() == 40401) {
                     subjectCompatibilityLevel.set(null);
                 } else {
                     throw e;
@@ -81,10 +77,10 @@ public class SubjectConfigDialog {
                             Field.ofSingleSelectionType(schemaCompatibilityLevels)
                                     .label("Subject:")
                                     .tooltip("Subject Schema Compatibility Leve")
-                                    .bind(schemaCompatibilityLevels,subjectCompatibilityLevel)
+                                    .bind(schemaCompatibilityLevels, subjectCompatibilityLevel)
                     )
             ).title("Schema Compatibility")
-             .binding(BindingMode.CONTINUOUS);
+                    .binding(BindingMode.CONTINUOUS);
 
             Dialog<SimpleObjectProperty> dialog = new Dialog<>();
             Main.applyIcon(dialog);
@@ -109,10 +105,9 @@ public class SubjectConfigDialog {
 
             Optional<SimpleObjectProperty> newSubjectLevel = dialog.showAndWait();
 
-            if(newSubjectLevel.isPresent() && !newSubjectLevel.get().get().equals(existingSubjectCompatibilityLevel.getValue()))
-            {
-                    schemaCompatibilityLevel newLevel = (schemaCompatibilityLevel) newSubjectLevel.get().get();
-                    schemaRegistryRestService.updateCompatibility(newLevel.name(), selectedSubject);
+            if (newSubjectLevel.isPresent() && !newSubjectLevel.get().get().equals(existingSubjectCompatibilityLevel.getValue())) {
+                schemaCompatibilityLevel newLevel = (schemaCompatibilityLevel) newSubjectLevel.get().get();
+                schemaRegistryRestService.updateCompatibility(newLevel.name(), selectedSubject);
             }
 
         } catch (Exception e) {

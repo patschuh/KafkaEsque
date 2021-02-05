@@ -604,9 +604,7 @@ public class Controller {
             fxmlLoader.setLocation(getClass().getResource("/fxml/aclViewer.fxml"));
             Parent root1 = fxmlLoader.load();
             AclViewerController controller = fxmlLoader.getController();
-            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), new TopicMessageTypeConfig(), new HashMap<>());
-            KafkaConsumer consumer = consumerHandler.getConsumer(consumerId).orElseThrow(() -> new RuntimeException("Error getting consumer"));
-            controller.setup(adminClient, consumer);
+            controller.setup(adminClient);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
             stage.initOwner(controlledStage);
@@ -617,7 +615,6 @@ public class Controller {
             centerStageOnControlledStage(stage);
             stage.setOnCloseRequest(windowEvent -> {
                 controller.stop();
-                consumerHandler.deregisterConsumer(consumerId);
             });
         } catch (Exception e) {
             ErrorAlert.show(e);
@@ -930,7 +927,11 @@ public class Controller {
 
     @FXML
     public void editClusterConfigsClick(ActionEvent actionEvent) {
-        ClusterConfigDialog.show(selectedCluster()).ifPresent(clusterConfig -> configHandler.saveConfigs());
+        ClusterConfig existingConfig = selectedCluster();
+        ClusterConfigDialog.show(existingConfig).ifPresent(clusterConfig -> {
+            existingConfig.update(clusterConfig);
+            configHandler.saveConfigs();
+        });
     }
 
     @FXML

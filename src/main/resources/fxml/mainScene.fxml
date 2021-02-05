@@ -3,7 +3,6 @@
 <?import at.esque.kafka.controls.FilterableListView?>
 <?import at.esque.kafka.controls.JsonTreeView?>
 <?import at.esque.kafka.controls.KafkaEsqueCodeArea?>
-<?import java.lang.String?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
@@ -106,7 +105,7 @@
                         <BorderPane prefHeight="200.0" prefWidth="200.0">
                             <center>
                                 <StackPane BorderPane.alignment="CENTER">
-                                    <TabPane fx:id="messageTabPane" prefHeight="200.0" prefWidth="200.0"/>
+                                    <TabPane fx:id="messageTabPane" prefHeight="200.0" prefWidth="200.0" minHeight="0"/>
                                 </StackPane>
                             </center>
                             <top>

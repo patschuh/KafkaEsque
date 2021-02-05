@@ -2,5 +2,14 @@ package at.esque.kafka;
 
 public enum MessageType {
     STRING,
-    AVRO
+    AVRO,
+    SHORT,
+    INTEGER,
+    LONG,
+    FLOAT,
+    DOUBLE,
+    BYTEARRAY,
+    BYTEBUFFER,
+    BYTES,
+    UUID
 }

@@ -27,7 +27,6 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.util.Collections;
-import java.util.function.ToDoubleBiFunction;
 
 
 public class SchemaRegistryBrowserController {
@@ -132,9 +131,9 @@ public class SchemaRegistryBrowserController {
 
         MenuItem configItem = new MenuItem();
         configItem.setGraphic(new FontIcon(FontAwesome.COG));
-        configItem.textProperty().set("config");
+        configItem.textProperty().set("Configure Compatibility Level");
         configItem.setOnAction(event -> {
-            SubjectConfigDialog.show(schemaRegistryRestService,subjectListView.getListView().getSelectionModel().getSelectedItem());
+            SubjectConfigDialog.show(schemaRegistryRestService, subjectListView.getListView().getSelectionModel().getSelectedItem());
         });
 
         contextMenu.getItems().add(configItem);
