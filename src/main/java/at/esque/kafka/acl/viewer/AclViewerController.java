@@ -123,11 +123,11 @@ public class AclViewerController {
             List<Acl> aclList = new ArrayList<>();
             Platform.runLater(() -> {
                 refreshRunning.setValue(true);
-                resultView.setItems(FXCollections.observableArrayList(aclList));
             });
             adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText())
                     .forEach(acl -> Platform.runLater(() -> aclList.add(new Acl(acl))));
             Platform.runLater(() -> refreshRunning.setValue(false));
+            Platform.runLater(() -> resultView.setItems(FXCollections.observableArrayList(aclList)));
         });
     }
 
