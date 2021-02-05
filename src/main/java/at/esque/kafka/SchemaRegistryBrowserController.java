@@ -7,6 +7,7 @@ import at.esque.kafka.cluster.SslSocketFactoryCreator;
 import at.esque.kafka.controls.FilterableListView;
 import at.esque.kafka.controls.JsonTreeView;
 import at.esque.kafka.controls.KafkaEsqueCodeArea;
+import at.esque.kafka.dialogs.SubjectConfigDialog;
 import at.esque.kafka.handlers.ConfigHandler;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import javafx.collections.FXCollections;
@@ -55,7 +56,7 @@ public class SchemaRegistryBrowserController {
         try {
             versionComboBox.getSelectionModel().selectedItemProperty().addListener(((observable1, oldValue1, newValue1) -> {
                 if (newValue1 == null) {
-                    schemaTextArea.setText(null);
+                    schemaTextArea.setText("");
                     return;
                 }
                 try {
@@ -127,7 +128,16 @@ public class SchemaRegistryBrowserController {
         deleteItem.setOnAction(event -> {
             deleteSubject();
         });
-        contextMenu.getItems().addAll(deleteItem);
+
+        MenuItem configItem = new MenuItem();
+        configItem.setGraphic(new FontIcon(FontAwesome.COG));
+        configItem.textProperty().set("Configure Compatibility Level");
+        configItem.setOnAction(event -> {
+            SubjectConfigDialog.show(schemaRegistryRestService, subjectListView.getListView().getSelectionModel().getSelectedItem());
+        });
+
+        contextMenu.getItems().add(configItem);
+        contextMenu.getItems().add(deleteItem);
 
         cell.textProperty().bind(cell.itemProperty());
 

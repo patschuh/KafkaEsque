@@ -27,11 +27,11 @@ Allows for playing a set of Messages over different topics into a cluster, see t
 ***
 
 ### Authentication 
-At the moment the UI only supports cluster configs without any authentication
 Within the cluster.json file it is possible to configure Authentication for Kafka and Confluent Schema Registry:
 Note: the secrets have to be given in the json file in plain text. This might be a security issue. Feel free to apply a PR if you want to improve this. 
-
 sslEnabled controls the SSL Authentication method
+
+Config of the Authentication can be done either in cluster.json directly or via the UI.
 
 ###### Example for SSL with mTLS Authentication to the broker: 
  ```
