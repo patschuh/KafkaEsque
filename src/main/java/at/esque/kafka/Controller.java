@@ -109,8 +109,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -460,7 +459,8 @@ public class Controller {
             stopWatch.start();
             LOGGER.info("Started getting topics for cluster");
             backGroundTaskHolder.setIsInProgress(true);
-            Platform.runLater(() -> topicListView.setItems(adminClient.getTopics()));
+            topicListView.setItems(adminClient.getTopics());
+
         } finally {
             stopWatch.stop();
             LOGGER.info("Finished getting topics for cluster [{}]", stopWatch);
@@ -1216,4 +1216,6 @@ public class Controller {
     private void updateTabName(PinTab tab, ClusterConfig clusterConfig, String name) {
         Platform.runLater(() -> tab.setText(clusterConfig.getIdentifier() + " - " + name));
     }
+
+
 }

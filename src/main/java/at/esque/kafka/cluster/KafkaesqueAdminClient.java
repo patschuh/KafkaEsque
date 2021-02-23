@@ -1,6 +1,7 @@
 package at.esque.kafka.cluster;
 
 import at.esque.kafka.alerts.ErrorAlert;
+import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.lag.viewer.Lag;
 import at.esque.kafka.topics.DescribeTopicWrapper;
 import javafx.application.Platform;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 
 public class KafkaesqueAdminClient {
     private AdminClient adminClient;
-
+    
     public KafkaesqueAdminClient(String bootstrapServers, Map<String, String> sslProps, Map<String, String> saslProps) {
         Properties props = new Properties();
         props.setProperty(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -53,6 +54,7 @@ public class KafkaesqueAdminClient {
         props.putAll(saslProps);
 
         this.adminClient = AdminClient.create(props);
+
     }
 
     public Set<String> getTopics() {
@@ -60,9 +62,9 @@ public class KafkaesqueAdminClient {
         options.listInternal(true);
         ListTopicsResult result = adminClient.listTopics(options);
         try {
-            return result.names().get();
-        } catch (Exception e) {
-            ErrorAlert.show(e);
+            return result.names().get(15, TimeUnit.SECONDS);
+         } catch (Exception e) {
+            Platform.runLater(() -> ErrorAlert.show(e));
         }
         return new HashSet<>();
     }
