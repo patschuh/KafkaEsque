@@ -1,25 +1,10 @@
 package at.esque.kafka.cluster;
 
 import at.esque.kafka.alerts.ErrorAlert;
-import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.lag.viewer.Lag;
 import at.esque.kafka.topics.DescribeTopicWrapper;
 import javafx.application.Platform;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.apache.kafka.clients.admin.Config;
-import org.apache.kafka.clients.admin.ConsumerGroupListing;
-import org.apache.kafka.clients.admin.CreateTopicsResult;
-import org.apache.kafka.clients.admin.DeleteTopicsResult;
-import org.apache.kafka.clients.admin.DescribeAclsResult;
-import org.apache.kafka.clients.admin.DescribeConfigsResult;
-import org.apache.kafka.clients.admin.DescribeTopicsResult;
-import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsResult;
-import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
-import org.apache.kafka.clients.admin.ListTopicsOptions;
-import org.apache.kafka.clients.admin.ListTopicsResult;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.acl.AccessControlEntryFilter;
 import org.apache.kafka.common.acl.AclBinding;
@@ -31,21 +16,14 @@ import org.apache.kafka.common.resource.PatternType;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.apache.kafka.common.resource.ResourceType;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class KafkaesqueAdminClient {
     private AdminClient adminClient;
-    
+
     public KafkaesqueAdminClient(String bootstrapServers, Map<String, String> sslProps, Map<String, String> saslProps) {
         Properties props = new Properties();
         props.setProperty(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -149,6 +127,20 @@ public class KafkaesqueAdminClient {
                     new AccessControlEntryFilter(aclBinding.entry().principal(), aclBinding.entry().host(), aclBinding.entry().operation(), aclBinding.entry().permissionType()));
 
             adminClient.deleteAcls(Collections.singletonList(aclBindingFilter));
+
+        } catch (Exception e) {
+            Platform.runLater(() -> ErrorAlert.show(e));
+        }
+    }
+
+    public void addAcl(AclBinding aclBinding)
+    {
+        try {
+
+
+            CreateAclsResult result = adminClient.createAcls(Arrays.asList(aclBinding));
+
+            result.all().get();
 
         } catch (Exception e) {
             Platform.runLater(() -> ErrorAlert.show(e));
