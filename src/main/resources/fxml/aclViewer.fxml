@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import java.lang.String?>
+<?import javafx.scene.control.Tooltip?>
 <BorderPane prefHeight="295.0" prefWidth="497.0" xmlns="http://javafx.com/javafx/11.0.1"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.acl.viewer.AclViewerController">
     <center>
@@ -54,13 +55,31 @@
                 <ComboBox fx:id="resourcePatternCombo" maxWidth="1.7976931348623157E308" prefHeight="25.0"
                           prefWidth="176.0" GridPane.columnIndex="3" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/>
                 <Button fx:id="searchButton" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-                        mnemonicParsing="false" onAction="#startSearch" prefWidth="30.0" GridPane.columnIndex="4"
-                        GridPane.halignment="CENTER" GridPane.rowSpan="2" GridPane.valignment="CENTER">
+                        mnemonicParsing="false" onAction="#startSearch" prefWidth="30.0"
+                        GridPane.columnIndex="4" GridPane.rowIndex="1" GridPane.halignment="CENTER" GridPane.columnSpan="1">
                     <styleClass>
                         <String fx:value="success"/>
                     </styleClass>
                     <graphic>
                         <FontIcon iconColor="WHITE" iconLiteral="fa-search" iconSize="20"/>
+                    </graphic>
+                </Button>
+                <Button fx:id="addButton" maxHeight="-Infinity" maxWidth="-Infinity"
+                        minHeight="30.0" mnemonicParsing="false"
+                        onAction="#addACL" prefWidth="30.0"
+                        GridPane.columnIndex="4" GridPane.rowIndex="0" GridPane.halignment="CENTER" GridPane.columnSpan="1"
+                        >
+                    <tooltip>
+                        <Tooltip text="Add ACL"/>
+                    </tooltip>
+                    <styleClass>
+<!--                        <String fx:value="btn"/>-->
+                        <String fx:value="success"/>
+<!--                        <String fx:value="first"/>-->
+                    </styleClass>
+                    <graphic>
+                        <FontIcon iconColor="WHITE" iconLiteral="fa-plus"
+                                  iconSize="20"/>
                     </graphic>
                 </Button>
             </children>
