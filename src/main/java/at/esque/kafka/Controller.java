@@ -108,6 +108,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -459,7 +460,8 @@ public class Controller {
             stopWatch.start();
             LOGGER.info("Started getting topics for cluster");
             backGroundTaskHolder.setIsInProgress(true);
-            topicListView.setItems(adminClient.getTopics());
+            Set<String> topics = adminClient.getTopics();
+            Platform.runLater(() -> topicListView.setItems(topics));
 
         } finally {
             stopWatch.stop();
