@@ -126,10 +126,12 @@ public class AclViewerController {
             adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText())
                     .forEach(acl -> Platform.runLater(() -> aclList.add(new Acl(acl))));
             Platform.runLater(() -> {
-                // This needs to be after building the list otherwise somehow the table view stays empty
-                resultView.setItems(FXCollections.observableArrayList(aclList));
-                refreshRunning.setValue(false);
+                refreshRunning.setValue(true);
             });
+            adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText())
+                    .forEach(acl -> Platform.runLater(() -> aclList.add(new Acl(acl))));
+            Platform.runLater(() -> refreshRunning.setValue(false));
+            Platform.runLater(() -> resultView.setItems(FXCollections.observableArrayList(aclList)));
         });
     }
 
