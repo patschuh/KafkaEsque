@@ -108,9 +108,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -460,7 +460,9 @@ public class Controller {
             stopWatch.start();
             LOGGER.info("Started getting topics for cluster");
             backGroundTaskHolder.setIsInProgress(true);
-            Platform.runLater(() -> topicListView.setItems(adminClient.getTopics()));
+            Set<String> topics = adminClient.getTopics();
+            Platform.runLater(() -> topicListView.setItems(topics));
+
         } finally {
             stopWatch.stop();
             LOGGER.info("Finished getting topics for cluster [{}]", stopWatch);
@@ -668,9 +670,7 @@ public class Controller {
             fxmlLoader.setLocation(getClass().getResource("/fxml/aclViewer.fxml"));
             Parent root1 = fxmlLoader.load();
             AclViewerController controller = fxmlLoader.getController();
-            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), new TopicMessageTypeConfig(), new HashMap<>());
-            KafkaConsumer consumer = consumerHandler.getConsumer(consumerId).orElseThrow(() -> new RuntimeException("Error getting consumer"));
-            controller.setup(adminClient, consumer);
+            controller.setup(adminClient);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
             stage.initOwner(controlledStage);
@@ -681,7 +681,6 @@ public class Controller {
             centerStageOnControlledStage(stage);
             stage.setOnCloseRequest(windowEvent -> {
                 controller.stop();
-                consumerHandler.deregisterConsumer(consumerId);
             });
         } catch (Exception e) {
             ErrorAlert.show(e);
@@ -994,7 +993,11 @@ public class Controller {
 
     @FXML
     public void editClusterConfigsClick(ActionEvent actionEvent) {
-        ClusterConfigDialog.show(selectedCluster()).ifPresent(clusterConfig -> configHandler.saveConfigs());
+        ClusterConfig existingConfig = selectedCluster();
+        ClusterConfigDialog.show(existingConfig).ifPresent(clusterConfig -> {
+            existingConfig.update(clusterConfig);
+            configHandler.saveConfigs();
+        });
     }
 
     @FXML
@@ -1279,4 +1282,6 @@ public class Controller {
     private void updateTabName(PinTab tab, ClusterConfig clusterConfig, String name) {
         Platform.runLater(() -> tab.setText(clusterConfig.getIdentifier() + " - " + name));
     }
+
+
 }

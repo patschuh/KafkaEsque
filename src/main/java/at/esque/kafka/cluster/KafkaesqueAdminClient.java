@@ -3,12 +3,16 @@ package at.esque.kafka.cluster;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.lag.viewer.Lag;
 import at.esque.kafka.topics.DescribeTopicWrapper;
+import javafx.application.Platform;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.TopicPartitionInfo;
-import org.apache.kafka.common.acl.*;
+import org.apache.kafka.common.acl.AccessControlEntryFilter;
+import org.apache.kafka.common.acl.AclBinding;
+import org.apache.kafka.common.acl.AclBindingFilter;
+import org.apache.kafka.common.acl.AclOperation;
+import org.apache.kafka.common.acl.AclPermissionType;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.resource.PatternType;
-import org.apache.kafka.common.resource.ResourcePattern;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.apache.kafka.common.resource.ResourceType;
 
@@ -20,7 +24,7 @@ import java.util.stream.Collectors;
 public class KafkaesqueAdminClient {
     private AdminClient adminClient;
 
-    public KafkaesqueAdminClient(String bootstrapServers, Map<String, String> sslProps,  Map<String, String> saslProps) {
+    public KafkaesqueAdminClient(String bootstrapServers, Map<String, String> sslProps, Map<String, String> saslProps) {
         Properties props = new Properties();
         props.setProperty(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.setProperty(AdminClientConfig.CLIENT_ID_CONFIG, String.format("kafkaesque-%s", UUID.randomUUID()));
@@ -28,6 +32,7 @@ public class KafkaesqueAdminClient {
         props.putAll(saslProps);
 
         this.adminClient = AdminClient.create(props);
+
     }
 
     public Set<String> getTopics() {
@@ -35,9 +40,9 @@ public class KafkaesqueAdminClient {
         options.listInternal(true);
         ListTopicsResult result = adminClient.listTopics(options);
         try {
-            return result.names().get();
-        } catch (Exception e) {
-            ErrorAlert.show(e);
+            return result.names().get(15, TimeUnit.SECONDS);
+         } catch (Exception e) {
+            Platform.runLater(() -> ErrorAlert.show(e));
         }
         return new HashSet<>();
     }
@@ -83,7 +88,7 @@ public class KafkaesqueAdminClient {
         return null;
     }
 
-    public List<Lag> getConsumerGroups(){
+    public List<Lag> getConsumerGroups() {
         ListConsumerGroupsResult result = adminClient.listConsumerGroups();
         try {
             Collection<ConsumerGroupListing> consumerGroupListings = result.all().get();
@@ -93,13 +98,12 @@ public class KafkaesqueAdminClient {
                 return lag;
             }).collect(Collectors.toList());
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            Platform.runLater(() -> ErrorAlert.show(e));
         }
         return Collections.EMPTY_LIST;
     }
 
-    public List<AclBinding> getACLs(ResourceType resourceType, PatternType resourcePattern, String resourceName)
-    {
+    public List<AclBinding> getACLs(ResourceType resourceType, PatternType resourcePattern, String resourceName) {
         try {
             if ("".equals(resourceName))
                 resourceName = null;
@@ -112,13 +116,12 @@ public class KafkaesqueAdminClient {
             return describeAclsResult.values().get().stream().collect(Collectors.toList());
 
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            Platform.runLater(() -> ErrorAlert.show(e));
         }
         return Collections.EMPTY_LIST;
     }
 
-    public void deleteAcl(AclBinding aclBinding)
-    {
+    public void deleteAcl(AclBinding aclBinding) {
         try {
             AclBindingFilter aclBindingFilter = new AclBindingFilter(new ResourcePatternFilter(aclBinding.pattern().resourceType(), aclBinding.pattern().name(), aclBinding.pattern().patternType()),
                     new AccessControlEntryFilter(aclBinding.entry().principal(), aclBinding.entry().host(), aclBinding.entry().operation(), aclBinding.entry().permissionType()));
@@ -126,11 +129,25 @@ public class KafkaesqueAdminClient {
             adminClient.deleteAcls(Collections.singletonList(aclBindingFilter));
 
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            Platform.runLater(() -> ErrorAlert.show(e));
         }
     }
 
-    public ListConsumerGroupOffsetsResult listConsumerGroupOffsets(String groupId){
+    public void addAcl(AclBinding aclBinding)
+    {
+        try {
+
+
+            CreateAclsResult result = adminClient.createAcls(Arrays.asList(aclBinding));
+
+            result.all().get();
+
+        } catch (Exception e) {
+            Platform.runLater(() -> ErrorAlert.show(e));
+        }
+    }
+
+    public ListConsumerGroupOffsetsResult listConsumerGroupOffsets(String groupId) {
         return adminClient.listConsumerGroupOffsets(groupId);
     }
 

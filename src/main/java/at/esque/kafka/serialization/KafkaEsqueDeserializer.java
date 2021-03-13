@@ -5,18 +5,22 @@ import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.handlers.ConfigHandler;
 import org.apache.avro.Schema;
 import org.apache.kafka.common.serialization.Deserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.Serdes;
 
+import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.Map;
 
 public class KafkaEsqueDeserializer implements Deserializer<Object> {
 
     private ForgivingKafkaAvroDeserializer avroDeserializer;
-    private StringDeserializer stringDeserializer;
+
+    private Map<MessageType, Deserializer> deserializerMap = new EnumMap<MessageType, Deserializer>(MessageType.class) {{
+        Arrays.stream(MessageType.values()).filter(type -> !type.equals(MessageType.AVRO)).forEach(type -> put(type, deserializerByType(type)));
+    }};
 
     public KafkaEsqueDeserializer() {
         avroDeserializer = new ForgivingKafkaAvroDeserializer();
-        stringDeserializer = new StringDeserializer();
     }
 
     private String clusterId;
@@ -32,14 +36,14 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
         if (isKey ? topicConfig.getKeyType().equals(MessageType.AVRO) : topicConfig.getValueType().equals(MessageType.AVRO)) {
             return avroDeserializer.deserialize(bytes);
         } else {
-            return stringDeserializer.deserialize(s, bytes);
+            return deserializerMap.get(isKey ? topicConfig.getKeyType() : topicConfig.getValueType()).deserialize(s, bytes);
         }
     }
 
 
     public void configure(Map<String, ?> configs, boolean isKey) {
         this.isKey = isKey;
-        stringDeserializer.configure(configs, isKey);
+        deserializerMap.values().forEach(deserializer -> deserializer.configure(configs, isKey));
         if (configs.get("schema.registry.url") != null) {
             avroDeserializer.configure(configs, isKey);
         }
@@ -52,6 +56,35 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
     }
 
     public void close() {
+    }
+
+    private Deserializer deserializerByType(MessageType type) {
+        switch (type) {
+            case STRING:
+                return Serdes.String().deserializer();
+            case SHORT:
+                return Serdes.Short().deserializer();
+            case INTEGER:
+                return Serdes.Integer().deserializer();
+            case LONG:
+                return Serdes.Long().deserializer();
+            case FLOAT:
+                return Serdes.Float().deserializer();
+            case DOUBLE:
+                return Serdes.Double().deserializer();
+            case BYTEARRAY:
+                return Serdes.ByteArray().deserializer();
+            case BYTEBUFFER:
+                return Serdes.ByteBuffer().deserializer();
+            case BYTES:
+                return Serdes.Bytes().deserializer();
+            case UUID:
+                return Serdes.UUID().deserializer();
+            case AVRO:
+                return new ForgivingKafkaAvroDeserializer();
+            default:
+                throw new UnsupportedOperationException("no deserializer for Message type: " + type);
+        }
     }
 }
 

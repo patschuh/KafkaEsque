@@ -3,10 +3,6 @@ package at.esque.kafka.acl.viewer;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import org.apache.kafka.common.acl.AclBinding;
-import org.apache.kafka.common.acl.AclOperation;
-import org.apache.kafka.common.acl.AclPermissionType;
-import org.apache.kafka.common.resource.PatternType;
-import org.apache.kafka.common.resource.ResourceType;
 
 public class Acl {
     private StringProperty resourceType = new SimpleStringProperty();
@@ -18,8 +14,7 @@ public class Acl {
     private StringProperty host = new SimpleStringProperty();
     private AclBinding aclBinding;
 
-    public Acl(AclBinding aclBinding)
-    {
+    public Acl(AclBinding aclBinding) {
         this.aclBinding = aclBinding;
         this.resourceType.set(aclBinding.pattern().resourceType().toString());
         this.resourceName.set(aclBinding.pattern().name());
@@ -86,8 +81,7 @@ public class Acl {
         return host;
     }
 
-    public AclBinding getAclBinding()
-    {
+    public AclBinding getAclBinding() {
         return aclBinding;
     }
 }

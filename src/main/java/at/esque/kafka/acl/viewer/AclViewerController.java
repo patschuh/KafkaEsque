@@ -1,34 +1,30 @@
 package at.esque.kafka.acl.viewer;
 
-import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.cluster.KafkaesqueAdminClient;
-import at.esque.kafka.controls.FilterableListView;
-import at.esque.kafka.controls.LagViewerCellContent;
-import at.esque.kafka.lag.viewer.Lag;
+import at.esque.kafka.dialogs.CreateACLDialog;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.Callback;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.resource.PatternType;
-import org.apache.kafka.common.resource.ResourcePattern;
 import org.apache.kafka.common.resource.ResourceType;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-import javax.swing.*;
-import java.awt.event.MouseEvent;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AclViewerController {
 
@@ -45,29 +41,27 @@ public class AclViewerController {
     TableView<Acl> resultView;
 
     @FXML
-    TableColumn<Acl,String> resourceTypeColumn;
+    TableColumn<Acl, String> resourceTypeColumn;
     @FXML
-    TableColumn<Acl,String> resourceNameColumn;
+    TableColumn<Acl, String> resourceNameColumn;
     @FXML
-    TableColumn<Acl,String> patternTypeColumn;
+    TableColumn<Acl, String> patternTypeColumn;
     @FXML
-    TableColumn<Acl,String> principalColumn;
+    TableColumn<Acl, String> principalColumn;
     @FXML
-    TableColumn<Acl,String> operationColumn;
+    TableColumn<Acl, String> operationColumn;
     @FXML
-    TableColumn<Acl,String> permissionTypeColumn;
+    TableColumn<Acl, String> permissionTypeColumn;
     @FXML
-    TableColumn<Acl,String> hostColumn;
+    TableColumn<Acl, String> hostColumn;
 
     private KafkaesqueAdminClient adminClient;
-
-    private KafkaConsumer kafkaConsumer;
 
     private BooleanProperty refreshRunning = new SimpleBooleanProperty(false);
 
     @FXML
     public void initialize() {
-        resourceTypeCombo.setItems(FXCollections.observableArrayList( ResourceType.values()));
+        resourceTypeCombo.setItems(FXCollections.observableArrayList(ResourceType.values()));
         resourcePatternCombo.setItems(FXCollections.observableArrayList(PatternType.values()));
 
         resourceTypeCombo.getSelectionModel().select(ResourceType.ANY);
@@ -102,8 +96,7 @@ public class AclViewerController {
                             public void handle(ActionEvent event) {
                                 Object item = resultView.getSelectionModel().getSelectedItem();
 
-                                if (item instanceof Acl)
-                                {
+                                if (item instanceof Acl) {
                                     Acl selectedAcl = (Acl) item;
                                     adminClient.deleteAcl(selectedAcl.getAclBinding());
                                 }
@@ -121,30 +114,35 @@ public class AclViewerController {
 
     }
 
-    public void setup(KafkaesqueAdminClient adminClient, KafkaConsumer kafkaConsumer) {
+    public void setup(KafkaesqueAdminClient adminClient) {
         this.adminClient = adminClient;
-        this.kafkaConsumer = kafkaConsumer;
     }
 
     @FXML
     private void startSearch(ActionEvent actionEvent) {
         runInDaemonThread(() -> {
-                Platform.runLater(() -> {
-                    refreshRunning.setValue(true);
-                    List<Acl> aclList = new ArrayList<>();
-
-                    adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText())
-                            .forEach(acl -> aclList.add(new Acl(acl)));
-
-                    resultView.setItems(FXCollections.observableArrayList(aclList));
-                });
+            List<Acl> aclList = new ArrayList<>();
+            Platform.runLater(() -> refreshRunning.setValue(true));
+            adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText())
+                    .forEach(acl -> Platform.runLater(() -> aclList.add(new Acl(acl))));
+            Platform.runLater(() -> {
+                refreshRunning.setValue(true);
+            });
+            adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText())
+                    .forEach(acl -> Platform.runLater(() -> aclList.add(new Acl(acl))));
             Platform.runLater(() -> refreshRunning.setValue(false));
+            Platform.runLater(() -> resultView.setItems(FXCollections.observableArrayList(aclList)));
         });
     }
 
+    @FXML
+    private void addACL(ActionEvent actionEvent)
+    {
+        CreateACLDialog.show(adminClient);
+    }
 
-    public void stop(){
-        kafkaConsumer = null;
+    public void stop() {
+        adminClient = null;
     }
 
     private void runInDaemonThread(Runnable runnable) {
