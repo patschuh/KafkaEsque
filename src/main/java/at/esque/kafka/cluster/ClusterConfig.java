@@ -47,9 +47,9 @@ public class ClusterConfig {
             this.setSaslSecurityProtocol(existingConfig.getSaslSecurityProtocol());
             this.setSaslMechanism(existingConfig.getSaslMechanism());
             this.setSaslJaasConfig(existingConfig.getSaslJaasConfig());
-            this.setKafkaConnectUrl(existingConfig.getKafkaConnectUrl());
-            this.setKafkaConnectBasicAuthUser(existingConfig.getKafkaConnectBasicAuthUser());
-            this.setKafkaConnectBasicAuthPassword(existingConfig.getKafkaConnectBasicAuthPassword());
+            this.setkafkaConnectUrl(existingConfig.getkafkaConnectUrl());
+            this.setkafkaConnectBasicAuthUser(existingConfig.getkafkaConnectBasicAuthUser());
+            this.setkafkaConnectBasicAuthPassword(existingConfig.getkafkaConnectBasicAuthPassword());
         }
     }
 
