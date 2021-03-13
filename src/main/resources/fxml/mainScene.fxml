@@ -203,6 +203,23 @@
                                 </MenuItem>
                             </items>
                         </Menu>
+                        <Menu mnemonicParsing="false" text="Kafka Connect">
+                            <items>
+                                <MenuItem mnemonicParsing="false" onAction="#kafkaConnectClick"
+                                          text="Kafka Connect Browser">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fa-plug"/>
+                                    </graphic>
+                                </MenuItem>
+                                <MenuItem mnemonicParsing="false" onAction="#kafkaConnectInstalledPluginClick"
+                                          text="View installed connector plugins">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fa-plug"/>
+                                    </graphic>
+                                </MenuItem>
+
+                            </items>
+                        </Menu>
                     </menus>
                 </MenuBar>
             </top>

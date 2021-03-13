@@ -57,6 +57,7 @@ dependencies {
     compile 'org.fxmisc.richtext:richtextfx:0.10.5'
     compile 'net.thisptr:jackson-jq:1.0.0-preview.20191208'
     compile 'com.dlsc.formsfx:formsfx-core:8.4.0'
+    compile group: 'org.sourcelab', name: 'kafka-connect-client', version: '3.1.0'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.springframework.kafka:spring-kafka-test:2.2.0.RELEASE'
