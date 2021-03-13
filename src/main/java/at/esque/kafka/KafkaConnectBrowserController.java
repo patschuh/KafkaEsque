@@ -8,6 +8,7 @@ import at.esque.kafka.alerts.WarningAlert;
 import at.esque.kafka.cluster.ClusterConfig;
 import at.esque.kafka.connect.KafkaesqueConnectClient;
 import at.esque.kafka.connect.Status;
+import at.esque.kafka.connect.utils.ConnectUtil;
 import at.esque.kafka.controls.FilterableListView;
 import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import at.esque.kafka.handlers.ConfigHandler;
@@ -16,8 +17,13 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.apache.zookeeper.data.Stat;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
@@ -126,7 +132,7 @@ public class KafkaConnectBrowserController {
         try {
             if(selectedConnector != null) {
                 Map<String, String> connectorConfig = kafkaesqueConnectClient.getConnectorConfig(selectedConnector);
-                connectorConfigTextArea.setText(buildConfigString(connectorConfig));
+                connectorConfigTextArea.setText(ConnectUtil.buildConfigString(connectorConfig,ConnectUtil.PARAM_BLACK_LIST_VIEW));
 
                 Status status = kafkaesqueConnectClient.getConnectorStatus(selectedConnector);
                 connectorStatus.setText(status.getStatus());
@@ -153,7 +159,7 @@ public class KafkaConnectBrowserController {
 
 
     public void addConnector(ActionEvent actionEvent) {
-        //TODO
+        showConnectConfigDialog(null);
     }
 
 
@@ -161,6 +167,25 @@ public class KafkaConnectBrowserController {
         try {
             connectorListView.getListView().getSelectionModel().select(null);
             connectorListView.setItems(FXCollections.observableArrayList(kafkaesqueConnectClient.getConnectors()));
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
+    }
+
+    private void showConnectConfigDialog(String selectedConnector)
+    {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/createConnector.fxml"));
+            Parent root1 = fxmlLoader.load();
+            CreateConnectorController controller = fxmlLoader.getController();
+            Stage stage = new Stage();
+            controller.setup(selectedConnector, kafkaesqueConnectClient, stage);
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Add Connector");
+            stage.setScene(Main.createStyledScene(root1, -1, -1));
+            stage.setOnCloseRequest(event -> controller.cleanup());
+            stage.show();
         } catch (Exception e) {
             ErrorAlert.show(e);
         }
@@ -195,7 +220,7 @@ public class KafkaConnectBrowserController {
         configItem.setGraphic(new FontIcon(FontAwesome.COG));
         configItem.textProperty().set("configure");
         configItem.setOnAction(event -> {
-          //  configureConnector();
+            showConnectConfigDialog(cell.itemProperty().get());
         });
 
         contextMenu.getItems().add(configItem);
@@ -213,22 +238,6 @@ public class KafkaConnectBrowserController {
         return cell;
     }
 
-    private String buildConfigString(Map<String,String> configMap)
-    {
-        StringBuilder configString = new StringBuilder();
-        boolean firstRow = true;
-        for(String entry : configMap.keySet())
-        {
-            if (firstRow == false)
-                configString.append(System.getProperty("line.separator"));
-            configString.append(entry);
-            configString.append(":");
-            configString.append(configMap.get(entry));
-            firstRow = false;
-        }
-
-        return configString.toString();
-    }
 
     private void updateDisableFlagOfConnectorActionButtonStatus(String connectorStatus)
     {

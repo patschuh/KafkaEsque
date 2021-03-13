@@ -5,8 +5,7 @@ import org.apache.kafka.common.config.SslConfigs;
 import org.eclipse.jetty.util.StringUtil;
 import org.sourcelab.kafka.connect.apiclient.Configuration;
 import org.sourcelab.kafka.connect.apiclient.KafkaConnectClient;
-import org.sourcelab.kafka.connect.apiclient.request.dto.ConnectorPlugin;
-import org.sourcelab.kafka.connect.apiclient.request.dto.ConnectorStatus;
+import org.sourcelab.kafka.connect.apiclient.request.dto.*;
 
 import java.io.File;
 import java.util.*;
@@ -99,4 +98,70 @@ public class KafkaesqueConnectClient {
         return connectClient.restartConnectorTask(connenctorName,taskId);
     }
 
+    public List<ConnectConfigParameter> getConnectorConfigParameters(String connectorClass)
+    {
+        ConnectorPluginConfigDefinition connectDef = ConnectorPluginConfigDefinition.newBuilder()
+                .withName(connectorClass)
+                .withConfig("connector.class",connectorClass)
+                .withConfig("tasks.max", 1)
+                .withConfig("topics", "test")
+                .build();
+
+        ConnectorPluginConfigValidationResults configValidationResults = connectClient.validateConnectorPluginConfig(connectDef);
+
+        Collection<ConnectorPluginConfigValidationResults.Config> paramList = configValidationResults.getConfigs();
+
+        List<ConnectConfigParameter> mappedparamList = new ArrayList<>();
+
+        paramList.stream().forEach(c -> mappedparamList.add(new ConnectConfigParameter(c)));
+
+        return mappedparamList;
+
+    }
+
+    public ValidationResult validateConnectorConfig(String name, String connectorClass,  Map<String,String> params)
+    {
+        ConnectorPluginConfigDefinition connectDef = ConnectorPluginConfigDefinition.newBuilder()
+                .withName(connectorClass)
+                .withConfig(params)
+                .withConfig("connector.class",connectorClass)
+                .withConfig("name",name)
+                .build();
+
+        ConnectorPluginConfigValidationResults configValidationResults = connectClient.validateConnectorPluginConfig(connectDef);
+
+        ValidationResult valRes = new ValidationResult(configValidationResults.getErrorCount());
+
+        for(ConnectorPluginConfigValidationResults.Config c : configValidationResults.getConfigs())
+        {
+            Collection<String>  errors = c.getValue().getErrors();
+
+            if(errors.size() > 0)
+            {
+                valRes.addParamErrors(c.getDefinition().getName(),new ArrayList<>(errors));
+            }
+        }
+
+      return valRes;
+    }
+
+    public void createConnector(String name, String connectorClass, Map<String,String> params)
+    {
+        NewConnectorDefinition connectDef = NewConnectorDefinition.newBuilder()
+                .withName(name)
+                .withConfig(params)
+                .withConfig("connector.class",connectorClass)
+                .build();
+
+        connectClient.addConnector(connectDef);
+
+    }
+
+    public void updateConnector(String name, String connectorClass, Map<String,String> params)
+    {
+        params.put("connector.class", connectorClass);
+
+        connectClient.updateConnectorConfig(name,params);
+
+    }
 }
