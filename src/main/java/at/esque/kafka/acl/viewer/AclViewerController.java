@@ -1,6 +1,7 @@
 package at.esque.kafka.acl.viewer;
 
 import at.esque.kafka.cluster.KafkaesqueAdminClient;
+import at.esque.kafka.dialogs.CreateACLDialog;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -121,16 +122,24 @@ public class AclViewerController {
     private void startSearch(ActionEvent actionEvent) {
         runInDaemonThread(() -> {
             List<Acl> aclList = new ArrayList<>();
+            Platform.runLater(() -> refreshRunning.setValue(true));
+            adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText())
+                    .forEach(acl -> Platform.runLater(() -> aclList.add(new Acl(acl))));
             Platform.runLater(() -> {
                 refreshRunning.setValue(true);
-                resultView.setItems(FXCollections.observableArrayList(aclList));
             });
             adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText())
                     .forEach(acl -> Platform.runLater(() -> aclList.add(new Acl(acl))));
             Platform.runLater(() -> refreshRunning.setValue(false));
+            Platform.runLater(() -> resultView.setItems(FXCollections.observableArrayList(aclList)));
         });
     }
 
+    @FXML
+    private void addACL(ActionEvent actionEvent)
+    {
+        CreateACLDialog.show(adminClient);
+    }
 
     public void stop() {
         adminClient = null;
