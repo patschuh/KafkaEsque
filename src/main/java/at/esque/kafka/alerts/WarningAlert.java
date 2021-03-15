@@ -9,9 +9,7 @@ public final class WarningAlert {
         alert.setTitle(title);
         alert.setHeaderText(header);
         alert.setContentText(content);
-        Main.applyStylesheet(alert.getDialogPane().getScene());
         Main.applyIcon(alert);
-
         alert.showAndWait();
     }
 }

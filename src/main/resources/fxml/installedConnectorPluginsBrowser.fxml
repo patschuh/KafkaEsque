@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import at.esque.kafka.controls.FilterableListView?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import at.esque.kafka.controls.KafkaEsqueCodeArea?>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.InstalledConnectorPluginsController">
+    <center>
+        <SplitPane dividerPositions="0.23244147157190637" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <items>
+                <FilterableListView fx:id="connectorPluginListView" addButtonVisible="false"
+                                    refreshButtonVisible="true" onRefreshAction="#refreshConnectorPlugins" prefHeight="200.0"
+                                    prefWidth="200.0"/>
+            </items>
+        </SplitPane>
+    </center>
+</BorderPane>

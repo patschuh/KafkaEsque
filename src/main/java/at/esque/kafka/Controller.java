@@ -553,6 +553,70 @@ public class Controller {
     }
 
     @FXML
+    public void kafkaConnectClick(ActionEvent actionEvent)
+    {
+        try {
+            ClusterConfig selectedConfig = selectedCluster();
+            if (StringUtils.isEmpty(selectedConfig.getkafkaConnectUrl())) {
+                Optional<String> input = SystemUtils.showInputDialog("http://localhost:8083", "Add kafka connect url", "this cluster config is missing a kafka connect url please add it now", "kafka connect URL");
+                if (!input.isPresent()) {
+                    return;
+                }
+                input.ifPresent(url -> {
+                    selectedConfig.setkafkaConnectUrl(url);
+                    configHandler.saveConfigs();
+                });
+            }
+
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/kafkaConnectBrowser.fxml"));
+            Parent root1 = fxmlLoader.load();
+            KafkaConnectBrowserController controller = fxmlLoader.getController();
+            controller.setup(selectedConfig,configHandler);
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Browse Kafka Connect");
+            stage.setScene(Main.createStyledScene(root1, -1, -1));
+            stage.show();
+            centerStageOnControlledStage(stage);
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
+    }
+
+    @FXML
+    public void kafkaConnectInstalledPluginClick(ActionEvent actionEvent)
+    {
+        try {
+            ClusterConfig selectedConfig = selectedCluster();
+            if (StringUtils.isEmpty(selectedConfig.getkafkaConnectUrl())) {
+                Optional<String> input = SystemUtils.showInputDialog("http://localhost:8083", "Add kafka connect url", "this cluster config is missing a kafka connect url please add it now", "kafka connect URL");
+                if (!input.isPresent()) {
+                    return;
+                }
+                input.ifPresent(url -> {
+                    selectedConfig.setkafkaConnectUrl(url);
+                    configHandler.saveConfigs();
+                });
+            }
+
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/installedConnectorPluginsBrowser.fxml"));
+            Parent root1 = fxmlLoader.load();
+            InstalledConnectorPluginsController controller = fxmlLoader.getController();
+            controller.setup(selectedConfig,configHandler);
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Browse installed Kafka Connect plugins");
+            stage.setScene(Main.createStyledScene(root1, -1, -1));
+            stage.show();
+            centerStageOnControlledStage(stage);
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
+    }
+
+    @FXML
     public void crossClusterClick(ActionEvent actionEvent) {
         try {
             FXMLLoader fxmlLoader = injector.getInstance(FXMLLoader.class);
