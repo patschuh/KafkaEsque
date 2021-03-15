@@ -1,6 +1,5 @@
 package at.esque.kafka;
 
-import at.esque.kafka.acl.viewer.Acl;
 import at.esque.kafka.alerts.ConfirmationAlert;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.alerts.SuccessAlert;
@@ -12,23 +11,27 @@ import at.esque.kafka.connect.utils.ConnectUtil;
 import at.esque.kafka.controls.FilterableListView;
 import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import at.esque.kafka.handlers.ConfigHandler;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import org.apache.zookeeper.data.Stat;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
-import scala.Int;
 
 import java.util.Map;
 
@@ -71,7 +74,7 @@ public class KafkaConnectBrowserController {
     private KafkaesqueConnectClient kafkaesqueConnectClient;
 
     public void setup(ClusterConfig selectedConfig, ConfigHandler configHandler) {
-        kafkaesqueConnectClient = new KafkaesqueConnectClient(selectedConfig.getkafkaConnectUrl(), selectedConfig.getkafkaConnectBasicAuthUser(), selectedConfig.getkafkaConnectBasicAuthPassword(), configHandler.getSslProperties(selectedConfig));
+        kafkaesqueConnectClient = new KafkaesqueConnectClient(selectedConfig.getkafkaConnectUrl(), selectedConfig.getkafkaConnectBasicAuthUser(), selectedConfig.getkafkaConnectBasicAuthPassword(), selectedConfig.isKafkaConnectuseSsl(), configHandler.getSslProperties(selectedConfig));
 
         // Setup Connector List
         connectorListView.getListView().setCellFactory(param -> connectorListCellFactory());

@@ -15,26 +15,24 @@ public class KafkaesqueConnectClient {
     private KafkaConnectClient connectClient;
 
 
-    public KafkaesqueConnectClient(String kafkaConnectURL, String kafkaConnectBasicAuthUser, String kafkaConnectBasicAuthPassword, Map<String, String> sslProps) {
+    public KafkaesqueConnectClient(String kafkaConnectURL, String kafkaConnectBasicAuthUser, String kafkaConnectBasicAuthPassword, boolean kafkaConnectuseSsl, Map<String, String> sslProps) {
 
         Configuration configuration = new Configuration(kafkaConnectURL);
 
         if(!StringUtil.isEmpty(kafkaConnectBasicAuthUser) && !StringUtils.isEmpty(kafkaConnectBasicAuthPassword)) {
             configuration.useBasicAuth(kafkaConnectBasicAuthUser, kafkaConnectBasicAuthPassword);
         }
+        if(kafkaConnectuseSsl) {
+            if (sslProps.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG) != null) {
+                configuration.useTrustStore(new File(sslProps.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG)), sslProps.get(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG));
+            }
 
-        if (sslProps.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG) != null)
-        {
-            configuration.useTrustStore(new File(sslProps.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG)), sslProps.get(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG));
-        }
-
-        if (sslProps.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG) != null)
-        {
-            configuration.useTrustStore(new File(sslProps.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG)), sslProps.get(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG));
-        }
-        if (sslProps.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG) != null)
-        {
-            configuration.useKeyStore(new File(sslProps.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG)), sslProps.get(SslConfigs.SSL_KEY_PASSWORD_CONFIG));
+            if (sslProps.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG) != null) {
+                configuration.useTrustStore(new File(sslProps.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG)), sslProps.get(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG));
+            }
+            if (sslProps.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG) != null) {
+                configuration.useKeyStore(new File(sslProps.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG)), sslProps.get(SslConfigs.SSL_KEY_PASSWORD_CONFIG));
+            }
         }
 
         connectClient = new KafkaConnectClient(configuration);

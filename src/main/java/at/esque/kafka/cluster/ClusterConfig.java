@@ -25,6 +25,7 @@ public class ClusterConfig {
     private StringProperty kafkaConnectUrl = new SimpleStringProperty();
     private StringProperty kafkaConnectBasicAuthUser = new SimpleStringProperty();
     private StringProperty kafkaConnectBasicAuthPassword = new SimpleStringProperty();
+    private BooleanProperty kafkaConnectuseSsl = new SimpleBooleanProperty();
 
     public ClusterConfig() {
     }
@@ -50,6 +51,7 @@ public class ClusterConfig {
             this.setkafkaConnectUrl(existingConfig.getkafkaConnectUrl());
             this.setkafkaConnectBasicAuthUser(existingConfig.getkafkaConnectBasicAuthUser());
             this.setkafkaConnectBasicAuthPassword(existingConfig.getkafkaConnectBasicAuthPassword());
+            this.setKafkaConnectuseSsl(existingConfig.isKafkaConnectuseSsl());
         }
     }
 
@@ -247,6 +249,19 @@ public class ClusterConfig {
 
     public void setkafkaConnectBasicAuthPassword(String kafkaConnectBasicAuthPassword) {
         this.kafkaConnectBasicAuthPassword.set(kafkaConnectBasicAuthPassword);
+    }
+
+    @JsonProperty("kafkaConnectUseSsl")
+    public boolean isKafkaConnectuseSsl() {
+        return kafkaConnectuseSsl.get();
+    }
+
+    public BooleanProperty kafkaConnectuseSslProperty() {
+        return kafkaConnectuseSsl;
+    }
+
+    public void setKafkaConnectuseSsl(boolean kafkaConnectuseSsl) {
+        this.kafkaConnectuseSsl.set(kafkaConnectuseSsl);
     }
 
     @JsonIgnore

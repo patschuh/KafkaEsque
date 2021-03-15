@@ -4,15 +4,10 @@ import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.cluster.ClusterConfig;
 import at.esque.kafka.connect.KafkaesqueConnectClient;
 import at.esque.kafka.controls.FilterableListView;
-import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import at.esque.kafka.handlers.ConfigHandler;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.ListCell;
-
-import java.util.Map;
 
 
 public class InstalledConnectorPluginsController {
@@ -23,7 +18,7 @@ public class InstalledConnectorPluginsController {
     private KafkaesqueConnectClient kafkaesqueConnectClient;
 
     public void setup(ClusterConfig selectedConfig, ConfigHandler configHandler) {
-        kafkaesqueConnectClient = new KafkaesqueConnectClient(selectedConfig.getkafkaConnectUrl(), selectedConfig.getkafkaConnectBasicAuthUser(), selectedConfig.getkafkaConnectBasicAuthPassword(), configHandler.getSslProperties(selectedConfig));
+        kafkaesqueConnectClient = new KafkaesqueConnectClient(selectedConfig.getkafkaConnectUrl(), selectedConfig.getkafkaConnectBasicAuthUser(), selectedConfig.getkafkaConnectBasicAuthPassword(), selectedConfig.isKafkaConnectuseSsl(), configHandler.getSslProperties(selectedConfig));
         connectorPluginListView.setListComparator(String::compareTo);
 
         refreshConnectorPlugins(null);

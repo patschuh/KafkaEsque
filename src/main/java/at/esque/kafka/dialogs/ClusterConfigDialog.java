@@ -29,6 +29,10 @@ public class ClusterConfigDialog {
     public static final String LABEL_SASL_MECHANISM = "SASL Mechanism";
     public static final String LABEL_SASL_JAAS_CONFIG = "SASL JAAS Config";
     public static final String LABEL_SASL_SECURITY_PROTOCOL = "SASL Security Protocol";
+    public static final String LABEL_KAFKA_CONNECT_URL = "Kafka Connect URL";
+    public static final String LABEL_KAFKA_CONNECT_BASIC_AUTH_USER = "Kafka Connect Basic Auth User";
+    public static final String LABEL_KAFKA_CONNECT_BASIC_AUTH_PASSWORD = "Kafka Connect Basic Auth Password";
+    public static final String LABEL_USE_SSL_CONFIGURATION = "use SSL Configuration";
 
     private ClusterConfigDialog(){}
 
@@ -75,23 +79,27 @@ public class ClusterConfigDialog {
                 ),
                 Group.of(
                         Field.ofStringType(copy.getkafkaConnectUrl()==null?"":copy.getkafkaConnectUrl())
-                                .label("Kafka Connect URL")
-                                .tooltip("Kafka Connect URL")
-                                .placeholder("Kafka Connect URL")
+                                .label(LABEL_KAFKA_CONNECT_URL)
+                                .tooltip(LABEL_KAFKA_CONNECT_URL)
+                                .placeholder("http://my-kafka-connect.com")
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.kafkaConnectUrlProperty()),
                         Field.ofStringType(copy.getkafkaConnectBasicAuthUser()==null?"":copy.getkafkaConnectBasicAuthUser())
-                                .label("Kafka Connect Basic Auth User")
-                                .tooltip("Kafka Connect Basic Auth User")
-                                .placeholder("Kafka Connect Basic Auth User")
+                                .label(LABEL_KAFKA_CONNECT_BASIC_AUTH_USER)
+                                .tooltip(LABEL_KAFKA_CONNECT_BASIC_AUTH_USER)
+                                .placeholder(LABEL_KAFKA_CONNECT_BASIC_AUTH_USER)
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.kafkaConnectBasicAuthUserProperty()),
-                        Field.ofStringType(copy.getkafkaConnectBasicAuthPassword()==null?"":copy.getkafkaConnectBasicAuthPassword())
-                                .label("Kafka Connect Basic Auth Password")
-                                .tooltip("Kafka Connect Basic Auth Password")
-                                .placeholder("Kafka Connect Basic Auth Password")
+                        Field.ofPasswordType(copy.getkafkaConnectBasicAuthPassword()==null?"":copy.getkafkaConnectBasicAuthPassword())
+                                .label(LABEL_KAFKA_CONNECT_BASIC_AUTH_PASSWORD)
+                                .tooltip(LABEL_KAFKA_CONNECT_BASIC_AUTH_PASSWORD)
+                                .placeholder(LABEL_KAFKA_CONNECT_BASIC_AUTH_PASSWORD)
                                 .format(new  NullFormatStringConverter())
-                                .bind(copy.kafkaConnectBasicAuthPasswordProperty())
+                                .bind(copy.kafkaConnectBasicAuthPasswordProperty()),
+                        Field.ofBooleanType(copy.isKafkaConnectuseSsl())
+                                .label(LABEL_USE_SSL_CONFIGURATION)
+                                .tooltip(LABEL_USE_SSL_CONFIGURATION)
+                                .bind(copy.kafkaConnectuseSslProperty())
                 ),
                 Group.of(
                         Field.ofBooleanType(copy.isSslEnabled())
