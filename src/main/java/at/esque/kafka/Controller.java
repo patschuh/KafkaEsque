@@ -110,7 +110,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -539,11 +540,12 @@ public class Controller {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/schemaRegistryBrowser.fxml"));
             Parent root1 = fxmlLoader.load();
             SchemaRegistryBrowserController controller = fxmlLoader.getController();
-            controller.setup(selectedConfig,configHandler);
+            controller.setup(selectedConfig, configHandler);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Browse Schema Registry");
+            stage.initOwner(controlledStage);
+            stage.initModality(Modality.NONE);
+            stage.setTitle("Browse Schema Registry - " + selectedConfig.getIdentifier());
             stage.setScene(Main.createStyledScene(root1, -1, -1));
             stage.show();
             centerStageOnControlledStage(stage);
@@ -553,8 +555,7 @@ public class Controller {
     }
 
     @FXML
-    public void kafkaConnectClick(ActionEvent actionEvent)
-    {
+    public void kafkaConnectClick(ActionEvent actionEvent) {
         try {
             ClusterConfig selectedConfig = selectedCluster();
             if (StringUtils.isEmpty(selectedConfig.getkafkaConnectUrl())) {
@@ -571,11 +572,12 @@ public class Controller {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/kafkaConnectBrowser.fxml"));
             Parent root1 = fxmlLoader.load();
             KafkaConnectBrowserController controller = fxmlLoader.getController();
-            controller.setup(selectedConfig,configHandler);
+            controller.setup(selectedConfig, configHandler);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Browse Kafka Connect");
+            stage.initOwner(controlledStage);
+            stage.initModality(Modality.NONE);
+            stage.setTitle("Browse Kafka Connect - " + selectedConfig.getIdentifier());
             stage.setScene(Main.createStyledScene(root1, -1, -1));
             stage.show();
             centerStageOnControlledStage(stage);
@@ -585,8 +587,7 @@ public class Controller {
     }
 
     @FXML
-    public void kafkaConnectInstalledPluginClick(ActionEvent actionEvent)
-    {
+    public void kafkaConnectInstalledPluginClick(ActionEvent actionEvent) {
         try {
             ClusterConfig selectedConfig = selectedCluster();
             if (StringUtils.isEmpty(selectedConfig.getkafkaConnectUrl())) {
@@ -603,11 +604,12 @@ public class Controller {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/installedConnectorPluginsBrowser.fxml"));
             Parent root1 = fxmlLoader.load();
             InstalledConnectorPluginsController controller = fxmlLoader.getController();
-            controller.setup(selectedConfig,configHandler);
+            controller.setup(selectedConfig, configHandler);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Browse installed Kafka Connect plugins");
+            stage.initOwner(controlledStage);
+            stage.initModality(Modality.NONE);
+            stage.setTitle("Browse installed Kafka Connect plugins - " + selectedConfig.getIdentifier());
             stage.setScene(Main.createStyledScene(root1, -1, -1));
             stage.show();
             centerStageOnControlledStage(stage);
@@ -626,6 +628,7 @@ public class Controller {
             controller.setup();
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initOwner(controlledStage);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Cross Cluster Operations");
             stage.setScene(Main.createStyledScene(root1, 1000, 500));
@@ -723,7 +726,7 @@ public class Controller {
     }
 
     private ObservableList<KafkaMessage> getAndClearBaseList(PinTab tab) {
-        if(tab == null){
+        if (tab == null) {
             return null;
         }
         ObservableList<KafkaMessage> baseList = ((MessagesTabContent) tab.getContent()).getMessageTableView().getBaseList();
@@ -1040,6 +1043,7 @@ public class Controller {
             controller.setup(adminClient);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initOwner(controlledStage);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Create Topic");
             stage.setScene(Main.createStyledScene(root1, -1, -1));
@@ -1058,6 +1062,7 @@ public class Controller {
             controller.setup(adminClient.describeTopic(topic));
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initOwner(controlledStage);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Topic Description");
             Scene styledScene = Main.createStyledScene(root1, -1, -1);
