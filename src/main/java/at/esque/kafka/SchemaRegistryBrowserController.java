@@ -45,8 +45,8 @@ public class SchemaRegistryBrowserController {
     public void setup(ClusterConfig selectedConfig, ConfigHandler configHandler) {
         schemaRegistryRestService = new RestService(selectedConfig.getSchemaRegistry());
 
-        if(selectedConfig.isSchemaRegistryHttps()) {
-            SSLSocketFactory sslSocketFactory = SslSocketFactoryCreator.buildSSlSocketFactory(selectedConfig);
+        if (selectedConfig.isSchemaRegistryUseSsl()) {
+            SSLSocketFactory sslSocketFactory = SslSocketFactoryCreator.buildSSlSocketFactory(selectedConfig, configHandler);
             schemaRegistryRestService.setSslSocketFactory(sslSocketFactory);
         }
 

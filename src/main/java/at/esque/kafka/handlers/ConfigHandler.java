@@ -184,7 +184,7 @@ public class ConfigHandler {
             props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         }
 
-        if (config.isSchemaRegistryHttps()) {
+        if (config.isSchemaRegistryUseSsl()) {
             props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         }
 

@@ -14,6 +14,7 @@ public class ClusterConfig {
     private StringProperty bootStrapServers = new SimpleStringProperty();
     private StringProperty schemaRegistry = new SimpleStringProperty();
     private StringProperty schemaRegistryBasicAuthUserInfo = new SimpleStringProperty();
+    private BooleanProperty schemaRegistryUseSsl = new SimpleBooleanProperty();
     private BooleanProperty sslEnabled = new SimpleBooleanProperty();
     private StringProperty keyStoreLocation = new SimpleStringProperty();
     private StringProperty keyStorePassword = new SimpleStringProperty();
@@ -40,6 +41,7 @@ public class ClusterConfig {
             this.setBootStrapServers(existingConfig.getBootStrapServers());
             this.setSchemaRegistry(existingConfig.getSchemaRegistry());
             this.setSchemaRegistryBasicAuthUserInfo(existingConfig.getSchemaRegistryBasicAuthUserInfo());
+            this.setSchemaRegistryUseSsl(existingConfig.isSchemaRegistryUseSsl());
             this.setSslEnabled(existingConfig.isSslEnabled());
             this.setKeyStoreLocation(existingConfig.getKeyStoreLocation());
             this.setKeyStorePassword(existingConfig.getKeyStorePassword());
@@ -210,6 +212,19 @@ public class ClusterConfig {
 
     public void setSchemaRegistryBasicAuthUserInfo(String schemaRegistryBasicAuthUserInfo) {
         this.schemaRegistryBasicAuthUserInfo.set(schemaRegistryBasicAuthUserInfo);
+    }
+
+    @JsonProperty("schemaRegistryUseSsl")
+    public boolean isSchemaRegistryUseSsl() {
+        return schemaRegistryUseSsl.get();
+    }
+
+    public BooleanProperty schemaRegistryUseSslProperty() {
+        return schemaRegistryUseSsl;
+    }
+
+    public void setSchemaRegistryUseSsl(boolean schemaRegistryUseSsl) {
+        this.schemaRegistryUseSsl.set(schemaRegistryUseSsl);
     }
 
     @JsonProperty("kafkaConnectUrl")

@@ -68,14 +68,18 @@ public class ClusterConfigDialog {
                                 .label(LABEL_SCHEMA_REGISTRY_URL)
                                 .tooltip(LABEL_SCHEMA_REGISTRY_URL)
                                 .placeholder(LABEL_SCHEMA_REGISTRY_URL)
-                                .format(new  NullFormatStringConverter())
+                                .format(new NullFormatStringConverter())
                                 .bind(copy.schemaRegistryProperty()),
-                        Field.ofStringType(copy.getSchemaRegistryBasicAuthUserInfo()==null?"":copy.getSchemaRegistryBasicAuthUserInfo())
+                        Field.ofStringType(copy.getSchemaRegistryBasicAuthUserInfo() == null ? "" : copy.getSchemaRegistryBasicAuthUserInfo())
                                 .label(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
                                 .tooltip(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
                                 .placeholder(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
-                                .format(new  NullFormatStringConverter())
-                                .bind(copy.schemaRegistryBasicAuthUserInfoProperty())
+                                .format(new NullFormatStringConverter())
+                                .bind(copy.schemaRegistryBasicAuthUserInfoProperty()),
+                        Field.ofBooleanType(copy.isSchemaRegistryUseSsl())
+                                .label(LABEL_USE_SSL_CONFIGURATION)
+                                .tooltip(LABEL_USE_SSL_CONFIGURATION)
+                                .bind(copy.schemaRegistryUseSslProperty())
                 ),
                 Group.of(
                         Field.ofStringType(copy.getkafkaConnectUrl()==null?"":copy.getkafkaConnectUrl())

@@ -79,9 +79,8 @@ public class ProducerHandler {
 
             schemaRegistryRestService.configure(configHandler.getSchemaRegistryAuthProperties(clusterConfig));
 
-            if (clusterConfig.isSchemaRegistryHttps())
-            {
-                SSLSocketFactory sslSocketFactory = SslSocketFactoryCreator.buildSSlSocketFactory(clusterConfig);
+            if (clusterConfig.isSchemaRegistryUseSsl()) {
+                SSLSocketFactory sslSocketFactory = SslSocketFactoryCreator.buildSSlSocketFactory(clusterConfig, configHandler);
                 schemaRegistryRestService.setSslSocketFactory(sslSocketFactory);
             }
         }
