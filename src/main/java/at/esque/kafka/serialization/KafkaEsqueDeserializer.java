@@ -81,6 +81,7 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
             case UUID:
                 return Serdes.UUID().deserializer();
             case AVRO:
+            case AVRO_TOPIC_RECORD_NAME_STRATEGY:
                 return new ForgivingKafkaAvroDeserializer();
             default:
                 throw new UnsupportedOperationException("no deserializer for Message type: " + type);

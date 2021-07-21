@@ -34,6 +34,22 @@ public class KafkaMessagBookWrapper {
         wrappedMessage.setValue(value);
     }
 
+    public String getKeyType() {
+        return wrappedMessage.getKeyType();
+    }
+
+    public void setKeyType(String keyType) {
+        wrappedMessage.setKeyType(keyType);
+    }
+
+    public String getValueType() {
+        return wrappedMessage.getValueType();
+    }
+
+    public void setValueType(String valueType) {
+        wrappedMessage.setValueType(valueType);
+    }
+
     public int getPartition() {
         return wrappedMessage.getPartition();
     }

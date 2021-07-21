@@ -157,7 +157,7 @@ public class CrossClusterController {
             UUID producerId;
             UUID consumerId;
             try {
-                producerId = producerHandler.registerProducer(operation.getToCluster());
+                producerId = producerHandler.registerProducer(operation.getToCluster(), operation.getToTopic().getName());
                 consumerId = consumerHandler.registerConsumer(operation.getFromCluster(), operation.getFromTopic(), configHandler.readConsumerConfigs(operation.getToCluster().getIdentifier()));
                 consumerHandler.subscribe(consumerId, operation.getFromTopic().getName());
                 if (instantPicker.getInstantValue() != null) {

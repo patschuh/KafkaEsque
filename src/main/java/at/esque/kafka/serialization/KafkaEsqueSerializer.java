@@ -11,6 +11,7 @@ import org.apache.kafka.common.utils.Bytes;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -19,8 +20,10 @@ public class KafkaEsqueSerializer implements Serializer<Object> {
 
     private KafkaAvroSerializer avroSerialier = new KafkaAvroSerializer();
 
+    private static final List<MessageType> AVRO_TYPES = Arrays.asList(MessageType.AVRO, MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY);
+
     private Map<MessageType, SerializerWrapper> serializerMap = new EnumMap<MessageType, SerializerWrapper>(MessageType.class) {{
-        Arrays.stream(MessageType.values()).filter(type -> !type.equals(MessageType.AVRO)).forEach(type -> put(type, serializerByType(type)));
+        Arrays.stream(MessageType.values()).filter(type -> !AVRO_TYPES.contains(type)).forEach(type -> put(type, serializerByType(type)));
     }};
 
     private String clusterId;
@@ -33,7 +36,7 @@ public class KafkaEsqueSerializer implements Serializer<Object> {
 
     public byte[] serialize(String s, Object object) {
         TopicMessageTypeConfig topicConfig = configHandler.getConfigForTopic(clusterId, s);
-        if (isKey ? topicConfig.getKeyType().equals(MessageType.AVRO) : topicConfig.getValueType().equals(MessageType.AVRO)) {
+        if (isKey ? AVRO_TYPES.contains(topicConfig.getKeyType()) : AVRO_TYPES.contains(topicConfig.getValueType())) {
             return avroSerialier.serialize(s, object);
         } else {
             SerializerWrapper serializerWrapper = serializerMap.get(isKey ? topicConfig.getKeyType() : topicConfig.getValueType());

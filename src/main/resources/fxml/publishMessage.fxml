@@ -15,6 +15,7 @@
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
@@ -23,8 +24,6 @@
    <bottom>
        <ToolBar minWidth="40.0" nodeOrientation="RIGHT_TO_LEFT" prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
         <items>
-            <HBox>
-                <children>
                     <Button fx:id="publishMessageButton" minHeight="-Infinity" mnemonicParsing="false" onAction="#publishClick" text="Publish">
                         <styleClass>
                             <String fx:value="first" />
@@ -32,8 +31,9 @@
                         </styleClass>
                     </Button>
                     <ComboBox fx:id="partitionCombobox" prefWidth="150.0" promptText="Partition" styleClass="last" />
-                </children>
-            </HBox>
+                  <Pane HBox.hgrow="ALWAYS" />
+                  <ComboBox fx:id="keyTypeSelectCombobox" maxWidth="150.0" prefWidth="150.0" promptText="Select Key Type" visible="false" />
+            <ComboBox fx:id="valueTypeSelectCombobox" layoutX="504.0" layoutY="13.0" maxWidth="150.0" prefWidth="150.0" promptText="Select Value Type" visible="false" />
         </items>
       </ToolBar>
    </bottom>

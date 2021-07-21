@@ -1,6 +1,13 @@
 package at.esque.kafka.topics;
 
-import javafx.beans.property.*;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import org.apache.kafka.common.header.Header;
 
@@ -12,6 +19,8 @@ public class KafkaMessage {
     private StringProperty value = new SimpleStringProperty();
     private StringProperty timestamp = new SimpleStringProperty();
     private ListProperty<Header> headers = new SimpleListProperty<>();
+    private StringProperty keyType = new SimpleStringProperty();
+    private StringProperty valueType = new SimpleStringProperty();
 
     public long getOffset() {
         return offset.get();
@@ -83,5 +92,29 @@ public class KafkaMessage {
 
     public void setHeaders(ObservableList<Header> headers) {
         this.headers.set(headers);
+    }
+
+    public String getKeyType() {
+        return keyType.get();
+    }
+
+    public StringProperty keyTypeProperty() {
+        return keyType;
+    }
+
+    public void setKeyType(String keyType) {
+        this.keyType.set(keyType);
+    }
+
+    public String getValueType() {
+        return valueType.get();
+    }
+
+    public StringProperty valueTypeProperty() {
+        return valueType;
+    }
+
+    public void setValueType(String valueType) {
+        this.valueType.set(valueType);
     }
 }

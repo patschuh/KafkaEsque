@@ -74,6 +74,8 @@ import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.JsonQuery;
 import net.thisptr.jackson.jq.Scope;
 import net.thisptr.jackson.jq.Version;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -915,9 +917,24 @@ public class Controller {
         kafkaMessage.setPartition(cr.partition());
         kafkaMessage.setKey(cr.key() == null ? null : cr.key().toString());
         kafkaMessage.setValue(cr.value() == null ? null : cr.value().toString());
+        if (cr.value() instanceof GenericData.Record) {
+            kafkaMessage.setValueType(extractTypeFromGenericRecord((GenericData.Record) cr.value()));
+        }
+        if (cr.key() instanceof GenericData.Record) {
+            kafkaMessage.setKeyType(extractTypeFromGenericRecord((GenericData.Record) cr.key()));
+        }
         kafkaMessage.setTimestamp(Instant.ofEpochMilli(cr.timestamp()).toString());
         kafkaMessage.setHeaders(FXCollections.observableArrayList(cr.headers().toArray()));
         Platform.runLater(() -> baseList.add(kafkaMessage));
+    }
+
+    private String extractTypeFromGenericRecord(GenericData.Record genericRecord) {
+        if (genericRecord == null || genericRecord.getSchema() == null) {
+            return null;
+        }
+        Schema schema = genericRecord.getSchema();
+        return schema.getNamespace() + "." + schema.getName();
+
     }
 
     private void getMessagesFromSpecificOffset(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
@@ -1154,9 +1171,9 @@ public class Controller {
             runInDaemonThread(() -> {
                 StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
+                Map<String, UUID> topicToProducerMap = new HashMap<>();
                 try {
                     backGroundTaskHolder.setIsInProgress(true);
-                    UUID producerId = producerHandler.registerProducer(selectedCluster());
                     List<File> listedFiles = Arrays.asList(Objects.requireNonNull(selectedFolder.listFiles()));
                     Map<String, String> replacementMap = new HashMap<>();
                     List<KafkaMessagBookWrapper> messagesToSend = new ArrayList<>();
@@ -1176,7 +1193,14 @@ public class Controller {
                     messagesToSend.stream().sorted(Comparator.comparing(KafkaMessagBookWrapper::getTimestamp, Comparator.nullsLast(Comparator.naturalOrder())))
                             .forEach(message -> {
                                 try {
-                                    producerHandler.sendMessage(producerId, message.getTargetTopic(), message.getPartition() == -1 ? null : message.getPartition(), message.getKey(), message.getValue());
+                                    UUID producerId = topicToProducerMap.computeIfAbsent(message.getTargetTopic(), targetTopic -> {
+                                        try {
+                                            return producerHandler.registerProducer(selectedCluster(), targetTopic);
+                                        } catch (IOException e) {
+                                           throw new RuntimeException(e);
+                                        }
+                                    });
+                                    producerHandler.sendMessage(producerId, message.getTargetTopic(), message.getPartition() == -1 ? null : message.getPartition(), message.getKey(), message.getValue(), message.getKeyType(), message.getValueType());
                                     Platform.runLater(() -> backGroundTaskHolder.setProgressMessage("published " + counter.incrementAndGet() + " messages"));
                                 } catch (InterruptedException | ExecutionException | TimeoutException | IOException | RestClientException e) {
                                     throw new RuntimeException(e);
@@ -1186,6 +1210,7 @@ public class Controller {
                     Platform.runLater(() -> ErrorAlert.show(e));
                 } finally {
                     stopWatch.stop();
+                    topicToProducerMap.values().forEach(uuid -> producerHandler.deregisterProducer(uuid));
                     LOGGER.info("Message Book completed [{}]", stopWatch);
                     backGroundTaskHolder.backgroundTaskStopped();
                 }
@@ -1203,7 +1228,8 @@ public class Controller {
     private void addMessagesToSend(List<KafkaMessagBookWrapper> messagesToSend, File playFile) {
         try {
             List<KafkaMessage> messages = new CsvToBeanBuilder<KafkaMessage>(new FileReader(playFile.getAbsolutePath()))
-                    .withType(KafkaMessage.class).build().parse();
+                    .withType(KafkaMessage.class)
+                    .build().parse();
             messagesToSend.addAll(messages.stream().map(message -> new KafkaMessagBookWrapper(playFile.getName(), message))
                     .collect(Collectors.toList()));
         } catch (FileNotFoundException e) {

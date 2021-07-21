@@ -3,11 +3,17 @@ package at.esque.kafka;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.alerts.SuccessAlert;
 import at.esque.kafka.cluster.ClusterConfig;
+import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.controls.KafkaEsqueCodeArea;
+import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.handlers.ProducerHandler;
+import at.esque.kafka.handlers.ProducerWrapper;
 import at.esque.kafka.topics.KafkaMessage;
 import com.google.inject.Inject;
+import io.confluent.kafka.schemaregistry.client.rest.RestService;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -22,13 +28,20 @@ import org.apache.kafka.common.header.internals.RecordHeader;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 public class PublisherController {
 
     @FXML
     private ComboBox<Integer> partitionCombobox;
+    @FXML
+    private ComboBox<String> keyTypeSelectCombobox;
+    @FXML
+    private ComboBox<String> valueTypeSelectCombobox;
     @FXML
     private KafkaEsqueCodeArea keyTextArea;
     @FXML
@@ -48,17 +61,24 @@ public class PublisherController {
 
     @Inject
     private ProducerHandler producerHandler;
+    @Inject
+    private ConfigHandler configHandler;
 
     private UUID producerId;
+    private ProducerWrapper producerWrapper;
+    private TopicMessageTypeConfig configForTopic;
     private String topic;
 
     public void setup(ClusterConfig clusterConfig, String topic, ObservableList<Integer> partitions, KafkaMessage kafkaMessage) throws IOException {
-        setupControls(partitions, kafkaMessage);
-        producerId = producerHandler.registerProducer(clusterConfig);
         this.topic = topic;
+        configForTopic = configHandler.getConfigForTopic(clusterConfig.getIdentifier(), topic);
+        producerId = producerHandler.registerProducer(clusterConfig, topic);
+        producerWrapper = producerHandler.getProducer(producerId).orElse(null);
+        setupControls(partitions, configForTopic, kafkaMessage);
+
     }
 
-    private void setupControls(ObservableList<Integer> partitions, KafkaMessage kafkaMessage) {
+    private void setupControls(ObservableList<Integer> partitions, TopicMessageTypeConfig configForTopic, KafkaMessage kafkaMessage) {
         partitions.add(-1);
         partitionCombobox.setItems(partitions);
         partitionCombobox.getSelectionModel().select(Integer.valueOf(-1));
@@ -68,7 +88,6 @@ public class PublisherController {
             keyTextArea.setText(kafkaMessage.getKey());
             valueTextArea.setText(kafkaMessage.getValue());
             headerTableView.setItems(kafkaMessage.getHeaders());
-
         }
 
         headerKeyColumn.setCellFactory(TextFieldTableCell.forTableColumn());
@@ -83,6 +102,38 @@ public class PublisherController {
             Header current = event.getTableView().getItems().get(event.getTablePosition().getRow());
             event.getTableView().getItems().set(event.getTablePosition().getRow(), new RecordHeader(current.key(), event.getNewValue().getBytes(StandardCharsets.UTF_8)));
         });
+
+        ObservableList<String> topicMessageTypes = null;
+        if(MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(configForTopic.getKeyType())){
+            keyTypeSelectCombobox.setVisible(true);
+            try {
+                topicMessageTypes = findTypesForTopic(topic, producerWrapper.getSchemaRegistryRestService());
+            } catch (RestClientException | IOException e) {
+                ErrorAlert.show(e);
+            }
+            if(topicMessageTypes != null) {
+                keyTypeSelectCombobox.setItems(topicMessageTypes);
+                if(kafkaMessage != null && kafkaMessage.getKeyType() != null){
+                    valueTypeSelectCombobox.getSelectionModel().select(kafkaMessage.getKeyType());
+                }
+            }
+        }
+        if(MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(configForTopic.getValueType())){
+            valueTypeSelectCombobox.setVisible(true);
+            if(topicMessageTypes == null) {
+                try {
+                    topicMessageTypes = findTypesForTopic(topic, producerWrapper.getSchemaRegistryRestService());
+                } catch (RestClientException | IOException e) {
+                    ErrorAlert.show(e);
+                }
+            }
+            if(topicMessageTypes != null) {
+                valueTypeSelectCombobox.setItems(topicMessageTypes);
+                if(kafkaMessage != null && kafkaMessage.getValueType() != null){
+                    valueTypeSelectCombobox.getSelectionModel().select(kafkaMessage.getValueType());
+                }
+            }
+        }
     }
 
 
@@ -96,11 +147,15 @@ public class PublisherController {
 
     public void publishClick(ActionEvent event) {
         Integer selectedPartition = partitionCombobox.getSelectionModel().getSelectedItem();
+
         String keyText = keyText();
         String valueText = valueText();
+
+        String valueRecordType = valueTypeSelectCombobox.getSelectionModel().getSelectedItem();
+        String keyRecordType = keyTypeSelectCombobox.getSelectionModel().getSelectedItem();
         try {
             if (validateMessage(keyText, valueText)) {
-                RecordMetadata metadata = producerHandler.sendMessage(producerId, topic, selectedPartition, keyText, valueText, headerTableView.getItems());
+                RecordMetadata metadata = producerHandler.sendMessage(producerId, topic, selectedPartition, keyText, valueText, keyRecordType, valueRecordType, headerTableView.getItems());
                 String successMessage = String.format("topic [%s] " + System.lineSeparator() + "partition [%s]" + System.lineSeparator() + "offset [%s]", metadata.topic(), metadata.partition(), metadata.offset());
                 SuccessAlert.show("Message published", "Message was published successfully", successMessage);
             }
@@ -154,5 +209,15 @@ public class PublisherController {
         if (producerId != null) {
             producerHandler.deregisterProducer(producerId);
         }
+    }
+
+    private ObservableList<String> findTypesForTopic(String topicName, RestService schemaRegistryService) throws IOException, RestClientException {
+        List<String> collect = schemaRegistryService.getAllSubjects().stream()
+                .filter(Objects::nonNull)
+                .filter(subject -> subject.startsWith(topicName))
+                .map(subject -> subject.split("-")[1])
+                .filter(recordName -> !(recordName.equals("key") || recordName.equals("value")))
+                .collect(Collectors.toList());
+        return FXCollections.observableList(collect);
     }
 }
