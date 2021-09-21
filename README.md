@@ -1,5 +1,9 @@
 # KafkaEsque
-:information_source: This is a JavaFX application and therfore requires OpenJFX to be installed when using OpenJDK
+:information_source: This is a JavaFX application and therfore requires OpenJFX.
+* When using a JDK that includes OpenJFX simply run it with `java -jar KafkaEsque.jar`
+* If OpenJFX is installed separately run it with `java -jar --module-path="path/to/openJfx/lib" --add-modules javafx.controls,javafx.fxml KafkaEsque.jar`
+
+
 ### Create, remove and describe Topics
 ![Create Topic Screenshot](https://kafka.esque.at/images/screenshots/CreateTopic.png "Create Topics")
 
@@ -80,3 +84,15 @@ you can use only Basic Auth if you SR is only protected with basic auth, you can
     }
  ```
 
+###### Settings
+
+Check the settings.yaml in the <user.home>/.kafkaesque directory for cluster independent application settings
+
+* use.system.menubar: use macOS System menu bar
+  *  <span style="color:gray">default: true</span>
+* trace.quick.select.enabled: enables quick select buttons in trace dialogs
+  * <span style="color:gray">default: true</span>
+* trace.quick.select.duration.list: configures the values of the quick select buttons as a comma separated list of [Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html) Strings
+  * <span style="color:gray">default: PT2H, P1D, P7D</span>
+
+![Trace Quick Select](https://kafka.esque.at/images/screenshots/quickselectTrace.png "Trace Quick Select")

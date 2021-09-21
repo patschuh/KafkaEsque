@@ -389,7 +389,7 @@ public class Controller {
                 Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
                 TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(true, topicMessageTypeConfig.getKeyType() == MessageType.AVRO)
+                TraceInputDialog.show(true, topicMessageTypeConfig.getKeyType() == MessageType.AVRO, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()))
                         .ifPresent(traceKeyInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing key: " + traceKeyInput.getSearch());
                             Integer partition = null;
@@ -411,7 +411,7 @@ public class Controller {
                 Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
                 TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(false, false)
+                TraceInputDialog.show(false, false,Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()))
                         .ifPresent(traceInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing in Value: " + traceInput.getSearch());
                             Pattern pattern = Pattern.compile(traceInput.getSearch());

@@ -93,7 +93,6 @@ public class ConfigHandler {
         if (!configFile.exists()) {
             configFile.getParentFile().mkdirs();
             settings = new HashMap<>();
-            settings.put(Settings.USE_SYSTEM_MENU_BAR, "true");
             try {
                 yamlMapper.writeValue(configFile, settings);
             } catch (IOException e) {
@@ -106,7 +105,37 @@ public class ConfigHandler {
         } catch (IOException e) {
             ErrorAlert.show(e);
         }
+        boolean changedSettings = setDefaultsIfMissing();
+        if (changedSettings) {
+            try {
+                yamlMapper.writeValue(configFile, settings);
+            } catch (IOException e) {
+                ErrorAlert.show(e);
+            }
+        }
+
         return settings;
+    }
+
+    private boolean setDefaultsIfMissing() {
+        boolean changed = false;
+        if (settings == null) {
+            settings = new HashMap<>();
+            changed = true;
+        }
+        if (!settings.containsKey(Settings.USE_SYSTEM_MENU_BAR)) {
+            settings.put(Settings.USE_SYSTEM_MENU_BAR, Settings.USE_SYSTEM_MENU_BAR_DEFAULT);
+            changed = true;
+        }
+        if (!settings.containsKey(Settings.TRACE_QUICK_SELECT_DURATION_LIST)) {
+            settings.put(Settings.TRACE_QUICK_SELECT_DURATION_LIST, Settings.TRACE_QUICK_SELECT_DURATION_LIST_DEFAULT);
+            changed = true;
+        }
+        if (!settings.containsKey(Settings.TRACE_QUICK_SELECT_ENABLED)) {
+            settings.put(Settings.TRACE_QUICK_SELECT_ENABLED, Settings.TRACE_QUICK_SELECT_ENABLED_DEFAULT);
+            changed = true;
+        }
+        return changed;
     }
 
     public Map<String, String> readConsumerConfigs(String clusterIdentification) throws IOException {
@@ -220,20 +249,17 @@ public class ConfigHandler {
     public Map<String, String> getSaslProperties(ClusterConfig config) {
         Map<String, String> props = new HashMap<>();
 
-        if (StringUtils.isNoneEmpty(config.getSaslSecurityProtocol()))
-        {
-            props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG,config.getSaslSecurityProtocol());
+        if (StringUtils.isNoneEmpty(config.getSaslSecurityProtocol())) {
+            props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, config.getSaslSecurityProtocol());
         }
 
-        if (StringUtils.isNotEmpty(config.getSaslMechanism()))
-        {
-            props.put(SaslConfigs.SASL_MECHANISM,config.getSaslMechanism());
+        if (StringUtils.isNotEmpty(config.getSaslMechanism())) {
+            props.put(SaslConfigs.SASL_MECHANISM, config.getSaslMechanism());
         }
 
 
-        if (StringUtils.isNotEmpty(config.getSaslJaasConfig()))
-        {
-            props.put(SaslConfigs.SASL_JAAS_CONFIG,config.getSaslJaasConfig());
+        if (StringUtils.isNotEmpty(config.getSaslJaasConfig())) {
+            props.put(SaslConfigs.SASL_JAAS_CONFIG, config.getSaslJaasConfig());
         }
 
         return props;
@@ -242,9 +268,8 @@ public class ConfigHandler {
     public Map<String, ?> getSchemaRegistryAuthProperties(ClusterConfig config) {
         Map<String, String> props = new HashMap<>();
 
-        if (StringUtils.isNoneEmpty(config.getSchemaRegistryBasicAuthUserInfo()))
-        {
-            props.put(SchemaRegistryClientConfig.BASIC_AUTH_CREDENTIALS_SOURCE,"USER_INFO");
+        if (StringUtils.isNoneEmpty(config.getSchemaRegistryBasicAuthUserInfo())) {
+            props.put(SchemaRegistryClientConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO");
             props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + SchemaRegistryClientConfig.USER_INFO_CONFIG, config.getSchemaRegistryBasicAuthUserInfo());
         }
 

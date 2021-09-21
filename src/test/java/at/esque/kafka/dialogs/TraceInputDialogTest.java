@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit.ApplicationTest;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
 import static org.testfx.assertions.api.Assertions.assertThat;
@@ -20,7 +21,7 @@ public class TraceInputDialogTest extends ApplicationTest {
             Button openDialogButton = new Button("Open Dialog");
             openDialogButton.setId("openDialog");
             openDialogButton.setOnAction(event -> {
-                TraceInputDialog.show(true, false);
+                TraceInputDialog.show(true, false, false, new ArrayList<>());
             });
             StackPane root = new StackPane(openDialogButton);
             root.setPrefSize(800, 500);

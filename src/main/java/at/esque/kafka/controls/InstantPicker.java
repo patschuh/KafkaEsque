@@ -6,6 +6,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.DatePicker;
 import javafx.util.StringConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -21,6 +23,7 @@ import java.time.format.DateTimeFormatter;
  */
 @SuppressWarnings("unused")
 public class InstantPicker extends DatePicker {
+    private static final Logger logger = LoggerFactory.getLogger(InstantPicker.class);
     public static final String DefaultFormat = "yyyy-MM-dd HH:mm:ss.SSS z";
 
     private DateTimeFormatter formatter;
@@ -76,13 +79,19 @@ public class InstantPicker extends DatePicker {
 
         getEditor().focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue)
-                simulateEnterPressed();
+                processStringValue();
         });
 
     }
 
-    private void simulateEnterPressed() {
+    private void processStringValue() {
         getEditor().commitValue();
+        try {
+            getConverter().fromString(getEditor().getText());
+        }catch (Exception e){
+            logger.error("Failed to convert String", e);
+        }
+        setConverter(new InternalConverter());
     }
 
     public Instant getInstantValue() {
