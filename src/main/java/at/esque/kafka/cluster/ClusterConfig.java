@@ -27,6 +27,7 @@ public class ClusterConfig {
     private StringProperty kafkaConnectBasicAuthUser = new SimpleStringProperty();
     private StringProperty kafkaConnectBasicAuthPassword = new SimpleStringProperty();
     private BooleanProperty kafkaConnectuseSsl = new SimpleBooleanProperty();
+    private BooleanProperty suppressSslEndPointIdentification = new SimpleBooleanProperty();
 
     public ClusterConfig() {
     }
@@ -54,6 +55,7 @@ public class ClusterConfig {
             this.setkafkaConnectBasicAuthUser(existingConfig.getkafkaConnectBasicAuthUser());
             this.setkafkaConnectBasicAuthPassword(existingConfig.getkafkaConnectBasicAuthPassword());
             this.setKafkaConnectuseSsl(existingConfig.isKafkaConnectuseSsl());
+            this.setsuppressSslEndPointIdentification(existingConfig.issuppressSslEndPointIdentification());
         }
     }
 
@@ -294,6 +296,20 @@ public class ClusterConfig {
             return false;
         }
         return kafkaConnectUrl.get().toLowerCase().startsWith("https:");
+    }
+
+
+    @JsonProperty("suppressSslEndPointIdentification")
+    public boolean issuppressSslEndPointIdentification() {
+        return suppressSslEndPointIdentification.get();
+    }
+
+    public BooleanProperty suppressSslEndPointIdentificationProperty() {
+        return suppressSslEndPointIdentification;
+    }
+
+    public void setsuppressSslEndPointIdentification(boolean suppressSslEndPointIdentification) {
+        this.suppressSslEndPointIdentification.set(suppressSslEndPointIdentification);
     }
 
 

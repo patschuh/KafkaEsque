@@ -213,7 +213,11 @@ public class ConfigHandler {
             props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         }
 
-        if (config.isSchemaRegistryUseSsl()) {
+        if(config.issuppressSslEndPointIdentification()) {
+            props.put("ssl.endpoint.identification.algorithm", "");
+        }
+
+        if (config.isSchemaRegistryHttps()) {
             props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         }
 
