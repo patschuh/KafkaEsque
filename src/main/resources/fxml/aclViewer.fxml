@@ -13,10 +13,10 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import java.lang.String?>
 <?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.control.ToggleButton?>
 <BorderPane prefHeight="295.0" prefWidth="497.0" xmlns="http://javafx.com/javafx/11.0.1"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.acl.viewer.AclViewerController">
     <center>
-
         <TableView fx:id="resultView" BorderPane.alignment="CENTER">
             <columns>
                 <TableColumn fx:id="resourceTypeColumn" editable="false" prefWidth="70.0" text="Resource Type"/>
@@ -41,8 +41,9 @@
                 <ColumnConstraints hgrow="NEVER" maxWidth="50.0" minWidth="10.0" prefWidth="100.0"/>
             </columnConstraints>
             <rowConstraints>
-                <RowConstraints minHeight="10.0" prefHeight="40.0" vgrow="NEVER"/>
-                <RowConstraints minHeight="30.0" prefHeight="40.0" vgrow="NEVER"/>
+                <RowConstraints minHeight="10.0" prefHeight="60.0" vgrow="NEVER"/>
+                <RowConstraints minHeight="30.0" prefHeight="35.0" vgrow="NEVER"/>
+                <RowConstraints minHeight="30.0" prefHeight="35.0" vgrow="NEVER"/>
             </rowConstraints>
             <children>
                 <Label text="Resource Type:"/>
@@ -50,13 +51,26 @@
                 <ComboBox fx:id="resourceTypeCombo" maxWidth="1.7976931348623157E308" prefHeight="25.0"
                           prefWidth="176.0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/>
                 <TextField fx:id="resourceName" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="275.0"
-                           GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="1"/>
+                           GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="1" onKeyPressed="#resourceNameFieldkeyPressed"/>
                 <Label prefHeight="17.0" prefWidth="100.0" text="Resource Pattern:" GridPane.columnIndex="2"/>
                 <ComboBox fx:id="resourcePatternCombo" maxWidth="1.7976931348623157E308" prefHeight="25.0"
                           prefWidth="176.0" GridPane.columnIndex="3" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/>
+                <ToggleButton fx:id="substringSearch" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+                              mnemonicParsing="false" prefWidth="30.0"
+                              GridPane.columnIndex="4" GridPane.rowIndex="1" GridPane.halignment="CENTER">
+                    <styleClass>
+                        <String fx:value="secondary"/>
+                    </styleClass>
+                    <tooltip>
+                        <Tooltip text="Substring Search"/>
+                    </tooltip>
+                    <graphic>
+                        <FontIcon iconColor="GRAY" iconLiteral="fa-asterisk" iconSize="20"/>
+                    </graphic>
+                </ToggleButton>
                 <Button fx:id="searchButton" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
                         mnemonicParsing="false" onAction="#startSearch" prefWidth="30.0"
-                        GridPane.columnIndex="4" GridPane.rowIndex="1" GridPane.halignment="CENTER" GridPane.columnSpan="1">
+                        GridPane.columnIndex="4" GridPane.rowIndex="2" GridPane.halignment="CENTER" >
                     <styleClass>
                         <String fx:value="success"/>
                     </styleClass>
@@ -82,6 +96,10 @@
                                   iconSize="20"/>
                     </graphic>
                 </Button>
+
+                <Label text="Principal Name:" GridPane.rowIndex="2"/>
+                <TextField fx:id="principalName" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="275.0"
+                           GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="2" onKeyPressed="#resourceNameFieldkeyPressed"/>
             </children>
         </GridPane>
     </top>
