@@ -33,6 +33,7 @@ public class ClusterConfigDialog {
     public static final String LABEL_KAFKA_CONNECT_BASIC_AUTH_USER = "Kafka Connect Basic Auth User";
     public static final String LABEL_KAFKA_CONNECT_BASIC_AUTH_PASSWORD = "Kafka Connect Basic Auth Password";
     public static final String LABEL_USE_SSL_CONFIGURATION = "use SSL Configuration";
+    public static final String LABEL_SUPPRESS_SSL_ENDPOINT_IDENTIFICATION = "no SSL Endpoint Identification";
 
     private ClusterConfigDialog(){}
 
@@ -110,6 +111,10 @@ public class ClusterConfigDialog {
                                 .label(LABEL_ENABLE_SSL)
                                 .tooltip(LABEL_ENABLE_SSL)
                                 .bind(copy.sslEnabledProperty()),
+                        Field.ofBooleanType(copy.issuppressSslEndPointIdentification())
+                                .label(LABEL_SUPPRESS_SSL_ENDPOINT_IDENTIFICATION)
+                                .tooltip(LABEL_SUPPRESS_SSL_ENDPOINT_IDENTIFICATION)
+                                .bind(copy.suppressSslEndPointIdentificationProperty()),
                         Field.ofStringType(copy.getKeyStoreLocation()==null?"":copy.getKeyStoreLocation())
                                 .label(LABEL_KEY_STORE_LOCATION)
                                 .tooltip(LABEL_KEY_STORE_LOCATION)
