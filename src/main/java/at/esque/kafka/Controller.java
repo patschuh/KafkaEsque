@@ -416,6 +416,9 @@ public class Controller {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing in Value: " + traceInput.getSearch());
                             Pattern pattern = Pattern.compile(traceInput.getSearch());
                             trace(topicMessageTypeConfig, consumerConfig, (ConsumerRecord cr) -> {
+                                if (cr.value() == null){
+                                    return false;
+                                }
                                 Matcher matcher = pattern.matcher(cr.value().toString());
                                 return matcher.find();
                             }, null, traceInput.getEpoch());
