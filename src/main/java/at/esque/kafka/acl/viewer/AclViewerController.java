@@ -9,14 +9,10 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.util.Callback;
 import org.apache.kafka.common.resource.PatternType;
 import org.apache.kafka.common.resource.ResourceType;
@@ -33,6 +29,9 @@ public class AclViewerController {
 
     @FXML
     TextField resourceName;
+
+    @FXML
+    TextField principalName;
 
     @FXML
     ComboBox<PatternType> resourcePatternCombo;
@@ -54,6 +53,9 @@ public class AclViewerController {
     TableColumn<Acl, String> permissionTypeColumn;
     @FXML
     TableColumn<Acl, String> hostColumn;
+
+    @FXML
+    ToggleButton substringSearch;
 
     private KafkaesqueAdminClient adminClient;
 
@@ -123,13 +125,20 @@ public class AclViewerController {
         runInDaemonThread(() -> {
             List<Acl> aclList = new ArrayList<>();
             Platform.runLater(() -> refreshRunning.setValue(true));
-            adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText())
-                    .forEach(acl -> Platform.runLater(() -> aclList.add(new Acl(acl))));
+
+            if(substringSearch.isSelected())
+            {
+                adminClient.getACLsBySubstring(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText(), principalName.getText())
+                        .forEach(acl -> Platform.runLater(() -> aclList.add(new Acl(acl))));
+            }
+            else {
+                adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText(), principalName.getText())
+                        .forEach(acl -> Platform.runLater(() -> aclList.add(new Acl(acl))));
+            }
             Platform.runLater(() -> {
                 refreshRunning.setValue(true);
             });
-            adminClient.getACLs(resourceTypeCombo.getValue(), resourcePatternCombo.getValue(), resourceName.getText())
-                    .forEach(acl -> Platform.runLater(() -> aclList.add(new Acl(acl))));
+
             Platform.runLater(() -> refreshRunning.setValue(false));
             Platform.runLater(() -> resultView.setItems(FXCollections.observableArrayList(aclList)));
         });
@@ -139,6 +148,13 @@ public class AclViewerController {
     private void addACL(ActionEvent actionEvent)
     {
         CreateACLDialog.show(adminClient);
+    }
+
+    @FXML
+    private void resourceNameFieldkeyPressed(KeyEvent event){
+        if (event.getCode().equals(KeyCode.ENTER)) {
+            startSearch(null);
+        }
     }
 
     public void stop() {

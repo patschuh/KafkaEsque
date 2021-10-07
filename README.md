@@ -84,6 +84,15 @@ you can use only Basic Auth if you SR is only protected with basic auth, you can
     }
  ```
 
+###### Using SSL without domain name 
+In some situation you might need to use ip address for your bootstrap server and SSL. 
+With default config the API does a host name identification which fails in those scenarios with 
+```
+java.security.cert.CertificateException: No subject alternative names matching IP address .... found
+```
+If you select the toggle "No SSL Endpoint Identification" the kafka property "ssl.endpoint.identification.algorithm" 
+is set to an empty string so that this identification is suppressed 
+
 ###### Settings
 
 Check the settings.yaml in the <user.home>/.kafkaesque directory for cluster independent application settings

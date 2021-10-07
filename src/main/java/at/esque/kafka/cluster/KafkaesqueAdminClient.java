@@ -77,6 +77,7 @@ public class KafkaesqueAdminClient {
         DescribeTopicsResult describeResult = adminClient.describeTopics(Collections.singletonList(topic));
         ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic);
         DescribeConfigsResult configsResult = adminClient.describeConfigs(Collections.singletonList(configResource));
+
         try {
             TopicDescription topicDescription = describeResult.values().get(topic).get(10, TimeUnit.SECONDS);
             Config config = configsResult.values().get(configResource).get(10, TimeUnit.SECONDS);
@@ -103,13 +104,15 @@ public class KafkaesqueAdminClient {
         return Collections.EMPTY_LIST;
     }
 
-    public List<AclBinding> getACLs(ResourceType resourceType, PatternType resourcePattern, String resourceName) {
+    public List<AclBinding> getACLs(ResourceType resourceType, PatternType resourcePattern, String resourceName, String principalName) {
         try {
             if ("".equals(resourceName))
                 resourceName = null;
+            if ("".equals(principalName))
+                principalName = null;
 
             AclBindingFilter aclBindingFilter = new AclBindingFilter(new ResourcePatternFilter(resourceType, resourceName, resourcePattern),
-                    new AccessControlEntryFilter(null, null, AclOperation.ANY, AclPermissionType.ANY));
+                    new AccessControlEntryFilter(principalName, null, AclOperation.ANY, AclPermissionType.ANY));
 
             DescribeAclsResult describeAclsResult = adminClient.describeAcls(aclBindingFilter);
 
@@ -120,6 +123,25 @@ public class KafkaesqueAdminClient {
         }
         return Collections.EMPTY_LIST;
     }
+
+    public List<AclBinding> getACLsBySubstring(ResourceType resourceType, PatternType resourcePattern, String resourceName, String principalName) {
+        try {
+            AclBindingFilter aclBindingFilter = new AclBindingFilter(new ResourcePatternFilter(resourceType, null, resourcePattern),
+                    new AccessControlEntryFilter(null, null, AclOperation.ANY, AclPermissionType.ANY));
+
+            DescribeAclsResult describeAclsResult = adminClient.describeAcls(aclBindingFilter);
+
+            return describeAclsResult.values().get().stream()
+                    .filter(acl -> "".equals(resourceName) ? true : acl.pattern().name().contains(resourceName))
+                    .filter(acl -> "".equals(principalName) ? true : acl.entry().principal().contains(principalName))
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            Platform.runLater(() -> ErrorAlert.show(e));
+        }
+        return Collections.EMPTY_LIST;
+    }
+
 
     public void deleteAcl(AclBinding aclBinding) {
         try {

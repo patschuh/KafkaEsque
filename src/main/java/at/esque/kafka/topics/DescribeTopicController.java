@@ -1,8 +1,15 @@
 package at.esque.kafka.topics;
 
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.text.Text;
 import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.TopicPartitionInfo;
@@ -23,6 +30,9 @@ public class DescribeTopicController {
     @FXML
     public ListView<TopicPartitionInfo> partitionInfoList;
 
+    @FXML
+    public Button topicNameClpt;
+
     public void setup(DescribeTopicWrapper describeTopicWrapper) {
         TopicDescription topicDescription = describeTopicWrapper.getTopicDescription();
         topicName.setText(topicDescription.name());
@@ -30,6 +40,16 @@ public class DescribeTopicController {
         isInternal.setText("" + topicDescription.isInternal());
         partitionInfoList.getItems().addAll(topicDescription.partitions());
         showConfigsInListView(describeTopicWrapper.getConfigurations());
+
+        topicNameClpt.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                final Clipboard clipboard = Clipboard.getSystemClipboard();
+                final ClipboardContent content = new ClipboardContent();
+                content.putString(topicName.getText());
+                clipboard.setContent(content);
+            }
+        });
     }
 
     private void showConfigsInListView(Collection<ConfigEntry> configurations) {

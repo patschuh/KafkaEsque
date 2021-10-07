@@ -8,6 +8,11 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Button?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import javafx.scene.control.Tooltip?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
             prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="at.esque.kafka.topics.DescribeTopicController">
@@ -50,7 +55,17 @@
                                 <Insets left="20.0"/>
                             </GridPane.margin>
                         </Label>
+
+
                         <Label fx:id="topicName" text="TopicName" GridPane.columnIndex="1"/>
+                        <Button fx:id="topicNameClpt" text="Copy" GridPane.columnIndex="2" maxHeight="20.0" maxWidth="15.0" minHeight="20.0" minWidth="15.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="15.0">
+                            <graphic>
+                                <FontIcon iconLiteral="fa-copy" strokeType="OUTSIDE" strokeWidth="0.0"/>
+                            </graphic>
+                            <tooltip>
+                                <Tooltip text="Copy topic name to clipboard"/>
+                            </tooltip>
+                        </Button>
                         <Label fx:id="partitions" text="Number of paritions" GridPane.columnIndex="1"
                                GridPane.rowIndex="1"/>
                         <Label fx:id="isInternal" text="is an internal topic" GridPane.columnIndex="1"
