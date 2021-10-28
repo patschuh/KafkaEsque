@@ -198,6 +198,12 @@ public class Controller {
     @FXML
     private TabPane messageTabPane;
 
+    @FXML
+    Label serializedKeySizeLabel;
+
+    @FXML
+    Label serializedValueSizeLabel;
+
     private KafkaMessage selectedMessage;
 
     private double[] cachedValueTabDividerPositions = null;
@@ -309,6 +315,8 @@ public class Controller {
             return;
         }
         headerTableView.setItems(selectedMessage.getHeaders());
+        serializedKeySizeLabel.setText(String.valueOf(selectedMessage.getSerializedKeySize()));
+        serializedValueSizeLabel.setText(String.valueOf(selectedMessage.getSerializedValueSize()));
         if (formatJson) {
             keyTextArea.setText(JsonUtils.formatJson(selectedMessage.getKey()));
             String prettyPrintText = JsonUtils.formatJson(selectedMessage.getValue());
@@ -923,8 +931,13 @@ public class Controller {
         if (cr.key() instanceof GenericData.Record) {
             kafkaMessage.setKeyType(extractTypeFromGenericRecord((GenericData.Record) cr.key()));
         }
+
         kafkaMessage.setTimestamp(Instant.ofEpochMilli(cr.timestamp()).toString());
         kafkaMessage.setHeaders(FXCollections.observableArrayList(cr.headers().toArray()));
+
+        kafkaMessage.setSerializedKeySize(cr.serializedKeySize());
+        kafkaMessage.setSerializedValueSize(cr.serializedValueSize());
+
         Platform.runLater(() -> baseList.add(kafkaMessage));
     }
 

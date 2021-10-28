@@ -294,7 +294,7 @@ public class KafkaEsqueCodeArea extends BorderPane {
     public void setText(String text) {
         codeArea.selectAll();
         codeArea.deleteText(codeArea.getSelection());
-        codeArea.appendText(text);
+        codeArea.appendText(text != null ? text : "");
         codeArea.moveTo(0);
         codeArea.requestFollowCaret();
     }

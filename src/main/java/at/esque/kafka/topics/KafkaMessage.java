@@ -10,6 +10,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import org.apache.kafka.common.header.Header;
+import scala.Int;
 
 public class KafkaMessage {
 
@@ -21,6 +22,9 @@ public class KafkaMessage {
     private ListProperty<Header> headers = new SimpleListProperty<>();
     private StringProperty keyType = new SimpleStringProperty();
     private StringProperty valueType = new SimpleStringProperty();
+    private IntegerProperty serializedKeySize = new SimpleIntegerProperty();
+    private IntegerProperty serializedValueSize = new SimpleIntegerProperty();
+
 
     public long getOffset() {
         return offset.get();
@@ -117,4 +121,25 @@ public class KafkaMessage {
     public void setValueType(String valueType) {
         this.valueType.set(valueType);
     }
+
+    public void setSerializedKeySize(int serializedKeySize) {
+        this.serializedKeySize.set(serializedKeySize);
+    }
+
+    public void setSerializedValueSize(int serializedValueSize)
+    {
+        this.serializedValueSize.set(serializedValueSize);
+    }
+
+    public IntegerProperty serializedKeySizeProperty() { return serializedKeySize;}
+    public IntegerProperty serializedValueSizeProperty() { return serializedValueSize;}
+
+    public int getSerializedKeySize(){
+        return this.serializedKeySize.get();
+    }
+
+    public int getSerializedValueSize() {
+        return this.serializedValueSize.get();
+    }
+
 }
