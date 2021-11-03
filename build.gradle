@@ -36,6 +36,10 @@ repositories {
     }
 
     maven {
+        url "https://jitpack.io"
+    }
+
+    maven {
         url = 'https://repository.mulesoft.org/nexus/content/repositories/public/'
     }
     mavenLocal()
@@ -50,8 +54,8 @@ dependencies {
     compile 'org.kordamp.ikonli:ikonli-javafx:2.4.0'
     compile 'org.kordamp.ikonli:ikonli-fontawesome-pack:2.4.0'
     compile 'com.opencsv:opencsv:4.0'
-    compile 'io.confluent:kafka-schema-registry:6.0.0'
-    compile 'io.confluent:kafka-avro-serializer:6.0.0'
+    compile 'io.confluent:kafka-schema-registry:6.2.1'
+    compile 'io.confluent:kafka-avro-serializer:6.2.1'
     compile 'com.google.inject:guice:4.2.2'
     compile 'org.fxmisc.richtext:richtextfx:0.10.5'
     compile 'net.thisptr:jackson-jq:1.0.0-preview.20191208'

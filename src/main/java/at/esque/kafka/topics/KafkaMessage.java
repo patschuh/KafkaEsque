@@ -21,6 +21,9 @@ public class KafkaMessage {
     private ListProperty<Header> headers = new SimpleListProperty<>();
     private StringProperty keyType = new SimpleStringProperty();
     private StringProperty valueType = new SimpleStringProperty();
+    private IntegerProperty serializedKeySize = new SimpleIntegerProperty();
+    private IntegerProperty serializedValueSize = new SimpleIntegerProperty();
+    private StringProperty valueSchemaId = new SimpleStringProperty();
 
     public long getOffset() {
         return offset.get();
@@ -117,4 +120,34 @@ public class KafkaMessage {
     public void setValueType(String valueType) {
         this.valueType.set(valueType);
     }
+
+    public void setSerializedKeySize(int serializedKeySize) {
+        this.serializedKeySize.set(serializedKeySize);
+    }
+
+    public void setSerializedValueSize(int serializedValueSize)
+    {
+        this.serializedValueSize.set(serializedValueSize);
+    }
+
+    public IntegerProperty serializedKeySizeProperty() { return serializedKeySize;}
+    public IntegerProperty serializedValueSizeProperty() { return serializedValueSize;}
+
+    public int getSerializedKeySize(){
+        return this.serializedKeySize.get();
+    }
+
+    public int getSerializedValueSize() {
+        return this.serializedValueSize.get();
+    }
+
+    public void setValueSchemaId(String valueSchemaId)
+    {
+        this.valueSchemaId.set(valueSchemaId);
+    }
+
+    public StringProperty valueSchemaIdProperty() { return valueSchemaId;}
+
+    public String getValueSchemaId() { return this.valueSchemaId.get();}
+
 }
