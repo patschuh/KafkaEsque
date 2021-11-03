@@ -13,6 +13,7 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import java.lang.String?>
 <?import at.esque.kafka.controls.KafkaEsqueCodeArea?>
+<?import javafx.scene.text.Text?>
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.SchemaRegistryBrowserController">
     <center>
         <SplitPane dividerPositions="0.23244147157190637" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
@@ -34,6 +35,7 @@
                             <items>
                                 <Label text="Version:" />
                                 <ComboBox fx:id="versionComboBox" prefWidth="150.0" styleClass="first"/>
+
                                 <Button maxHeight="-Infinity" maxWidth="-Infinity" minHeight="30.0"
                                         mnemonicParsing="false" onAction="#addSchemaClick" prefWidth="30.0">
                                     <tooltip>
@@ -75,6 +77,11 @@
                                         <Tooltip text="Remove Schema"/>
                                     </tooltip>
                                 </Button>
+                                <Text text="Schema ID: " />
+                                <Label text="     "
+                                       fx:id="schemaIdLabel"
+                                       minWidth="5"
+                                />
                             </items>
                         </ToolBar>
                     </top>

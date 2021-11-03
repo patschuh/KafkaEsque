@@ -4,9 +4,12 @@ import at.esque.kafka.MessageType;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.handlers.ConfigHandler;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serdes;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
@@ -34,7 +37,17 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
     public Object deserialize(String s, byte[] bytes) {
         TopicMessageTypeConfig topicConfig = configHandler.getConfigForTopic(clusterId, s);
         if (isKey ? topicConfig.getKeyType().equals(MessageType.AVRO) : topicConfig.getValueType().equals(MessageType.AVRO)) {
-            return avroDeserializer.deserialize(bytes);
+
+            Integer schemaId = getSchemaId(bytes);
+
+            Object deserializedObj = avroDeserializer.deserialize(bytes);
+
+            if ((deserializedObj instanceof GenericData.Record))
+            {
+                GenericData.Record rec = (GenericData.Record) deserializedObj;
+                rec.getSchema().addProp("schema-registry-schema-id", schemaId);
+            }
+            return deserializedObj;
         } else {
             return deserializerMap.get(isKey ? topicConfig.getKeyType() : topicConfig.getValueType()).deserialize(s, bytes);
         }
@@ -86,6 +99,15 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
             default:
                 throw new UnsupportedOperationException("no deserializer for Message type: " + type);
         }
+    }
+
+    protected Integer getSchemaId(byte[] payload) {
+        ByteBuffer buffer = ByteBuffer.wrap(payload);
+        if (buffer.get() != 0x0) {
+            return -1;
+        }
+
+        return buffer.getInt();
     }
 }
 

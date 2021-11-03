@@ -273,6 +273,8 @@
                                     <Label fx:id="serializedKeySizeLabel" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
                                     <Label text="serializedValueSize"  GridPane.rowIndex="1" GridPane.columnIndex="0"/>
                                     <Label fx:id="serializedValueSizeLabel"  GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                                    <Label text="valueSchemaId"  GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                                    <Label fx:id="valueSchemaIdLabel"  GridPane.rowIndex="2" GridPane.columnIndex="1"/>
                                 </children>
                                 </GridPane>
 

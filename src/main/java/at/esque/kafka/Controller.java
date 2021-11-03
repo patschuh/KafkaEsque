@@ -204,6 +204,9 @@ public class Controller {
     @FXML
     Label serializedValueSizeLabel;
 
+    @FXML
+    Label valueSchemaIdLabel;
+
     private KafkaMessage selectedMessage;
 
     private double[] cachedValueTabDividerPositions = null;
@@ -317,6 +320,8 @@ public class Controller {
         headerTableView.setItems(selectedMessage.getHeaders());
         serializedKeySizeLabel.setText(String.valueOf(selectedMessage.getSerializedKeySize()));
         serializedValueSizeLabel.setText(String.valueOf(selectedMessage.getSerializedValueSize()));
+        valueSchemaIdLabel.setText(selectedMessage.getValueSchemaId());
+
         if (formatJson) {
             keyTextArea.setText(JsonUtils.formatJson(selectedMessage.getKey()));
             String prettyPrintText = JsonUtils.formatJson(selectedMessage.getValue());
@@ -925,8 +930,10 @@ public class Controller {
         kafkaMessage.setPartition(cr.partition());
         kafkaMessage.setKey(cr.key() == null ? null : cr.key().toString());
         kafkaMessage.setValue(cr.value() == null ? null : cr.value().toString());
+
         if (cr.value() instanceof GenericData.Record) {
             kafkaMessage.setValueType(extractTypeFromGenericRecord((GenericData.Record) cr.value()));
+            kafkaMessage.setValueSchemaId(extractSchemaIdFromGenericRecord((GenericData.Record) cr.value()));
         }
         if (cr.key() instanceof GenericData.Record) {
             kafkaMessage.setKeyType(extractTypeFromGenericRecord((GenericData.Record) cr.key()));
@@ -941,13 +948,25 @@ public class Controller {
         Platform.runLater(() -> baseList.add(kafkaMessage));
     }
 
+    private String extractSchemaIdFromGenericRecord(GenericData.Record genericRecord){
+        if (genericRecord == null || genericRecord.getSchema() == null) {
+            return null;
+        }
+        Schema schema = genericRecord.getSchema();
+        Map<String, Object> props = schema.getObjectProps();
+
+        if (props == null)
+            return "";
+
+        return String.valueOf(schema.getObjectProps().get("schema-registry-schema-id"));
+    }
+
     private String extractTypeFromGenericRecord(GenericData.Record genericRecord) {
         if (genericRecord == null || genericRecord.getSchema() == null) {
             return null;
         }
         Schema schema = genericRecord.getSchema();
         return schema.getNamespace() + "." + schema.getName();
-
     }
 
     private void getMessagesFromSpecificOffset(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
