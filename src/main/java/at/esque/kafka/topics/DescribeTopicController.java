@@ -1,5 +1,6 @@
 package at.esque.kafka.topics;
 
+import at.esque.kafka.controls.FilterableListView;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -26,9 +27,9 @@ public class DescribeTopicController {
     @FXML
     private Label isInternal;
     @FXML
-    public ListView<TopicConfig> configValueList;
+    public FilterableListView<TopicConfig> configValueList;
     @FXML
-    public ListView<TopicPartitionInfo> partitionInfoList;
+    public FilterableListView<TopicPartitionInfo> partitionInfoList;
 
     @FXML
     public Button topicNameClpt;
@@ -38,7 +39,7 @@ public class DescribeTopicController {
         topicName.setText(topicDescription.name());
         partitions.setText("" + topicDescription.partitions().size());
         isInternal.setText("" + topicDescription.isInternal());
-        partitionInfoList.getItems().addAll(topicDescription.partitions());
+        partitionInfoList.addItems(topicDescription.partitions());
         showConfigsInListView(describeTopicWrapper.getConfigurations());
 
         topicNameClpt.setOnAction(new EventHandler<ActionEvent>() {
@@ -55,8 +56,8 @@ public class DescribeTopicController {
     private void showConfigsInListView(Collection<ConfigEntry> configurations) {
         configurations.stream()
                 .map(configEntry -> new TopicConfig(configEntry.name(), configEntry.value()))
-                .forEach(configValueList.getItems()::add);
-        configValueList.getItems().sort(Comparator.comparing(TopicConfig::getKey));
+                .forEach(configValueList.getBaseList()::add);
+        configValueList.setListComparator(Comparator.comparing(TopicConfig::getKey));
     }
 
 
