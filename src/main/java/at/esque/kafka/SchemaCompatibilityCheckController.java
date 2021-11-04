@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class SchemaCompatibilityCheckController {
 
@@ -41,7 +42,10 @@ public class SchemaCompatibilityCheckController {
         Schema.Parser parser = new Schema.Parser();
         try {
             parser.parse(schemaTextArea.getText());
-            if (restService.testCompatibility(schemaTextArea.getText(), subjectTextField.getText(), versionTextField.getText())) {
+
+            List<String> compatibility = restService.testCompatibility(schemaTextArea.getText(), subjectTextField.getText(), versionTextField.getText());
+
+            if (compatibility.isEmpty()) {
                 resultLabel.setTextFill(Color.web("#3d7a3d"));
                 resultLabel.setText("Schema is compatible");
             } else {

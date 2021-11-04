@@ -15,15 +15,13 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
+import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.util.Collections;
@@ -40,6 +38,9 @@ public class SchemaRegistryBrowserController {
     private ComboBox<Integer> versionComboBox;
     @FXML
     private JsonTreeView jsonTreeView;
+
+    @FXML
+    private Label schemaIdLabel;
 
 
     public void setup(ClusterConfig selectedConfig, ConfigHandler configHandler) {
@@ -60,7 +61,9 @@ public class SchemaRegistryBrowserController {
                     return;
                 }
                 try {
-                    schemaTextArea.setText(JsonUtils.formatJson(schemaRegistryRestService.getVersion(subjectListView.getListView().getSelectionModel().getSelectedItem(), newValue1).getSchema()));
+                    Schema schema = schemaRegistryRestService.getVersion(subjectListView.getListView().getSelectionModel().getSelectedItem(), newValue1);
+                    schemaIdLabel.setText(String.valueOf(schema.getId()));
+                    schemaTextArea.setText(JsonUtils.formatJson(schema.getSchema()));
                 } catch (Exception e) {
                     ErrorAlert.show(e);
                 }
