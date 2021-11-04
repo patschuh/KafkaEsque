@@ -1,5 +1,6 @@
 package at.esque.kafka.topics;
 
+import at.esque.kafka.topics.metadata.MessageMetaData;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.LongProperty;
@@ -8,6 +9,7 @@ import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.apache.kafka.common.header.Header;
 
@@ -21,9 +23,7 @@ public class KafkaMessage {
     private ListProperty<Header> headers = new SimpleListProperty<>();
     private StringProperty keyType = new SimpleStringProperty();
     private StringProperty valueType = new SimpleStringProperty();
-    private IntegerProperty serializedKeySize = new SimpleIntegerProperty();
-    private IntegerProperty serializedValueSize = new SimpleIntegerProperty();
-    private StringProperty valueSchemaId = new SimpleStringProperty();
+    private ObservableList<MessageMetaData> metaData = FXCollections.observableArrayList();
 
     public long getOffset() {
         return offset.get();
@@ -121,33 +121,11 @@ public class KafkaMessage {
         this.valueType.set(valueType);
     }
 
-    public void setSerializedKeySize(int serializedKeySize) {
-        this.serializedKeySize.set(serializedKeySize);
+    public ObservableList<MessageMetaData> getMetaData() {
+        return metaData;
     }
 
-    public void setSerializedValueSize(int serializedValueSize)
-    {
-        this.serializedValueSize.set(serializedValueSize);
+    public void setMetaData(ObservableList<MessageMetaData> metaData) {
+        this.metaData = metaData;
     }
-
-    public IntegerProperty serializedKeySizeProperty() { return serializedKeySize;}
-    public IntegerProperty serializedValueSizeProperty() { return serializedValueSize;}
-
-    public int getSerializedKeySize(){
-        return this.serializedKeySize.get();
-    }
-
-    public int getSerializedValueSize() {
-        return this.serializedValueSize.get();
-    }
-
-    public void setValueSchemaId(String valueSchemaId)
-    {
-        this.valueSchemaId.set(valueSchemaId);
-    }
-
-    public StringProperty valueSchemaIdProperty() { return valueSchemaId;}
-
-    public String getValueSchemaId() { return this.valueSchemaId.get();}
-
 }

@@ -29,6 +29,9 @@ import at.esque.kafka.topics.DescribeTopicController;
 import at.esque.kafka.topics.DescribeTopicWrapper;
 import at.esque.kafka.topics.KafkaMessagBookWrapper;
 import at.esque.kafka.topics.KafkaMessage;
+import at.esque.kafka.topics.metadata.MessageMetaData;
+import at.esque.kafka.topics.metadata.NumericMetadata;
+import at.esque.kafka.topics.metadata.StringMetadata;
 import at.esque.kafka.topics.model.Topic;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -164,6 +167,12 @@ public class Controller {
     @FXML
     private TableColumn<Header, String> headerValueColumn;
     @FXML
+    private TableView<MessageMetaData> metdataTableView;
+    @FXML
+    private TableColumn<MessageMetaData, String> metadataNameColumn;
+    @FXML
+    private TableColumn<MessageMetaData, String> metadataValueColumn;
+    @FXML
     private FilterableListView<String> topicListView;
     @FXML
     private ComboBox<ClusterConfig> clusterComboBox;
@@ -198,15 +207,6 @@ public class Controller {
     @FXML
     private TabPane messageTabPane;
 
-    @FXML
-    Label serializedKeySizeLabel;
-
-    @FXML
-    Label serializedValueSizeLabel;
-
-    @FXML
-    Label valueSchemaIdLabel;
-
     private KafkaMessage selectedMessage;
 
     private double[] cachedValueTabDividerPositions = null;
@@ -235,6 +235,9 @@ public class Controller {
 
         headerKeyColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().key()));
         headerValueColumn.setCellValueFactory(param -> new SimpleStringProperty(new String(param.getValue().value())));
+
+        metadataNameColumn.setCellValueFactory(param -> param.getValue().nameProperty());
+        metadataValueColumn.setCellValueFactory(param -> param.getValue().valueAsString());
 
         fetchModeCombobox.setItems(FXCollections.observableArrayList(FetchTypes.values()));
         fetchModeCombobox.getSelectionModel().select(FetchTypes.NEWEST);
@@ -318,9 +321,7 @@ public class Controller {
             return;
         }
         headerTableView.setItems(selectedMessage.getHeaders());
-        serializedKeySizeLabel.setText(String.valueOf(selectedMessage.getSerializedKeySize()));
-        serializedValueSizeLabel.setText(String.valueOf(selectedMessage.getSerializedValueSize()));
-        valueSchemaIdLabel.setText(selectedMessage.getValueSchemaId());
+        metdataTableView.setItems(selectedMessage.getMetaData());
 
         if (formatJson) {
             keyTextArea.setText(JsonUtils.formatJson(selectedMessage.getKey()));
@@ -424,12 +425,12 @@ public class Controller {
                 Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
                 TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(false, false,Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()))
+                TraceInputDialog.show(false, false, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()))
                         .ifPresent(traceInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing in Value: " + traceInput.getSearch());
                             Pattern pattern = Pattern.compile(traceInput.getSearch());
                             trace(topicMessageTypeConfig, consumerConfig, (ConsumerRecord cr) -> {
-                                if (cr.value() == null){
+                                if (cr.value() == null) {
                                     return false;
                                 }
                                 Matcher matcher = pattern.matcher(cr.value().toString());
@@ -936,7 +937,7 @@ public class Controller {
 
         if (cr.value() instanceof GenericData.Record) {
             kafkaMessage.setValueType(extractTypeFromGenericRecord((GenericData.Record) cr.value()));
-            kafkaMessage.setValueSchemaId(extractSchemaIdFromGenericRecord((GenericData.Record) cr.value()));
+            kafkaMessage.getMetaData().add(new StringMetadata("Value Schema ID", extractSchemaIdFromGenericRecord((GenericData.Record) cr.value())));
         }
         if (cr.key() instanceof GenericData.Record) {
             kafkaMessage.setKeyType(extractTypeFromGenericRecord((GenericData.Record) cr.key()));
@@ -945,13 +946,13 @@ public class Controller {
         kafkaMessage.setTimestamp(Instant.ofEpochMilli(cr.timestamp()).toString());
         kafkaMessage.setHeaders(FXCollections.observableArrayList(cr.headers().toArray()));
 
-        kafkaMessage.setSerializedKeySize(cr.serializedKeySize());
-        kafkaMessage.setSerializedValueSize(cr.serializedValueSize());
+        kafkaMessage.getMetaData().add(new NumericMetadata("Serialized Key Size", (long) cr.serializedKeySize()));
+        kafkaMessage.getMetaData().add(new NumericMetadata("Serialized Value Size", (long) cr.serializedValueSize()));
 
         Platform.runLater(() -> baseList.add(kafkaMessage));
     }
 
-    private String extractSchemaIdFromGenericRecord(GenericData.Record genericRecord){
+    private String extractSchemaIdFromGenericRecord(GenericData.Record genericRecord) {
         if (genericRecord == null || genericRecord.getSchema() == null) {
             return null;
         }
@@ -1232,7 +1233,7 @@ public class Controller {
                                         try {
                                             return producerHandler.registerProducer(selectedCluster(), targetTopic);
                                         } catch (IOException e) {
-                                           throw new RuntimeException(e);
+                                            throw new RuntimeException(e);
                                         }
                                     });
                                     producerHandler.sendMessage(producerId, message.getTargetTopic(), message.getPartition() == -1 ? null : message.getPartition(), message.getKey(), message.getValue(), message.getKeyType(), message.getValueType());
