@@ -40,6 +40,7 @@ public class TraceInputDialog {
         TextField key = new TextField();
         key.setPrefWidth(500);
         CheckBox fastTraceFlag = new CheckBox();
+        CheckBox searchNullFlag = new CheckBox();
         HBox hBox = new HBox();
         InstantPicker instantPicker = new InstantPicker();
         instantPicker.setInstantValue(null);
@@ -62,7 +63,11 @@ public class TraceInputDialog {
             key.setPromptText("search");
             grid.add(new Label("Key:"), 0, 0);
         } else {
+            Label searchNullLabel = new Label("Search for null/tombstone:");
+            grid.add(searchNullLabel, 0, 1);
+            grid.add(searchNullFlag, 1, 1);
             key.setPromptText("regex");
+            key.disableProperty().bind(searchNullFlag.selectedProperty());
             grid.add(new Label("regex:"), 0, 0);
         }
         grid.add(key, 1, 0);
@@ -87,7 +92,7 @@ public class TraceInputDialog {
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == ButtonType.OK) {
-                return new TraceInput(key.getText(), fastTraceFlag.isSelected(), instantPicker.getInstantValue() == null ? null : instantPicker.getInstantValue().toEpochMilli());
+                return new TraceInput(key.getText(), fastTraceFlag.isSelected(), searchNullFlag.isSelected(), instantPicker.getInstantValue() == null ? null : instantPicker.getInstantValue().toEpochMilli());
             }
             return null;
         });
@@ -121,11 +126,13 @@ public class TraceInputDialog {
 
         private String search;
         private boolean fastTrace;
+        private boolean searchNull;
         private Long epoch;
 
-        public TraceInput(String key, boolean fastTrace, Long epoch) {
+        public TraceInput(String key, boolean fastTrace, boolean searchNull, Long epoch) {
             this.search = key;
             this.fastTrace = fastTrace;
+            this.searchNull = searchNull;
             this.epoch = epoch;
         }
 
@@ -143,6 +150,14 @@ public class TraceInputDialog {
 
         public void setFastTrace(boolean fastTrace) {
             this.fastTrace = fastTrace;
+        }
+
+        public boolean isSearchNull() {
+            return searchNull;
+        }
+
+        public void setSearchNull(boolean searchNull) {
+            this.searchNull = searchNull;
         }
 
         public Long getEpoch() {
