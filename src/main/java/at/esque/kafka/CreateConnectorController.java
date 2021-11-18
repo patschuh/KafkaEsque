@@ -20,6 +20,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.apache.avro.Schema;
 import org.apache.commons.lang3.StringUtils;
 import org.sourcelab.kafka.connect.apiclient.request.dto.ConnectorPluginConfigValidationResults;
@@ -139,17 +140,17 @@ public class CreateConnectorController {
             if(newConnectorMode == true) {
                 kafkaesqueConnectClient.createConnector(connectorName, connectorClass, paramMap);
 
-                SuccessAlert.show("Success", null, "Connector added successfully!");
+                SuccessAlert.show("Success", null, "Connector added successfully!", getWindow());
             }
             else
             {
                 kafkaesqueConnectClient.updateConnector(connectorName, connectorClass, paramMap);
-                SuccessAlert.show("Success", null, "Connector updated successfully!");
+                SuccessAlert.show("Success", null, "Connector updated successfully!", getWindow());
             }
 
             stage.close();
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
 
     }
@@ -198,7 +199,7 @@ public class CreateConnectorController {
             ValidationResult validationResult = kafkaesqueConnectClient.validateConnectorConfig(connectorName, connectorClass, paramMap);
 
             if (validationResult.getErrorCount() == 0) {
-                SuccessAlert.show("Success", null, "No validation error found!");
+                SuccessAlert.show("Success", null, "No validation error found!", getWindow());
             } else {
                 StringBuilder errorProtocol = new StringBuilder();
 
@@ -212,12 +213,16 @@ public class CreateConnectorController {
                     }
                 }
 
-                WarningAlert.show(String.format("%d validation errors found!", validationResult.getErrorCount()), null, errorProtocol.toString());
+                WarningAlert.show(String.format("%d validation errors found!", validationResult.getErrorCount()), null, errorProtocol.toString(), getWindow());
             }
 
 
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
+    }
+
+    private Window getWindow() {
+        return connectorConfigTextArea.getScene().getWindow();
     }
 }

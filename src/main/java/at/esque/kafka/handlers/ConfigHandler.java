@@ -4,6 +4,7 @@ import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.cluster.ClusterConfig;
 import at.esque.kafka.cluster.ClusterConfigs;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
+import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -135,6 +136,14 @@ public class ConfigHandler {
             settings.put(Settings.TRACE_QUICK_SELECT_ENABLED, Settings.TRACE_QUICK_SELECT_ENABLED_DEFAULT);
             changed = true;
         }
+        if (!settings.containsKey(Settings.SYNTAX_HIGHLIGHT_THRESHOLD_ENABLED)) {
+            settings.put(Settings.SYNTAX_HIGHLIGHT_THRESHOLD_ENABLED, Settings.SYNTAX_HIGHLIGHT_THRESHOLD_ENABLED_DEFAULT);
+            changed = true;
+        }
+        if (!settings.containsKey(Settings.SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS)) {
+            settings.put(Settings.SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS, Settings.SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS_DEFAULT);
+            changed = true;
+        }
         return changed;
     }
 
@@ -213,7 +222,7 @@ public class ConfigHandler {
             props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         }
 
-        if(config.issuppressSslEndPointIdentification()) {
+        if (config.issuppressSslEndPointIdentification()) {
             props.put("ssl.endpoint.identification.algorithm", "");
         }
 
@@ -290,5 +299,19 @@ public class ConfigHandler {
             return jksStore.getAbsolutePath();
         }
         return null;
+    }
+
+    public void configureKafkaEsqueCodeArea(KafkaEsqueCodeArea kafkaEsqueCodeArea) {
+        String s = settings.get(Settings.SYNTAX_HIGHLIGHT_THRESHOLD_ENABLED);
+        boolean b = Boolean.parseBoolean(s);
+        if (b) {
+            try {
+                String s2 = settings.get(Settings.SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS);
+                long l = Long.parseLong(s2);
+                kafkaEsqueCodeArea.maxCharactersSyntaxHighlighting.set(l);
+            } catch (Exception e) {
+                kafkaEsqueCodeArea.maxCharactersSyntaxHighlighting.set(Long.parseLong(Settings.SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS_DEFAULT));
+            }
+        }
     }
 }

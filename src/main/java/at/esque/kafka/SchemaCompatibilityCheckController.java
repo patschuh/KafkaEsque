@@ -10,6 +10,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.apache.avro.Schema;
 
 import java.io.File;
@@ -53,7 +54,7 @@ public class SchemaCompatibilityCheckController {
                 resultLabel.setText("Schema is incompatible");
             }
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
     }
 
@@ -67,7 +68,7 @@ public class SchemaCompatibilityCheckController {
             String schemaString = new String(Files.readAllBytes(Paths.get(selectedFile.getPath())));
             schemaTextArea.setText(schemaString);
         } catch (IOException e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
     }
 
@@ -85,5 +86,9 @@ public class SchemaCompatibilityCheckController {
         restService = null;
         subjectTextField.setDisable(false);
         stage = null;
+    }
+
+    private Window getWindow() {
+        return schemaTextArea.getScene().getWindow();
     }
 }

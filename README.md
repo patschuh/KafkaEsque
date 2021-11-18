@@ -103,5 +103,8 @@ Check the settings.yaml in the <user.home>/.kafkaesque directory for cluster ind
   * <span style="color:gray">default: true</span>
 * trace.quick.select.duration.list: configures the values of the quick select buttons as a comma separated list of [Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html) Strings
   * <span style="color:gray">default: PT2H, P1D, P7D</span>
-
 ![Trace Quick Select](https://kafka.esque.at/images/screenshots/quickselectTrace.png "Trace Quick Select")
+* syntax.highlight.threshold.enabled: Enables the syntax highlight threshold, if enabled JSON syntax highlighting will be disabled for if the codearea contains more characters than the threshold <span style="color:gray">(syntax.highlight.threshold.characters)</span>.
+  * <span style="color:gray">default: true</span>
+* syntax.highlight.threshold.characters: configures the maximum number of characters allowed in a codeArea before syntax highlighting is disabled if the threshold is enabled <span style="color:gray">(syntax.highlight.threshold.enabled)</span>.
+  * <span style="color:gray">default: 50000</span>

@@ -22,6 +22,8 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
@@ -68,12 +70,15 @@ public class PublisherController {
     private ProducerWrapper producerWrapper;
     private TopicMessageTypeConfig configForTopic;
     private String topic;
+    private Stage controlledStage;
 
     public void setup(ClusterConfig clusterConfig, String topic, ObservableList<Integer> partitions, KafkaMessage kafkaMessage) throws IOException {
         this.topic = topic;
         configForTopic = configHandler.getConfigForTopic(clusterConfig.getIdentifier(), topic);
         producerId = producerHandler.registerProducer(clusterConfig, topic);
         producerWrapper = producerHandler.getProducer(producerId).orElse(null);
+        configHandler.configureKafkaEsqueCodeArea(keyTextArea);
+        configHandler.configureKafkaEsqueCodeArea(valueTextArea);
         setupControls(partitions, configForTopic, kafkaMessage);
 
     }
@@ -109,7 +114,7 @@ public class PublisherController {
             try {
                 topicMessageTypes = findTypesForTopic(topic, producerWrapper.getSchemaRegistryRestService());
             } catch (RestClientException | IOException e) {
-                ErrorAlert.show(e);
+                ErrorAlert.show(e, getWindow());
             }
             if(topicMessageTypes != null) {
                 keyTypeSelectCombobox.setItems(topicMessageTypes);
@@ -124,7 +129,7 @@ public class PublisherController {
                 try {
                     topicMessageTypes = findTypesForTopic(topic, producerWrapper.getSchemaRegistryRestService());
                 } catch (RestClientException | IOException e) {
-                    ErrorAlert.show(e);
+                    ErrorAlert.show(e, getWindow());
                 }
             }
             if(topicMessageTypes != null) {
@@ -157,10 +162,10 @@ public class PublisherController {
             if (validateMessage(keyText, valueText)) {
                 RecordMetadata metadata = producerHandler.sendMessage(producerId, topic, selectedPartition, keyText, valueText, keyRecordType, valueRecordType, headerTableView.getItems());
                 String successMessage = String.format("topic [%s] " + System.lineSeparator() + "partition [%s]" + System.lineSeparator() + "offset [%s]", metadata.topic(), metadata.partition(), metadata.offset());
-                SuccessAlert.show("Message published", "Message was published successfully", successMessage);
+                SuccessAlert.show("Message published", "Message was published successfully", successMessage, getWindow());
             }
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
 
     }
@@ -188,7 +193,11 @@ public class PublisherController {
 
     private void showError(String inputName, ValidationResult validationResult) {
         String message = String.format("%s is not a valid json String: %s ", inputName, validationResult.getValidationError());
-        ErrorAlert.show(new ValidationException(message), false);
+        ErrorAlert.show(new ValidationException(message), getWindow(), false);
+    }
+
+    private Window getWindow() {
+        return valueTextArea.getScene().getWindow();
     }
 
     @FXML

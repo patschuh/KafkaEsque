@@ -3,8 +3,10 @@ package at.esque.kafka.controls;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -86,6 +88,7 @@ public class KafkaEsqueCodeArea extends BorderPane {
 
     public BooleanProperty editable = new SimpleBooleanProperty(true);
     public BooleanProperty searchVisible = new SimpleBooleanProperty(false);
+    public LongProperty maxCharactersSyntaxHighlighting = new SimpleLongProperty(Long.MAX_VALUE);
 
     public KafkaEsqueCodeArea() {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(
@@ -216,30 +219,33 @@ public class KafkaEsqueCodeArea extends BorderPane {
     private void highlightAndRememberHits(String regex) {
         clearSearchHits();
         if(!StringUtils.isEmpty(codeArea.getText())) {
-            Matcher syntaxMatcher = SYNTAX_PATTERN.matcher(codeArea.getText());
             String text = codeArea.getText();
             int lastKwEnd = 0;
             StyleSpansBuilder<Collection<String>> syntaxSpanBuilder = new StyleSpansBuilder<>();
             boolean syntaxMatches = false;
-            while (syntaxMatcher.find()) {
-                syntaxMatches = true;
-                String styleClass =
-                        syntaxMatcher.group("PAREN") != null ? "paren" :
-                                syntaxMatcher.group("BRACE") != null ? "brace" :
-                                        syntaxMatcher.group("BRACKET") != null ? "bracket" :
-                                                syntaxMatcher.group("SEMICOLON") != null ? "semicolon" :
-                                                        syntaxMatcher.group("FIELDNAME") != null ? "fieldname" :
-                                                                syntaxMatcher.group("STRING") != null ? "string" :
-                                                                        null; /* never happens */
-                assert styleClass != null;
-                syntaxSpanBuilder.add(Collections.emptyList(), syntaxMatcher.start() - lastKwEnd);
-                syntaxSpanBuilder.add(Collections.singleton(styleClass), syntaxMatcher.end() - syntaxMatcher.start());
-                lastKwEnd = syntaxMatcher.end();
+            if(text.length() <= maxCharactersSyntaxHighlighting.get()) {
+                Matcher syntaxMatcher = SYNTAX_PATTERN.matcher(text);
+                while (syntaxMatcher.find()) {
+                    syntaxMatches = true;
+                    String styleClass =
+                            syntaxMatcher.group("PAREN") != null ? "paren" :
+                                    syntaxMatcher.group("BRACE") != null ? "brace" :
+                                            syntaxMatcher.group("BRACKET") != null ? "bracket" :
+                                                    syntaxMatcher.group("SEMICOLON") != null ? "semicolon" :
+                                                            syntaxMatcher.group("FIELDNAME") != null ? "fieldname" :
+                                                                    syntaxMatcher.group("STRING") != null ? "string" :
+                                                                            null; /* never happens */
+                    assert styleClass != null;
+                    syntaxSpanBuilder.add(Collections.emptyList(), syntaxMatcher.start() - lastKwEnd);
+                    syntaxSpanBuilder.add(Collections.singleton(styleClass), syntaxMatcher.end() - syntaxMatcher.start());
+                    lastKwEnd = syntaxMatcher.end();
+                }
             }
             StyleSpans<Collection<String>> syntaxSpans = null;
             if(syntaxMatches){
                 syntaxSpans = syntaxSpanBuilder.create();
             }
+
 
             StyleSpans<Collection<String>> searchSpans = null;
             if (!StringUtils.isEmpty(regex)) {

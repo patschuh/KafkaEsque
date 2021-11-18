@@ -20,6 +20,10 @@ public class Settings {
     public static final String TRACE_QUICK_SELECT_DURATION_LIST_DEFAULT = "PT2H, P1D, P7D";
     public static final String TRACE_QUICK_SELECT_ENABLED = "trace.quick.select.enabled";
     public static final String TRACE_QUICK_SELECT_ENABLED_DEFAULT = "true";
+    public static final String SYNTAX_HIGHLIGHT_THRESHOLD_ENABLED = "syntax.highlight.threshold.enabled";
+    public static final String SYNTAX_HIGHLIGHT_THRESHOLD_ENABLED_DEFAULT = "true";
+    public static final String SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS = "syntax.highlight.threshold.characters";
+    public static final String SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS_DEFAULT = "50000";
 
     public static List<Duration> readDurationSetting(Map<String, String> settings) {
         return readDurationSetting(settings.get(TRACE_QUICK_SELECT_DURATION_LIST));

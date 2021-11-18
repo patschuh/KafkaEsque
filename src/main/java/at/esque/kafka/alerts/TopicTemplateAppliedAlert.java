@@ -5,11 +5,12 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
+import javafx.stage.Window;
 
 import java.util.List;
 
 public class TopicTemplateAppliedAlert {
-    public static void show(List<String> created, List<String> existed) {
+    public static void show(List<String> created, List<String> existed, Window owner) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Topic Template Applied");
         alert.setHeaderText("Result: ");
@@ -29,6 +30,10 @@ public class TopicTemplateAppliedAlert {
         gridPane.setMaxHeight(Double.MAX_VALUE);
 
         alert.getDialogPane().setContent(gridPane);
+
+        if (owner != null) {
+            alert.initOwner(owner);
+        }
 
         alert.showAndWait();
     }

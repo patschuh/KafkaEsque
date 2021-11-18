@@ -19,6 +19,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
@@ -65,7 +66,7 @@ public class SchemaRegistryBrowserController {
                     schemaIdLabel.setText(String.valueOf(schema.getId()));
                     schemaTextArea.setText(JsonUtils.formatJson(schema.getSchema()));
                 } catch (Exception e) {
-                    ErrorAlert.show(e);
+                    ErrorAlert.show(e, getWindow());
                 }
             }));
 
@@ -83,38 +84,38 @@ public class SchemaRegistryBrowserController {
                         versionComboBox.getSelectionModel().select(versionComboBox.getItems().size() - 1);
                     }
                 } catch (Exception e) {
-                    ErrorAlert.show(e);
+                    ErrorAlert.show(e, getWindow());
                 }
             });
 
             subjectListView.setItems(FXCollections.observableArrayList(schemaRegistryRestService.getAllSubjects()));
 
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
     }
 
     public void deleteSchema() {
         String subject = subjectListView.getListView().getSelectionModel().getSelectedItem();
         Integer version = versionComboBox.getSelectionModel().getSelectedItem();
-        if (subject != null && version != null && ConfirmationAlert.show("Delete Version", "Version [" + version + "] of subject [" + subject + "] will be deleted.", "Are you sure you want to delete this version?")) {
+        if (subject != null && version != null && ConfirmationAlert.show("Delete Version", "Version [" + version + "] of subject [" + subject + "] will be deleted.", "Are you sure you want to delete this version?", getWindow())) {
             try {
                 schemaRegistryRestService.deleteSchemaVersion(Collections.emptyMap(), subject, "" + version);
                 subjectListView.setItems(FXCollections.observableArrayList(schemaRegistryRestService.getAllSubjects()));
             } catch (Exception e) {
-                ErrorAlert.show(e);
+                ErrorAlert.show(e, getWindow());
             }
         }
     }
 
     public void deleteSubject() {
         String subject = subjectListView.getListView().getSelectionModel().getSelectedItem();
-        if (subject != null && ConfirmationAlert.show("Delete Subject", "Subject [" + subject + "] will be deleted.", "Are you sure you want to delete this subject?")) {
+        if (subject != null && ConfirmationAlert.show("Delete Subject", "Subject [" + subject + "] will be deleted.", "Are you sure you want to delete this subject?", getWindow())) {
             try {
                 schemaRegistryRestService.deleteSubject(Collections.emptyMap(), subject);
                 subjectListView.setItems(FXCollections.observableArrayList(schemaRegistryRestService.getAllSubjects()));
             } catch (Exception e) {
-                ErrorAlert.show(e);
+                ErrorAlert.show(e, getWindow());
             }
         }
     }
@@ -181,7 +182,7 @@ public class SchemaRegistryBrowserController {
             stage.setOnCloseRequest(event -> controller.cleanup());
             stage.show();
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
     }
 
@@ -199,7 +200,7 @@ public class SchemaRegistryBrowserController {
             stage.setOnCloseRequest(event -> controller.cleanup());
             stage.show();
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
     }
 
@@ -208,7 +209,12 @@ public class SchemaRegistryBrowserController {
             subjectListView.getListView().getSelectionModel().select(null);
             subjectListView.setItems(FXCollections.observableArrayList(schemaRegistryRestService.getAllSubjects()));
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
+    }
+
+
+    private Window getWindow() {
+        return schemaTextArea.getScene().getWindow();
     }
 }

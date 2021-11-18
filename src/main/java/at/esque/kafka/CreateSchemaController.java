@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.apache.avro.Schema;
 
 import java.io.File;
@@ -34,9 +35,9 @@ public class CreateSchemaController {
         try {
             parser.parse(schemaTextArea.getText());
             restService.registerSchema(schemaTextArea.getText(), subjectTextField.getText());
-            SuccessAlert.show("Success", null, "Schema added successfully!");
+            SuccessAlert.show("Success", null, "Schema added successfully!", getWindow());
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
     }
 
@@ -50,8 +51,12 @@ public class CreateSchemaController {
             String schemaString = new String(Files.readAllBytes(Paths.get(selectedFile.getPath())));
             schemaTextArea.setText(schemaString);
         } catch (IOException e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
+    }
+
+    private Window getWindow() {
+        return schemaTextArea.getScene().getWindow();
     }
 
     public void setup(String selectedSubject, RestService restService, Stage stage) {

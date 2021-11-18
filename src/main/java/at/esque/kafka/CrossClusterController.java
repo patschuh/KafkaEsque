@@ -26,6 +26,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
+import javafx.stage.Window;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -123,7 +124,7 @@ public class CrossClusterController {
                                     return FontIcon.of(FontAwesome.STOP_CIRCLE);
                                 default:
                                     if(cell.getItem().finishedExceptionaly()) {
-                                        cell.setOnMouseClicked(mouseEvent -> ErrorAlert.show(cell.getItem().getException()));
+                                        cell.setOnMouseClicked(mouseEvent -> ErrorAlert.show(cell.getItem().getException(), getWindow()));
                                     }
                                     return FontIcon.of(FontAwesome.WARNING);
                             }
@@ -166,7 +167,7 @@ public class CrossClusterController {
                     consumerHandler.seekToOffset(consumerId, -2);
                 }
             } catch (IOException | MissingSchemaRegistryException e) {
-                ErrorAlert.show(e);
+                ErrorAlert.show(e, getWindow());
                 return;
             }
             Optional<KafkaConsumer> consumer = consumerHandler.getConsumer(consumerId);
@@ -246,8 +247,12 @@ public class CrossClusterController {
             refreshOperationList(null);
             startOperation(operationId);
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
+    }
+
+    private Window getWindow() {
+        return fromClusterTopicsList.getScene().getWindow();
     }
 
     @FXML

@@ -5,6 +5,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import javafx.stage.Window;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -12,10 +13,14 @@ import java.io.StringWriter;
 public class ErrorAlert {
 
     public static void show(Throwable ex){
-        show(ex, true);
+        show(ex, null, true);
     }
 
-    public static void show(Throwable ex, boolean expandable) {
+    public static void show(Throwable ex, Window owner){
+        show(ex, owner, true);
+    }
+
+    public static void show(Throwable ex, Window owner, boolean expandable) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(ex.getClass().getSimpleName());
         alert.setHeaderText(ex.getClass().getName());
@@ -44,6 +49,10 @@ public class ErrorAlert {
 
             // Set expandable Exception into the dialog pane.
             alert.getDialogPane().setExpandableContent(expContent);
+        }
+
+        if(owner != null){
+            alert.initOwner(owner);
         }
 
         alert.showAndWait();

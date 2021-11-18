@@ -253,6 +253,9 @@ public class Controller {
         topicListView.getListView().setCellFactory(lv -> topicListCellFactory());
         topicListView.setListComparator(String::compareTo);
 
+        configHandler.configureKafkaEsqueCodeArea(keyTextArea);
+        configHandler.configureKafkaEsqueCodeArea(valueTextArea);
+
         setupJsonFormatToggle();
 
         setupClusterCombobox();
@@ -297,7 +300,7 @@ public class Controller {
 
                     Desktop.getDesktop().open(temp);
                 } catch (IOException e) {
-                    Platform.runLater(() -> ErrorAlert.show(e));
+                    Platform.runLater(() -> ErrorAlert.show(e, controlledStage));
                 }
             }).start();
         }
@@ -413,7 +416,7 @@ public class Controller {
                             trace(topicMessageTypeConfig, consumerConfig, (ConsumerRecord cr) -> StringUtils.equals(cr.key().toString(), traceKeyInput.getSearch()), partition, traceKeyInput.getEpoch());
                         });
             } catch (Exception e) {
-                ErrorAlert.show(e);
+                ErrorAlert.show(e, controlledStage);
             }
         });
 
@@ -443,7 +446,7 @@ public class Controller {
                             }, null, traceInput.getEpoch());
                         });
             } catch (Exception e) {
-                ErrorAlert.show(e);
+                ErrorAlert.show(e, controlledStage);
             }
         });
 
@@ -456,7 +459,7 @@ public class Controller {
                     adminClient.deleteTopic(cell.itemProperty().get());
                     SuccessAlert.show("Delete Topic", null, "Topic [" + cell.itemProperty().get() + "] marked for deletion.");
                 } catch (Exception e) {
-                    ErrorAlert.show(e);
+                    ErrorAlert.show(e, controlledStage);
                 }
             }
         });
@@ -532,7 +535,7 @@ public class Controller {
                 getMessagesContinuously(topicMessageTypeConfig, consumerConfig);
             }
         } catch (IOException e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, controlledStage);
         }
     }
 
@@ -574,7 +577,7 @@ public class Controller {
             stage.show();
             centerStageOnControlledStage(stage);
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, controlledStage);
         }
     }
 
@@ -606,7 +609,7 @@ public class Controller {
             stage.show();
             centerStageOnControlledStage(stage);
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, controlledStage);
         }
     }
 
@@ -638,7 +641,7 @@ public class Controller {
             stage.show();
             centerStageOnControlledStage(stage);
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, controlledStage);
         }
     }
 
@@ -659,7 +662,7 @@ public class Controller {
             stage.show();
             centerStageOnControlledStage(stage);
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, controlledStage);
         }
     }
 
@@ -686,7 +689,7 @@ public class Controller {
                 consumerHandler.deregisterConsumer(consumerId);
             });
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, controlledStage);
         }
     }
 
@@ -710,7 +713,7 @@ public class Controller {
                 controller.stop();
             });
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, controlledStage);
         }
     }
 
@@ -720,7 +723,7 @@ public class Controller {
             try {
                 consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
             } catch (MissingSchemaRegistryException e) {
-                Platform.runLater(() -> ErrorAlert.show(e));
+                Platform.runLater(() -> ErrorAlert.show(e, controlledStage));
                 return;
             }
             try {
@@ -795,7 +798,7 @@ public class Controller {
             try {
                 tempconsumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
             } catch (MissingSchemaRegistryException e) {
-                Platform.runLater(() -> ErrorAlert.show(e));
+                Platform.runLater(() -> ErrorAlert.show(e, controlledStage));
                 return;
             }
             UUID consumerId = tempconsumerId;
@@ -845,7 +848,7 @@ public class Controller {
         try {
             tempconsumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
         } catch (MissingSchemaRegistryException e) {
-            Platform.runLater(() -> ErrorAlert.show(e));
+            Platform.runLater(() -> ErrorAlert.show(e, controlledStage));
             return;
         }
         UUID consumerId = tempconsumerId;
@@ -880,7 +883,7 @@ public class Controller {
             try {
                 consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
             } catch (MissingSchemaRegistryException e) {
-                Platform.runLater(() -> ErrorAlert.show(e));
+                Platform.runLater(() -> ErrorAlert.show(e, controlledStage));
                 return;
             }
             try {
@@ -984,7 +987,7 @@ public class Controller {
             try {
                 consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
             } catch (MissingSchemaRegistryException e) {
-                ErrorAlert.show(e);
+                ErrorAlert.show(e, controlledStage);
                 return;
             }
             try {
@@ -1085,7 +1088,7 @@ public class Controller {
             stage.show();
             centerStageOnControlledStage(stage);
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, controlledStage);
         }
     }
 
@@ -1108,7 +1111,7 @@ public class Controller {
             stage.show();
             centerStageOnControlledStage(stage);
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, controlledStage);
         }
     }
 
@@ -1128,7 +1131,7 @@ public class Controller {
             stage.show();
             centerStageOnControlledStage(stage);
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, controlledStage);
         }
     }
 
@@ -1168,7 +1171,7 @@ public class Controller {
                 topicsToCreate = yamlMapper.readValue(selectedFile, new TypeReference<List<Topic>>() {
                 });
             } catch (Exception e) {
-                ErrorAlert.show(e);
+                ErrorAlert.show(e, controlledStage);
                 return;
             }
             runInDaemonThread(() -> {
@@ -1189,12 +1192,12 @@ public class Controller {
                             if (e.getCause() instanceof TopicExistsException) {
                                 alreadyExistedTopics.add(currentTopic);
                             } else {
-                                Platform.runLater(() -> ErrorAlert.show(e));
+                                Platform.runLater(() -> ErrorAlert.show(e, controlledStage));
                             }
                         }
                         Platform.runLater(() -> backGroundTaskHolder.setProgressMessage("Created Topic " + createdTopics.size() + " of " + topicsToCreate.size() + " (" + alreadyExistedTopics.size() + " already existed)"));
                     });
-                    Platform.runLater(() -> TopicTemplateAppliedAlert.show(createdTopics, alreadyExistedTopics));
+                    Platform.runLater(() -> TopicTemplateAppliedAlert.show(createdTopics, alreadyExistedTopics, topicListView.getScene().getWindow()));
                 } finally {
                     backGroundTaskHolder.backgroundTaskStopped();
                 }
@@ -1248,7 +1251,7 @@ public class Controller {
                                 }
                             });
                 } catch (Exception e) {
-                    Platform.runLater(() -> ErrorAlert.show(e));
+                    Platform.runLater(() -> ErrorAlert.show(e, controlledStage));
                 } finally {
                     stopWatch.stop();
                     topicToProducerMap.values().forEach(uuid -> producerHandler.deregisterProducer(uuid));
@@ -1274,7 +1277,7 @@ public class Controller {
             messagesToSend.addAll(messages.stream().map(message -> new KafkaMessagBookWrapper(playFile.getName(), message))
                     .collect(Collectors.toList()));
         } catch (FileNotFoundException e) {
-            Platform.runLater(() -> ErrorAlert.show(e));
+            Platform.runLater(() -> ErrorAlert.show(e, controlledStage));
         }
     }
 

@@ -29,6 +29,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.util.Callback;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -115,7 +116,7 @@ public class KafkaConnectBrowserController {
                                     updateRightPane(selectedConnectorInRightPane);
                                 } catch (Exception e)
                                 {
-                                    ErrorAlert.show(e);
+                                    ErrorAlert.show(e, getWindow());
                                 }
 
                             }
@@ -128,6 +129,10 @@ public class KafkaConnectBrowserController {
 
 
 
+    }
+
+    private Window getWindow() {
+        return connectorConfigTextArea.getScene().getWindow();
     }
 
     public void updateRightPane(String selectedConnector)
@@ -154,7 +159,7 @@ public class KafkaConnectBrowserController {
                 taskTableView.setItems(null);
             }
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
 
 
@@ -171,7 +176,7 @@ public class KafkaConnectBrowserController {
             connectorListView.getListView().getSelectionModel().select(null);
             connectorListView.setItems(FXCollections.observableArrayList(kafkaesqueConnectClient.getConnectors()));
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
     }
 
@@ -190,7 +195,7 @@ public class KafkaConnectBrowserController {
             stage.setOnCloseRequest(event -> controller.cleanup());
             stage.show();
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
     }
 
@@ -203,18 +208,18 @@ public class KafkaConnectBrowserController {
         deleteItem.setGraphic(new FontIcon(FontAwesome.TRASH));
         deleteItem.textProperty().set("delete");
         deleteItem.setOnAction(event -> {
-                if (ConfirmationAlert.show("Delete Connector", "Connector [" + cell.itemProperty().get() + "] will deleted.", "Are you sure you want to delete this connector")) {
+                if (ConfirmationAlert.show("Delete Connector", "Connector [" + cell.itemProperty().get() + "] will be deleted.", "Are you sure you want to delete this connector", getWindow())) {
                     try {
                         boolean result = kafkaesqueConnectClient.deleteConnector(cell.itemProperty().get());
 
                         if(result == true) {
-                            SuccessAlert.show("Delete Connector", null, "Connector [" + cell.itemProperty().get() + "] deleted.");
+                            SuccessAlert.show("Delete Connector", null, "Connector [" + cell.itemProperty().get() + "] deleted.", getWindow());
                         } else
                         {
-                            WarningAlert.show( "Delete Connector", null, "It wasn't possible to delete the connector");
+                            WarningAlert.show( "Delete Connector", null, "It wasn't possible to delete the connector", getWindow());
                         }
                     } catch (Exception e) {
-                        ErrorAlert.show(e);
+                        ErrorAlert.show(e, getWindow());
                     }
                 }
             });
@@ -303,13 +308,13 @@ public class KafkaConnectBrowserController {
 
             if (result != true)
             {
-                WarningAlert.show("Connector Action", null, String.format("Connector action '%s' returned fales from API!",action));
+                WarningAlert.show("Connector Action", null, String.format("Connector action '%s' returned fales from API!",action), getWindow());
             }
 
             //Refresh view
             updateRightPane(selectedConnectorInRightPane);
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
     }
 }

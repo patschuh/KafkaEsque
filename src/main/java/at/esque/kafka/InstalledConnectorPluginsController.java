@@ -8,6 +8,7 @@ import at.esque.kafka.handlers.ConfigHandler;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.stage.Window;
 
 
 public class InstalledConnectorPluginsController {
@@ -29,8 +30,12 @@ public class InstalledConnectorPluginsController {
         try {
             connectorPluginListView.setItems(FXCollections.observableArrayList(kafkaesqueConnectClient.getInstalledConnectorPlugins()));
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            ErrorAlert.show(e, getWindow());
         }
+    }
+
+    private Window getWindow() {
+        return connectorPluginListView.getScene().getWindow();
     }
 
 }
