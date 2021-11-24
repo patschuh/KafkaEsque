@@ -31,7 +31,7 @@ public class KafkaesqueConnectClient {
                 configuration.useTrustStore(new File(sslProps.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG)), sslProps.get(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG));
             }
             if (sslProps.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG) != null) {
-                configuration.useKeyStore(new File(sslProps.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG)), sslProps.get(SslConfigs.SSL_KEY_PASSWORD_CONFIG));
+                configuration.useKeyStore(new File(sslProps.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG)), sslProps.get(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG));
             }
         }
 
