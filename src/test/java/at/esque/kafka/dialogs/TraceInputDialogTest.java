@@ -22,7 +22,7 @@ public class TraceInputDialogTest extends ApplicationTest {
             Button openDialogButton = new Button("Open Dialog");
             openDialogButton.setId("openDialog");
             openDialogButton.setOnAction(event -> {
-                TraceInputDialog.show(true, false, false, new ArrayList<>());
+                TraceInputDialog.show(true, false, false, new ArrayList<>(), 0);
             });
             StackPane root = new StackPane(openDialogButton);
             root.setPrefSize(800, 500);

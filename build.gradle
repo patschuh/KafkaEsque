@@ -61,6 +61,7 @@ dependencies {
     compile 'net.thisptr:jackson-jq:1.0.0-preview.20191208'
     compile 'com.dlsc.formsfx:formsfx-core:8.4.0'
     compile group: 'org.sourcelab', name: 'kafka-connect-client', version: '3.1.0'
+    compile 'org.controlsfx:controlsfx:8.40.18'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.springframework.kafka:spring-kafka-test:2.2.0.RELEASE'
@@ -69,7 +70,7 @@ dependencies {
 }
 
 group = 'at.esque.kafka'
-version = '1.5.0-SNAPSHOT'
+version = '1.6.0-SNAPSHOT'
 sourceCompatibility = '1.8'
 
 publishing {

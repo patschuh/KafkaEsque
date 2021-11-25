@@ -5,7 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class Settings {
@@ -24,6 +28,8 @@ public class Settings {
     public static final String SYNTAX_HIGHLIGHT_THRESHOLD_ENABLED_DEFAULT = "true";
     public static final String SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS = "syntax.highlight.threshold.characters";
     public static final String SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS_DEFAULT = "50000";
+    public static final String RECENT_TRACE_MAX_ENTRIES = "recent.trace.max.entries";
+    public static final String RECENT_TRACE_MAX_ENTRIES_DEFAULT = "10";
 
     public static List<Duration> readDurationSetting(Map<String, String> settings) {
         return readDurationSetting(settings.get(TRACE_QUICK_SELECT_DURATION_LIST));

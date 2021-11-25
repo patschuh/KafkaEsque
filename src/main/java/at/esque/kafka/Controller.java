@@ -406,7 +406,7 @@ public class Controller {
                 Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
                 TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(true, topicMessageTypeConfig.getKeyType() == MessageType.AVRO, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()))
+                TraceInputDialog.show(true, topicMessageTypeConfig.getKeyType() == MessageType.AVRO, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)))
                         .ifPresent(traceKeyInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing key: " + traceKeyInput.getSearch());
                             Integer partition = null;
@@ -428,7 +428,7 @@ public class Controller {
                 Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
                 TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(false, false, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()))
+                TraceInputDialog.show(false, false, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()),Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)))
                         .ifPresent(traceInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing in Value: " + traceInput.getSearch());
                             Pattern pattern = Pattern.compile(traceInput.getSearch());

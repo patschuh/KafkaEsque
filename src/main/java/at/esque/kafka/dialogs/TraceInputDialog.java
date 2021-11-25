@@ -3,22 +3,47 @@ package at.esque.kafka.dialogs;
 import at.esque.kafka.Main;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.controls.InstantPicker;
-import at.esque.kafka.handlers.Settings;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import org.controlsfx.control.PopOver;
+import org.jetbrains.annotations.NotNull;
+import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-import java.time.*;
-import java.util.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.Period;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
 public class TraceInputDialog {
-    public static Optional<TraceInput> show(boolean isKeyTrace, boolean isAvroKeyType, boolean traceQuickSelectEnabled, List<Duration> durations) {
+
+    public static final LinkedList<String> recentTrace = new LinkedList<>();
+
+    public static Optional<TraceInput> show(boolean isKeyTrace, boolean isAvroKeyType, boolean traceQuickSelectEnabled, List<Duration> durations, int recentTraceMaxEntries) {
         Dialog<TraceInput> dialog = new Dialog<>();
         Main.applyIcon(dialog);
         Main.applyStylesheet(dialog.getDialogPane().getScene());
@@ -37,7 +62,11 @@ public class TraceInputDialog {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 20, 20, 20));
 
+
         TextField key = new TextField();
+        key.getStyleClass().add("first");
+        HBox.setHgrow(key, Priority.ALWAYS);
+        HBox keyBox = buildKeyHBox(key);
         key.setPrefWidth(500);
         CheckBox fastTraceFlag = new CheckBox();
         CheckBox searchNullFlag = new CheckBox();
@@ -59,6 +88,7 @@ public class TraceInputDialog {
                 fastTraceLabel.setTooltip(new Tooltip("Fast Trace traces in one partition determined by the default partitioning"));
                 grid.add(fastTraceLabel, 0, 1);
                 grid.add(fastTraceFlag, 1, 1);
+                fastTraceFlag.setSelected(true);
             }
             key.setPromptText("search");
             grid.add(new Label("Key:"), 0, 0);
@@ -70,11 +100,11 @@ public class TraceInputDialog {
             key.disableProperty().bind(searchNullFlag.selectedProperty());
             grid.add(new Label("regex:"), 0, 0);
         }
-        grid.add(key, 1, 0);
+        grid.add(keyBox, 1, 0);
         grid.add(startTimeLabel, 0, 2);
         grid.add(hBox, 1, 2);
 
-        if(traceQuickSelectEnabled) {
+        if (traceQuickSelectEnabled) {
             HBox buttonBar = new HBox();
             fillButtonBar(buttonBar, instantPicker, durations);
             buttonBar.setMaxWidth(Double.MAX_VALUE);
@@ -92,12 +122,77 @@ public class TraceInputDialog {
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == ButtonType.OK) {
+                updateRecentTrace(key.getText(), recentTraceMaxEntries);
                 return new TraceInput(key.getText(), fastTraceFlag.isSelected(), searchNullFlag.isSelected(), instantPicker.getInstantValue() == null ? null : instantPicker.getInstantValue().toEpochMilli());
             }
             return null;
         });
 
         return dialog.showAndWait();
+    }
+
+    @NotNull
+    private static HBox buildKeyHBox(TextField key) {
+        HBox keyBox = new HBox();
+        keyBox.getChildren().add(key);
+        FontIcon icon = new FontIcon();
+        icon.setIconCode(FontAwesome.HISTORY);
+        ListView<String> recentTraces = buildRecentTracesView(key);
+        PopOver popOver = buildPopover(recentTraces);
+        Button traceHistoryButton = new Button();
+        traceHistoryButton.setGraphic(icon);
+        traceHistoryButton.getStyleClass().add("last");
+        keyBox.getChildren().add(traceHistoryButton);
+        traceHistoryButton.setOnAction(event -> {
+            popOver.show(traceHistoryButton);
+        });
+        return keyBox;
+    }
+
+    @NotNull
+    private static PopOver buildPopover(ListView<String> recentTraces) {
+        PopOver popOver = new PopOver();
+        popOver.setContentNode(recentTraces);
+        popOver.setTitle("Recent Traces");
+        popOver.setCloseButtonEnabled(true);
+        popOver.setHeaderAlwaysVisible(true);
+        return popOver;
+    }
+
+    @NotNull
+    private static ListView<String> buildRecentTracesView(TextField key) {
+        ListView<String> recentTraces = new ListView<>();
+        recentTraces.setFocusTraversable(false);
+        recentTraces.setMaxHeight(200);
+        recentTraces.setBackground(Background.EMPTY);
+        recentTraces.setCellFactory(param -> {
+            ListCell<String> cell = new ListCell<>();
+
+            cell.textProperty().bind(cell.itemProperty());
+
+            cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
+                if (isNowEmpty) {
+                    cell.setOnMouseClicked(null);
+                } else {
+                    cell.setOnMouseClicked(event -> key.setText(cell.getText()));
+                }
+            });
+
+            return cell;
+        });
+        ArrayList<String> sortable = new ArrayList<>(recentTrace);
+        Collections.reverse(sortable);
+        recentTraces.setItems(FXCollections.observableArrayList(sortable));
+        return recentTraces;
+    }
+
+    private static void updateRecentTrace(String text, int recentTraceMaxEntries) {
+        //resets element as the most recent entry if it already exists
+        recentTrace.remove(text);
+        recentTrace.add(text);
+        while (recentTrace.size() > recentTraceMaxEntries) {
+            recentTrace.removeFirst();
+        }
     }
 
     private static void fillButtonBar(HBox buttonBar, InstantPicker instantPicker, List<Duration> durations) {

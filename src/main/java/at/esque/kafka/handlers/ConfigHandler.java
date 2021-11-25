@@ -144,6 +144,10 @@ public class ConfigHandler {
             settings.put(Settings.SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS, Settings.SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS_DEFAULT);
             changed = true;
         }
+        if (!settings.containsKey(Settings.RECENT_TRACE_MAX_ENTRIES)) {
+            settings.put(Settings.RECENT_TRACE_MAX_ENTRIES, Settings.RECENT_TRACE_MAX_ENTRIES_DEFAULT);
+            changed = true;
+        }
         return changed;
     }
 
