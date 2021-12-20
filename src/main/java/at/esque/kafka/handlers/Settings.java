@@ -1,5 +1,6 @@
 package at.esque.kafka.handlers;
 
+import at.esque.kafka.MessageType;
 import at.esque.kafka.dialogs.TraceInputDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +31,17 @@ public class Settings {
     public static final String SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS_DEFAULT = "50000";
     public static final String RECENT_TRACE_MAX_ENTRIES = "recent.trace.max.entries";
     public static final String RECENT_TRACE_MAX_ENTRIES_DEFAULT = "10";
+    public static final String DEFAULT_KEY_MESSAGE_TYPE = "default.key.messagetype";
+    public static final String DEFAULT_KEY_MESSAGE_TYPE_DEFAULT = "STRING";
+    public static final String DEFAULT_VALUE_MESSAGE_TYPE = "default.value.messagetype";
+    public static final String DEFAULT_VALUE_MESSAGE_TYPE_DEFAULT = "STRING";
 
     public static List<Duration> readDurationSetting(Map<String, String> settings) {
         return readDurationSetting(settings.get(TRACE_QUICK_SELECT_DURATION_LIST));
     }
 
-    public static boolean isTraceQuickSelectEnabled(Map<String, String> settings){
-        if(settings == null){
+    public static boolean isTraceQuickSelectEnabled(Map<String, String> settings) {
+        if (settings == null) {
             return false;
         }
         return Boolean.parseBoolean(settings.get(TRACE_QUICK_SELECT_ENABLED));
@@ -60,5 +65,21 @@ public class Settings {
                 .filter(duration -> !duration.isNegative())
                 .collect(Collectors.toList());
     }
+
+    public static MessageType readDefaultKeyMessageType(Map<String, String> settings) {
+        return readDefaultMessageTypeSetting(settings.get(DEFAULT_KEY_MESSAGE_TYPE));
+    }
+
+    public static MessageType readDefaultValueMessageType(Map<String, String> settings) {
+        return readDefaultMessageTypeSetting(settings.get(DEFAULT_VALUE_MESSAGE_TYPE));
+    }
+
+    public static MessageType readDefaultMessageTypeSetting(String setting) {
+        return Arrays.stream(MessageType.values())
+                .filter(messageType -> messageType.name().equals(setting))
+                .findFirst()
+                .orElse(MessageType.STRING);
+    }
+
 
 }

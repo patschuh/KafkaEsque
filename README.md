@@ -108,3 +108,7 @@ Check the settings.yaml in the <user.home>/.kafkaesque directory for cluster ind
   * <span style="color:gray">default: true</span>
 * syntax.highlight.threshold.characters: configures the maximum number of characters allowed in a codeArea before syntax highlighting is disabled if the threshold is enabled <span style="color:gray">(syntax.highlight.threshold.enabled)</span>.
   * <span style="color:gray">default: 50000</span>
+* default.key.messagetype: configures the default Key MessageType to use if no configuration was saved for the topic yet</span>.
+  * <span style="color:gray">default: STRING</span>
+* default.value.messagetype: configures the default Value MessageType to use if no configuration was saved for the topic yet</span>.
+  * <span style="color:gray">default: STRING</span>

@@ -5,7 +5,6 @@ import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.handlers.ConfigHandler;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
-import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serdes;
 
@@ -16,14 +15,11 @@ import java.util.Map;
 
 public class KafkaEsqueDeserializer implements Deserializer<Object> {
 
-    private ForgivingKafkaAvroDeserializer avroDeserializer;
-
     private Map<MessageType, Deserializer> deserializerMap = new EnumMap<MessageType, Deserializer>(MessageType.class) {{
-        Arrays.stream(MessageType.values()).filter(type -> !type.equals(MessageType.AVRO)).forEach(type -> put(type, deserializerByType(type)));
+        Arrays.stream(MessageType.values()).forEach(type -> put(type, deserializerByType(type)));
     }};
 
     public KafkaEsqueDeserializer() {
-        avroDeserializer = new ForgivingKafkaAvroDeserializer();
     }
 
     private String clusterId;
@@ -36,30 +32,33 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
 
     public Object deserialize(String s, byte[] bytes) {
         TopicMessageTypeConfig topicConfig = configHandler.getConfigForTopic(clusterId, s);
-        if (isKey ? topicConfig.getKeyType().equals(MessageType.AVRO) : topicConfig.getValueType().equals(MessageType.AVRO)) {
+        MessageType messageType = (isKey ? topicConfig.getKeyType() : topicConfig.getValueType());
+        Object deserializedObj = deserializerMap.get(messageType).deserialize(s, bytes);
 
-            Integer schemaId = getSchemaId(bytes);
+        Integer schemaId = null;
 
-            Object deserializedObj = avroDeserializer.deserialize(bytes);
-
-            if ((deserializedObj instanceof GenericData.Record))
-            {
-                GenericData.Record rec = (GenericData.Record) deserializedObj;
-                rec.getSchema().addProp("schema-registry-schema-id", schemaId);
-            }
-            return deserializedObj;
-        } else {
-            return deserializerMap.get(isKey ? topicConfig.getKeyType() : topicConfig.getValueType()).deserialize(s, bytes);
+        if (MessageType.AVRO.equals(messageType) || MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(messageType)) {
+            schemaId = getSchemaId(bytes);
         }
+        if ((deserializedObj instanceof GenericData.Record)) {
+            GenericData.Record rec = (GenericData.Record) deserializedObj;
+            rec.getSchema().addProp("schema-registry-schema-id", schemaId);
+        }
+
+
+        return deserializedObj;
     }
 
 
     public void configure(Map<String, ?> configs, boolean isKey) {
         this.isKey = isKey;
-        deserializerMap.values().forEach(deserializer -> deserializer.configure(configs, isKey));
-        if (configs.get("schema.registry.url") != null) {
-            avroDeserializer.configure(configs, isKey);
-        }
+        deserializerMap.values().forEach(deserializer -> {
+            if (deserializer instanceof ForgivingKafkaAvroDeserializer && configs.get("schema.registry.url") == null) {
+                //Don't call configure for the AvroDeserializer if there is no schema registry url to prevent exception, in cases where avro is not even used
+            }else {
+                deserializer.configure(configs, isKey);
+            }
+        });
         this.clusterId = (String) configs.get("kafkaesque.cluster.id");
         this.configHandler = (ConfigHandler) configs.get("kafkaesque.confighandler");
     }

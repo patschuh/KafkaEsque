@@ -52,7 +52,10 @@ public class ConfigHandler {
         TopicMessageTypeConfig topicMessageTypeConfig = configs.get(topic);
         if (topicMessageTypeConfig == null) {
             topicMessageTypeConfig = new TopicMessageTypeConfig(topic);
+            topicMessageTypeConfig.setKeyType(Settings.readDefaultKeyMessageType(settings));
+            topicMessageTypeConfig.setValueType(Settings.readDefaultValueMessageType(settings));
             configs.put(topic, topicMessageTypeConfig);
+            saveTopicMessageTypeConfigs(clusterIdentification);
         }
         return topicMessageTypeConfig;
     }
@@ -84,6 +87,12 @@ public class ConfigHandler {
         }
         cachedConfigs.put(clusterIdentification, new HashMap<>());
         return cachedConfigs.get(clusterIdentification);
+    }
+
+    public void setSettingsProperties(Map<String, String> settingsProperties) throws IOException {
+        File configFile = new File(String.format(CONFIG_DIRECTORY, "settings.yaml"));
+        this.settings = settingsProperties;
+        yamlMapper.writeValue(configFile, settings);
     }
 
     public Map<String, String> getSettingsProperties() {
@@ -146,6 +155,14 @@ public class ConfigHandler {
         }
         if (!settings.containsKey(Settings.RECENT_TRACE_MAX_ENTRIES)) {
             settings.put(Settings.RECENT_TRACE_MAX_ENTRIES, Settings.RECENT_TRACE_MAX_ENTRIES_DEFAULT);
+            changed = true;
+        }
+        if (!settings.containsKey(Settings.DEFAULT_KEY_MESSAGE_TYPE)) {
+            settings.put(Settings.DEFAULT_KEY_MESSAGE_TYPE, Settings.DEFAULT_KEY_MESSAGE_TYPE_DEFAULT);
+            changed = true;
+        }
+        if (!settings.containsKey(Settings.DEFAULT_VALUE_MESSAGE_TYPE)) {
+            settings.put(Settings.DEFAULT_VALUE_MESSAGE_TYPE, Settings.DEFAULT_VALUE_MESSAGE_TYPE_DEFAULT);
             changed = true;
         }
         return changed;

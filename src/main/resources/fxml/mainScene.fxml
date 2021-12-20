@@ -161,6 +161,16 @@
             <top>
                 <MenuBar fx:id="menuBar" BorderPane.alignment="CENTER">
                     <menus>
+                        <Menu mnemonicParsing="false" text="Settings">
+                            <items>
+                                <MenuItem fx:id="settings" mnemonicParsing="false"
+                                          onAction="#showSettingsDialog" text="Settings">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fa-wrench"/>
+                                    </graphic>
+                                </MenuItem>
+                            </items>
+                        </Menu>
                         <Menu mnemonicParsing="false" text="Cluster">
                             <items>
                                 <MenuItem fx:id="playMessageBookMenu" mnemonicParsing="false"

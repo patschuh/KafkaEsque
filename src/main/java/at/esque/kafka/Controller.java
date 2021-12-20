@@ -15,6 +15,7 @@ import at.esque.kafka.controls.MessagesTabContent;
 import at.esque.kafka.controls.PinTab;
 import at.esque.kafka.dialogs.ClusterConfigDialog;
 import at.esque.kafka.dialogs.DeleteClustersDialog;
+import at.esque.kafka.dialogs.SettingsDialog;
 import at.esque.kafka.dialogs.TopicMessageTypeConfigDialog;
 import at.esque.kafka.dialogs.TopicTemplatePartitionAndReplicationInputDialog;
 import at.esque.kafka.dialogs.TraceInputDialog;
@@ -393,7 +394,7 @@ public class Controller {
         configMessageTypesItem.textProperty().set("configure message types");
         configMessageTypesItem.setGraphic(new FontIcon(FontAwesome.WRENCH));
         configMessageTypesItem.setOnAction(event -> {
-            TopicMessageTypeConfig config = getTopicMessageTypeConfig(configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier()));
+            TopicMessageTypeConfig config = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
             TopicMessageTypeConfigDialog.show(config);
             configHandler.saveTopicMessageTypeConfigs(selectedCluster().getIdentifier());
         });
@@ -403,8 +404,7 @@ public class Controller {
         traceKeyItem.textProperty().set("trace key");
         traceKeyItem.setOnAction(event -> {
             try {
-                Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
-                TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
+                TopicMessageTypeConfig topicMessageTypeConfig = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
                 TraceInputDialog.show(true, topicMessageTypeConfig.getKeyType() == MessageType.AVRO, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)))
                         .ifPresent(traceKeyInput -> {
@@ -425,10 +425,9 @@ public class Controller {
         traceInValueItem.textProperty().set("trace in value");
         traceInValueItem.setOnAction(event -> {
             try {
-                Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
-                TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
+                TopicMessageTypeConfig topicMessageTypeConfig = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(false, false, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()),Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)))
+                TraceInputDialog.show(false, false, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)))
                         .ifPresent(traceInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing in Value: " + traceInput.getSearch());
                             Pattern pattern = Pattern.compile(traceInput.getSearch());
@@ -519,8 +518,7 @@ public class Controller {
     @FXML
     public void getMessagesClick(ActionEvent event) {
         try {
-            Map<String, TopicMessageTypeConfig> configs = configHandler.getTopicConfigForClusterIdentifier(selectedCluster().getIdentifier());
-            TopicMessageTypeConfig topicMessageTypeConfig = getTopicMessageTypeConfig(configs);
+            TopicMessageTypeConfig topicMessageTypeConfig = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
             Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
 
             backGroundTaskHolder.setBackGroundTaskDescription("getting messages...");
@@ -537,16 +535,6 @@ public class Controller {
         } catch (IOException e) {
             ErrorAlert.show(e, controlledStage);
         }
-    }
-
-    private TopicMessageTypeConfig getTopicMessageTypeConfig(Map<String, TopicMessageTypeConfig> configs) {
-        TopicMessageTypeConfig topicMessageTypeConfig = configs.get(selectedTopic());
-        if (topicMessageTypeConfig == null) {
-            topicMessageTypeConfig = new TopicMessageTypeConfig(selectedTopic());
-            configs.put(selectedTopic(), topicMessageTypeConfig);
-            configHandler.saveTopicMessageTypeConfigs(selectedCluster().getIdentifier());
-        }
-        return topicMessageTypeConfig;
     }
 
     @FXML
@@ -1206,6 +1194,20 @@ public class Controller {
     }
 
     @FXML
+    public void showSettingsDialog(ActionEvent event) {
+        Map<String, String> settingsProperties = configHandler.getSettingsProperties();
+        SettingsDialog.show(settingsProperties).ifPresent(
+                settingsProperties1 -> {
+                    try {
+                        configHandler.setSettingsProperties(settingsProperties1);
+                    } catch (IOException e) {
+                        ErrorAlert.show(e);
+                    }
+                }
+        );
+    }
+
+    @FXML
     public void playMessageBook(ActionEvent event) {
 
         DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -1357,6 +1359,4 @@ public class Controller {
     private void updateTabName(PinTab tab, ClusterConfig clusterConfig, String name) {
         Platform.runLater(() -> tab.setText(clusterConfig.getIdentifier() + " - " + name));
     }
-
-
 }

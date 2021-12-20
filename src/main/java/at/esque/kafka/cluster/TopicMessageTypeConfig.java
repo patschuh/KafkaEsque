@@ -59,6 +59,6 @@ public class TopicMessageTypeConfig {
     }
 
     public boolean containsAvro() {
-        return getValueType() == MessageType.AVRO || getKeyType() == MessageType.AVRO;
+        return getValueType() == MessageType.AVRO || getValueType() == MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY || getKeyType() == MessageType.AVRO || getKeyType() == MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY;
     }
 }
