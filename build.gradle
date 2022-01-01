@@ -1,82 +1,86 @@
-buildscript {
-    dependencies {
-        classpath group: 'de.dynamicfiles.projects.gradle.plugins', name: 'javafx-gradle-plugin', version: '8.8.2'
-    }
-
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-}
+import org.gradle.internal.os.OperatingSystem
 
 plugins {
-    id 'java'
-    id 'maven-publish'
-}
-
-apply plugin: 'javafx-gradle-plugin'
-
-jfx {
-    mainClass = 'at.esque.kafka.Main'
-    jfxAppOutputDir = "build/jfx/app"
-    jfxMainAppJarName = "KafkaEsque-jfx.jar"
-    // minimal requirement for jfxNative-task
-    vendor = 'patschuh'
-
-    appName = "KafkaEsque"
-}
-
-repositories {
-    maven {
-        url = 'https://repo1.maven.org/maven2'
-    }
-
-    maven {
-        url = 'https://packages.confluent.io/maven/'
-    }
-
-    maven {
-        url "https://jitpack.io"
-    }
-
-    maven {
-        url = 'https://repository.mulesoft.org/nexus/content/repositories/public/'
-    }
-    mavenLocal()
-}
-
-dependencies {
-    compile 'org.apache.kafka:kafka-clients:2.5.1'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
-    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.9'
-    compile 'org.slf4j:slf4j-simple:1.7.25'
-    compile 'org.apache.commons:commons-lang3:3.7'
-    compile 'org.kordamp.ikonli:ikonli-javafx:2.4.0'
-    compile 'org.kordamp.ikonli:ikonli-fontawesome-pack:2.4.0'
-    compile 'com.opencsv:opencsv:4.0'
-    compile 'io.confluent:kafka-schema-registry:6.2.1'
-    compile 'io.confluent:kafka-avro-serializer:6.2.1'
-    compile 'com.google.inject:guice:4.2.2'
-    compile 'org.fxmisc.richtext:richtextfx:0.10.5'
-    compile 'net.thisptr:jackson-jq:1.0.0-preview.20191208'
-    compile 'com.dlsc.formsfx:formsfx-core:8.4.0'
-    compile group: 'org.sourcelab', name: 'kafka-connect-client', version: '3.1.0'
-    compile 'org.controlsfx:controlsfx:8.40.18'
-
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.springframework.kafka:spring-kafka-test:2.2.0.RELEASE'
-    testCompile 'com.google.code.tempus-fugit:tempus-fugit:1.1'
-    testCompile 'org.testfx:testfx-junit:4.0.15-alpha'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
+    id 'org.beryx.runtime' version '1.12.7'
 }
 
 group = 'at.esque.kafka'
-version = '1.6.0-SNAPSHOT'
-sourceCompatibility = '1.8'
+version = '2.0.0'
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            from(components.java)
+repositories {
+    mavenCentral()
+    maven {
+        url = 'https://packages.confluent.io/maven/'
+    }
+    maven {
+        url 'https://jitpack.io'
+    }
+    maven {
+        url = 'https://repository.mulesoft.org/nexus/content/repositories/public/'
+    }
+}
+
+dependencies {
+    implementation 'org.apache.kafka:kafka-clients:2.8.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.1'
+    implementation 'org.slf4j:slf4j-simple:1.7.32'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'org.kordamp.ikonli:ikonli-javafx:12.2.0'
+    implementation 'org.kordamp.ikonli:ikonli-fontawesome-pack:12.2.0'
+    implementation 'com.opencsv:opencsv:5.5.2'
+    implementation 'io.confluent:kafka-schema-registry:6.2.1'
+    implementation 'io.confluent:kafka-avro-serializer:6.2.1'
+    implementation 'com.google.inject:guice:5.0.1'
+    implementation 'org.fxmisc.richtext:richtextfx:0.10.7'
+    implementation 'net.thisptr:jackson-jq:1.0.0-preview.20210928'
+    implementation 'com.dlsc.formsfx:formsfx-core:11.4.2'
+    implementation 'org.sourcelab:kafka-connect-client:3.1.2'
+    implementation 'org.controlsfx:controlsfx:11.1.1'
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.springframework.kafka:spring-kafka-test:2.4.13.RELEASE'
+    testImplementation 'com.google.code.tempus-fugit:tempus-fugit:1.1'
+    testImplementation 'org.testfx:testfx-junit:4.0.15-alpha'
+}
+
+application {
+    mainClass = 'at.esque.kafka.Launcher'
+    applicationName = 'KafkaEsque'
+}
+
+java {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
+}
+
+javafx {
+    version = '17'
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+runtime {
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    launcher {
+        noConsole = true
+    }
+    jpackage {
+        imageName = 'KafkaEsque'
+
+        def currentOs = OperatingSystem.current()
+        def imgType = currentOs.windows ? 'ico' : currentOs.macOsX ? 'icns' : 'png'
+        imageOptions += ['--icon', "src/main/resources/icons/package/KafkaEsque.$imgType"]
+        installerOptions += ['--resource-dir', "src/main/resources"]
+        installerOptions += ['--vendor', 'Patrick Schuh']
+
+        if (currentOs.windows) {
+            installerOptions += ['--win-per-user-install', '--win-dir-chooser', '--win-menu', '--win-shortcut']
+        } else if (currentOs.linux) {
+            installerOptions += ['--linux-package-name', 'kafka-esque', '--linux-shortcut']
+        } else if (currentOs.macOsX) {
+            installerOptions += ['--mac-package-name', 'kafka-esque']
         }
     }
 }
