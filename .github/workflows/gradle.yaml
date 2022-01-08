@@ -1,0 +1,120 @@
+name: Gradle Build
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ macos-11, ubuntu-20.04, windows-2019 ]
+        java: [ '17' ]
+      fail-fast: false
+    name: ${{ matrix.os }}
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v2
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: ${{ matrix.java }}
+          java-package: jdk+fx
+      - name: Echo JAVA_HOME
+        run: echo $JAVA_HOME
+      - name: Verify Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Execute build (macOs & Ubuntu)
+        if: matrix.os != 'windows-2019'
+        run: ./gradlew --info build
+      - name: Execute build (Windows)
+        if: matrix.os == 'windows-2019'
+        run: .\gradlew.bat --info build
+      - name: Upload TAR as an artifact
+        if: matrix.os != 'windows-2019'
+        uses: actions/upload-artifact@v2
+        with:
+          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-tar
+          path: build/distributions/*.tar
+      - name: Upload ZIP as an artifact
+        if: matrix.os == 'windows-2019'
+        uses: actions/upload-artifact@v2
+        with:
+          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-zip
+          path: build/distributions/*.zip
+      - name: Execute runtime (macOs & Ubuntu)
+        if: matrix.os != 'windows-2019'
+        run: ./gradlew --info runtime
+      - name: Execute runtime (Windows)
+        if: matrix.os == 'windows-2019'
+        run: .\gradlew.bat --info runtime
+      - name: Execute jpackage (macOs & Ubuntu)
+        if: matrix.os != 'windows-2019'
+        run: ./gradlew --info jpackage
+      - name: Execute jpackage (Windows)
+        if: matrix.os == 'windows-2019'
+        run: .\gradlew.bat --info jpackage
+      - name: Upload DMG as an artifact
+        if: matrix.os == 'macos-11'
+        uses: actions/upload-artifact@v2
+        with:
+          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-dmg
+          path: build/jpackage/*.dmg
+      - name: Upload PKG as an artifact
+        if: matrix.os == 'macos-11'
+        uses: actions/upload-artifact@v2
+        with:
+          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-pkg
+          path: build/jpackage/*.pkg
+      - name: Upload DEB as an artifact
+        if: matrix.os == 'ubuntu-20.04'
+        uses: actions/upload-artifact@v2
+        with:
+          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-deb
+          path: build/jpackage/*.deb
+      - name: Upload RPM as an artifact
+        if: matrix.os == 'ubuntu-20.04'
+        uses: actions/upload-artifact@v2
+        with:
+          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-rpm
+          path: build/jpackage/*.rpm
+      - name: Upload EXE as an artifact
+        if: matrix.os == 'windows-2019'
+        uses: actions/upload-artifact@v2
+        with:
+          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-exe
+          path: build/jpackage/*.exe
+      - name: Upload MSI as an artifact
+        if: matrix.os == 'windows-2019'
+        uses: actions/upload-artifact@v2
+        with:
+          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-msi
+          path: build/jpackage/*.msi
+      - name: Sign release (macOS)
+        run: codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime build/jpackage/*.dmg
+        if: |
+          startsWith(github.ref, 'refs/tags/') &&
+          matrix.os == 'macos-11'
+      - name: Create release (macOS)
+        uses: softprops/action-gh-release@v1
+        if: |
+          startsWith(github.ref, 'refs/tags/') &&
+          matrix.os == 'macos-11'
+        with:
+          files: build/jpackage/*.dmg
+      - name: Create release (Ubuntu)
+        uses: softprops/action-gh-release@v1
+        if: |
+          startsWith(github.ref, 'refs/tags/') &&
+          matrix.os == 'ubuntu-20.04'
+        with:
+          files: |
+            build/jpackage/*.deb
+            build/jpackage/*.rpm
+      - name: Create release (Windows)
+        uses: softprops/action-gh-release@v1
+        if: |
+          startsWith(github.ref, 'refs/tags/') &&
+          matrix.os == 'windows-2019'
+        with:
+          files: build/jpackage/*.exe
