@@ -91,7 +91,9 @@ jobs:
           name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-msi
           path: build/jpackage/*.msi
       - name: Sign release (macOS)
-        run: codesign --sign - --deep --force --preserve-metadata=entitlements,requirements,flags,runtime build/jpackage/*.dmg
+        run: |
+          xattr -cr build/jpackage/*.dmg
+          codesign --sign - --deep --force --preserve-metadata=entitlements,requirements,flags,runtime build/jpackage/*.dmg
         if: |
           startsWith(github.ref, 'refs/tags/') &&
           matrix.os == 'macos-11'
