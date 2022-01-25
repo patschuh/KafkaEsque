@@ -34,13 +34,13 @@ jobs:
         if: matrix.os != 'windows-2019'
         uses: actions/upload-artifact@v2
         with:
-          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-tar
+          name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-tar
           path: build/distributions/*.tar
       - name: Upload ZIP as an artifact
         if: matrix.os == 'windows-2019'
         uses: actions/upload-artifact@v2
         with:
-          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-zip
+          name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-zip
           path: build/distributions/*.zip
       - name: Execute runtime (macOs & Ubuntu)
         if: matrix.os != 'windows-2019'
@@ -58,37 +58,37 @@ jobs:
         if: matrix.os == 'macos-11'
         uses: actions/upload-artifact@v2
         with:
-          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-dmg
+          name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-dmg
           path: build/jpackage/*.dmg
       - name: Upload PKG as an artifact
         if: matrix.os == 'macos-11'
         uses: actions/upload-artifact@v2
         with:
-          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-pkg
+          name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-pkg
           path: build/jpackage/*.pkg
       - name: Upload DEB as an artifact
         if: matrix.os == 'ubuntu-20.04'
         uses: actions/upload-artifact@v2
         with:
-          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-deb
+          name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-deb
           path: build/jpackage/*.deb
       - name: Upload RPM as an artifact
         if: matrix.os == 'ubuntu-20.04'
         uses: actions/upload-artifact@v2
         with:
-          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-rpm
+          name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-rpm
           path: build/jpackage/*.rpm
       - name: Upload EXE as an artifact
         if: matrix.os == 'windows-2019'
         uses: actions/upload-artifact@v2
         with:
-          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-exe
+          name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-exe
           path: build/jpackage/*.exe
       - name: Upload MSI as an artifact
         if: matrix.os == 'windows-2019'
         uses: actions/upload-artifact@v2
         with:
-          name: kafka-esque-jdk${{ matrix.java }}-${{ matrix.os }}-msi
+          name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-msi
           path: build/jpackage/*.msi
       - name: Sign release (macOS)
         run: |

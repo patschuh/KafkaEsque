@@ -1,8 +1,52 @@
 # KafkaEsque
-:information_source: This is a JavaFX application and therfore requires OpenJFX.
+
+## What's new
+
+Starting with version 2.0.0 KafkaEsque uses JavaFX 17 instead of JavaFX 8, and provides prepackaged builds for most
+operating systems (Windows, macOS, Linux) that were created with
+[jpackage](https://docs.oracle.com/en/java/javase/17/jpackage/packaging-overview.html) using [GitHub Actions](actions)
+(CI). Every release on GitHub can be tracked to its 'run' (one job for each OS) in the 'Gradle Build' workflow, and the
+source code that was used to build it. Furthermore,
+[jlink](https://docs.oracle.com/en/java/javase/17/docs/specs/man/jlink.html) bundles a minimal version of the JRE/JDK
+with the required JavaFX libraries. Therefore, it is not necessary to have Java installed at all.
+
+Thanks to the [badass-runtime plugin](https://badass-runtime-plugin.beryx.org/releases/latest/) for Gradle, the
+application is still non-modular, and it was not necessary to use Java 9 modules (also known as Project Jigsaw).
+
+
+## Usage
+
+### Windows
+On Windows you will most likely receive a smart screen warning because the app was not signed or uploaded to Microsoft
+to verify it. You can safely ignore this warning. The app does not even require admin rights to install it because it is
+being installed for the current user only.
+
+### macOS
+macOS has a similar problem with signing, except that while the dmg file that contains the app, displays the correct
+message, and says it was signed by a non verified developer, the app inside the dmg does not. Instead, it says that the
+app is damaged which is incorrect. If anyone knows how to fix this, please submit a pull request.
+
+As most macOS user probably know, apps downloaded from the Internet are "in quarantine". You can see the flag
+(`com.apple.quarantine`) yourself if you run, e.g., `ls -lh@` in the console. To install the app you have to remove the
+flag first with, e.g., `xattr -rd com.apple.quarantine kafkaesque-2.0.0.dmg`.
+
+### Linux
+For Linux deb & rpm packages are provided. So every distribution that uses those, can install them. If someone actually
+uses Kafkaesque on another Linux distribution, feel free to submit an issue, or even a PR, if you want up-to-date
+packages for your distribution.
+
+### JAR
+You can still run just the JAR files as before version 2.0.0, but now they require Java 17 instead of Java 8.
+
+:information_source: This is a JavaFX application and therefore requires OpenJFX.
 * When using a JDK that includes OpenJFX simply run it with `java -jar KafkaEsque.jar`
 * If OpenJFX is installed separately run it with `java -jar --module-path="path/to/openJfx/lib" --add-modules javafx.controls,javafx.fxml KafkaEsque.jar`
 
+Alternatively you can start the JAR file with the provided helper script. Either with `./bin/KafkaEsque` on macOS or
+Linux, or with `.bin/KafkaEsque.bat` on Windows.
+
+
+## Features
 
 ### Create, remove and describe Topics
 ![Create Topic Screenshot](https://kafka.esque.at/images/screenshots/CreateTopic.png "Create Topics")

@@ -63,7 +63,7 @@ public class WindowsEmbeddedKafkaRule extends EmbeddedKafkaRule {
     }
 
     private void shutdown(KafkaServer kafkaServer) {
-        if (kafkaServer.brokerState().currentState() != (NotRunning.state())) {
+        if (kafkaServer.brokerState().get().value() != NotRunning.state()) {
             kafkaServer.shutdown();
             kafkaServer.awaitShutdown();
         }
@@ -75,11 +75,10 @@ public class WindowsEmbeddedKafkaRule extends EmbeddedKafkaRule {
     }
 
     private void closeZkClient() {
-        getEmbeddedKafka().getZkClient().close();
+        getEmbeddedKafka().getZooKeeperClient().close();
     }
 
     private void shutdownZookeeper() throws IOException {
-        getEmbeddedKafka().getZookeeper().zookeeper().getZKDatabase().close();
         getEmbeddedKafka().getZookeeper().shutdown();
     }
 
