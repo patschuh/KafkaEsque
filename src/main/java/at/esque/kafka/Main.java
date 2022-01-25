@@ -43,10 +43,16 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
+        setSystemProperties();
         launch(args);
     }
 
     @Override
     public void stop() {
     }
+
+    private static void setSystemProperties() {
+        System.setProperty("glass.win.uiScale", "100%");
+    }
+
 }
