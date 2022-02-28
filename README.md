@@ -156,3 +156,7 @@ Check the settings.yaml in the <user.home>/.kafkaesque directory for cluster ind
   * <span style="color:gray">default: STRING</span>
 * default.value.messagetype: configures the default Value MessageType to use if no configuration was saved for the topic yet</span>.
   * <span style="color:gray">default: STRING</span>
+* check.for.updates.enabled: configures if KafkaEsque checks github-releases for a newer version on startup</span>.
+  * <span style="color:gray">default: true</span>
+* check.for.updates.duration.between.hours: configures how many hours a check of the latest version on github is valid before it is checked again</span>.
+  * <span style="color:gray">default: 24</span>

@@ -165,6 +165,14 @@ public class ConfigHandler {
             settings.put(Settings.DEFAULT_VALUE_MESSAGE_TYPE, Settings.DEFAULT_VALUE_MESSAGE_TYPE_DEFAULT);
             changed = true;
         }
+        if (!settings.containsKey(Settings.CHECK_FOR_UPDATES_ENABLED)) {
+            settings.put(Settings.CHECK_FOR_UPDATES_ENABLED, Settings.CHECK_FOR_UPDATES_ENABLED_DEFAULT);
+            changed = true;
+        }
+        if (!settings.containsKey(Settings.CHECK_FOR_UPDATES_DURATION_BETWEEN_HOURS)) {
+            settings.put(Settings.CHECK_FOR_UPDATES_DURATION_BETWEEN_HOURS, Settings.CHECK_FOR_UPDATES_DURATION_BETWEEN_HOURS_DEFAULT);
+            changed = true;
+        }
         return changed;
     }
 
@@ -333,6 +341,27 @@ public class ConfigHandler {
             } catch (Exception e) {
                 kafkaEsqueCodeArea.maxCharactersSyntaxHighlighting.set(Long.parseLong(Settings.SYNTAX_HIGHLIGHT_THRESHOLD_CHARACTERS_DEFAULT));
             }
+        }
+    }
+
+    public Map<String, Object> getVersionCheckContent() {
+        File versionCheckFile = new File(String.format(CONFIG_DIRECTORY, "versionCheck.yaml"));
+        if (versionCheckFile.exists()) {
+            try {
+                return (Map<String, Object>) objectMapper.readValue(versionCheckFile, Map.class);
+            } catch (IOException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    public void writeVersionCheckContent(Map<String, Object> content) {
+        File versionCheckFile = new File(String.format(CONFIG_DIRECTORY, "versionCheck.yaml"));
+        try {
+            objectMapper.writeValue(versionCheckFile, content);
+        } catch (IOException e) {
+            ErrorAlert.show(e);
         }
     }
 }

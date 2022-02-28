@@ -227,7 +227,16 @@
                                         <FontIcon iconLiteral="fa-plug"/>
                                     </graphic>
                                 </MenuItem>
-
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Help">
+                            <items>
+                                <MenuItem mnemonicParsing="false" onAction="#aboutClick"
+                                          text="About">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fa-info"/>
+                                    </graphic>
+                                </MenuItem>
                             </items>
                         </Menu>
                     </menus>

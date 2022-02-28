@@ -35,6 +35,10 @@ public class Settings {
     public static final String DEFAULT_KEY_MESSAGE_TYPE_DEFAULT = "STRING";
     public static final String DEFAULT_VALUE_MESSAGE_TYPE = "default.value.messagetype";
     public static final String DEFAULT_VALUE_MESSAGE_TYPE_DEFAULT = "STRING";
+    public static final String CHECK_FOR_UPDATES_ENABLED = "check.for.updates.enabled";
+    public static final String CHECK_FOR_UPDATES_ENABLED_DEFAULT = "true";
+    public static final String CHECK_FOR_UPDATES_DURATION_BETWEEN_HOURS = "check.for.updates.duration.between.hours";
+    public static final String CHECK_FOR_UPDATES_DURATION_BETWEEN_HOURS_DEFAULT = "24";
 
     public static List<Duration> readDurationSetting(Map<String, String> settings) {
         return readDurationSetting(settings.get(TRACE_QUICK_SELECT_DURATION_LIST));
@@ -45,6 +49,13 @@ public class Settings {
             return false;
         }
         return Boolean.parseBoolean(settings.get(TRACE_QUICK_SELECT_ENABLED));
+    }
+
+    public static boolean isCheckForUpdatesEnabled(Map<String, String> settings) {
+        if (settings == null) {
+            return false;
+        }
+        return Boolean.parseBoolean(settings.get(CHECK_FOR_UPDATES_ENABLED));
     }
 
     public static List<Duration> readDurationSetting(String setting) {

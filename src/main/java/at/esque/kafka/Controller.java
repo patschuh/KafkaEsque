@@ -24,6 +24,7 @@ import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.handlers.ConsumerHandler;
 import at.esque.kafka.handlers.ProducerHandler;
 import at.esque.kafka.handlers.Settings;
+import at.esque.kafka.handlers.VersionInfoHandler;
 import at.esque.kafka.lag.viewer.LagViewerController;
 import at.esque.kafka.topics.CreateTopicController;
 import at.esque.kafka.topics.DescribeTopicController;
@@ -148,6 +149,8 @@ public class Controller {
     @Inject
     private ConfigHandler configHandler;
     @Inject
+    private VersionInfoHandler versionInfoHandler;
+    @Inject
     private Injector injector;
 
     //FXML
@@ -268,6 +271,8 @@ public class Controller {
         ClusterConfig dummycluster = new ClusterConfig();
         dummycluster.setIdentifier("Empty");
         messageTabPane.getTabs().add(createTab(dummycluster, "Tab"));
+
+        versionInfoHandler.showDialogIfUpdateIsAvailable();
     }
 
     private void setupJsonFormatToggle() {
@@ -562,6 +567,7 @@ public class Controller {
             stage.initModality(Modality.NONE);
             stage.setTitle("Browse Schema Registry - " + selectedConfig.getIdentifier());
             stage.setScene(Main.createStyledScene(root1, -1, -1));
+            stage.setResizable(false);
             stage.show();
             centerStageOnControlledStage(stage);
         } catch (Exception e) {
@@ -1358,5 +1364,25 @@ public class Controller {
 
     private void updateTabName(PinTab tab, ClusterConfig clusterConfig, String name) {
         Platform.runLater(() -> tab.setText(clusterConfig.getIdentifier() + " - " + name));
+    }
+
+    @FXML
+    public void aboutClick(ActionEvent event) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/about.fxml"));
+            Parent root1 = fxmlLoader.load();
+            AboutController controller = fxmlLoader.getController();
+            controller.setup(versionInfoHandler);
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initOwner(controlledStage);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("About KafkaEsque");
+            stage.setScene(Main.createStyledScene(root1, -1, -1));
+            stage.show();
+            centerStageOnControlledStage(stage);
+        } catch (Exception e) {
+            ErrorAlert.show(e, controlledStage);
+        }
     }
 }
