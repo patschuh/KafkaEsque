@@ -6,18 +6,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import javafx.application.Platform;
+import okhttp3.Call;
+import okhttp3.CipherSuite;
+import okhttp3.ConnectionSpec;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.TlsVersion;
 import org.gradle.util.VersionNumber;
 
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
@@ -62,26 +68,57 @@ public class VersionInfoHandler {
     }
 
     private Map<String, Object> checkLatestVersion() {
-        if(Settings.isCheckForUpdatesEnabled(configHandler.getSettingsProperties())) {
+        if (Settings.isCheckForUpdatesEnabled(configHandler.getSettingsProperties())) {
             final Map<String, Object> versionCheckContent = configHandler.getVersionCheckContent();
             if (versionCheckContent == null || Duration.between(Instant.parse((String) versionCheckContent.get("checkTime")), Instant.now()).toHours() > Long.parseLong(configHandler.getSettingsProperties().get(Settings.CHECK_FOR_UPDATES_DURATION_BETWEEN_HOURS))) {
-                try {
-                    URL url = new URL(GITHUB_LATEST_RELEASE_URL);
-                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    con.setRequestMethod("GET");
-                    con.setRequestProperty("User-Agent", "patschuh/KafkaEsque");
-                    con.setConnectTimeout(5000);
-                    con.setReadTimeout(5000);
-                    final int responseCode = con.getResponseCode();
-                    if (responseCode != 200) {
+                final ConnectionSpec connectionSpec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                        .tlsVersions(TlsVersion.TLS_1_2)
+                        .cipherSuites(
+                                CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+                                CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+                                CipherSuite.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+                                CipherSuite.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+                                CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+                                CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+                                CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+                                CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+                                CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
+                                CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,
+                                CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+                                CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+                                CipherSuite.TLS_RSA_WITH_AES_128_GCM_SHA256,
+                                CipherSuite.TLS_RSA_WITH_AES_256_GCM_SHA384,
+                                CipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA256,
+                                CipherSuite.TLS_RSA_WITH_AES_256_CBC_SHA256,
+                                CipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA,
+                                CipherSuite.TLS_RSA_WITH_AES_256_CBC_SHA
+                        ).build();
+
+                OkHttpClient client = new OkHttpClient.Builder()
+                        .connectionSpecs(List.of(connectionSpec))
+                        .build();
+
+                Request request = new Request.Builder()
+                        .url(GITHUB_LATEST_RELEASE_URL)
+                        .addHeader("User-Agent", "patschuh/KafkaEsque")
+                        .method("GET", null)
+                        .build();
+
+
+                Call call = client.newCall(request);
+                try (Response response = call.execute()) {
+
+                    if (!response.isSuccessful()) {
                         return null;
                     }
-                    final Map<String, Object> response = objectMapper.readValue(con.getInputStream(), Map.class);
+                    final Map<String, Object> responseRelease = objectMapper.readValue(response.body().byteStream(), Map.class);
                     Map<String, Object> checkContent = new HashMap<>();
                     checkContent.put("checkTime", Instant.now().toString());
-                    checkContent.put("release", response);
+                    checkContent.put("release", responseRelease);
                     configHandler.writeVersionCheckContent(checkContent);
-                    return response;
+                    return responseRelease;
+
+
                 } catch (Exception e) {
                     Platform.runLater(() -> ErrorAlert.show(e));
                 }
@@ -94,9 +131,9 @@ public class VersionInfoHandler {
 
     public void showDialogIfUpdateIsAvailable() {
         final UpdateInfo updateInfo = availableUpdate();
-        if(updateInfo != null){
+        if (updateInfo != null) {
             final boolean openInBrowser = ConfirmationAlert.show("Update Available", "Version " + updateInfo.getTag() + " is available", "Do you want to open the release page?");
-            if(openInBrowser){
+            if (openInBrowser) {
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                     try {
                         Desktop.getDesktop().browse(new URI(updateInfo.getReleasePage()));

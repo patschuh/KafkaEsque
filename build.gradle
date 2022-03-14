@@ -46,6 +46,7 @@ dependencies {
     implementation 'org.sourcelab:kafka-connect-client:3.1.2'
     implementation 'org.controlsfx:controlsfx:11.1.1'
     implementation 'org.gradle:gradle-core:6.1.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.springframework.kafka:spring-kafka-test:2.4.13.RELEASE'

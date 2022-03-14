@@ -567,7 +567,6 @@ public class Controller {
             stage.initModality(Modality.NONE);
             stage.setTitle("Browse Schema Registry - " + selectedConfig.getIdentifier());
             stage.setScene(Main.createStyledScene(root1, -1, -1));
-            stage.setResizable(false);
             stage.show();
             centerStageOnControlledStage(stage);
         } catch (Exception e) {
@@ -1379,6 +1378,7 @@ public class Controller {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("About KafkaEsque");
             stage.setScene(Main.createStyledScene(root1, -1, -1));
+            stage.setResizable(false);
             stage.show();
             centerStageOnControlledStage(stage);
         } catch (Exception e) {
