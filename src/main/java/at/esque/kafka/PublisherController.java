@@ -49,6 +49,8 @@ public class PublisherController {
     @FXML
     private KafkaEsqueCodeArea valueTextArea;
     @FXML
+    private CheckBox nullKeyToggle;
+    @FXML
     private CheckBox nullMessageToggle;
     @FXML
     private CheckBox validateIsJsonKeyBox;
@@ -87,6 +89,7 @@ public class PublisherController {
         partitions.add(-1);
         partitionCombobox.setItems(partitions);
         partitionCombobox.getSelectionModel().select(Integer.valueOf(-1));
+        keyTextArea.disableProperty().bind(nullKeyToggle.selectedProperty());
         valueTextArea.disableProperty().bind(nullMessageToggle.selectedProperty());
 
         if (kafkaMessage != null) {
@@ -109,32 +112,32 @@ public class PublisherController {
         });
 
         ObservableList<String> topicMessageTypes = null;
-        if(MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(configForTopic.getKeyType())){
+        if (MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(configForTopic.getKeyType())) {
             keyTypeSelectCombobox.setVisible(true);
             try {
                 topicMessageTypes = findTypesForTopic(topic, producerWrapper.getSchemaRegistryRestService());
             } catch (RestClientException | IOException e) {
                 ErrorAlert.show(e, getWindow());
             }
-            if(topicMessageTypes != null) {
+            if (topicMessageTypes != null) {
                 keyTypeSelectCombobox.setItems(topicMessageTypes);
-                if(kafkaMessage != null && kafkaMessage.getKeyType() != null){
+                if (kafkaMessage != null && kafkaMessage.getKeyType() != null) {
                     valueTypeSelectCombobox.getSelectionModel().select(kafkaMessage.getKeyType());
                 }
             }
         }
-        if(MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(configForTopic.getValueType())){
+        if (MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(configForTopic.getValueType())) {
             valueTypeSelectCombobox.setVisible(true);
-            if(topicMessageTypes == null) {
+            if (topicMessageTypes == null) {
                 try {
                     topicMessageTypes = findTypesForTopic(topic, producerWrapper.getSchemaRegistryRestService());
                 } catch (RestClientException | IOException e) {
                     ErrorAlert.show(e, getWindow());
                 }
             }
-            if(topicMessageTypes != null) {
+            if (topicMessageTypes != null) {
                 valueTypeSelectCombobox.setItems(topicMessageTypes);
-                if(kafkaMessage != null && kafkaMessage.getValueType() != null){
+                if (kafkaMessage != null && kafkaMessage.getValueType() != null) {
                     valueTypeSelectCombobox.getSelectionModel().select(kafkaMessage.getValueType());
                 }
             }
@@ -143,7 +146,7 @@ public class PublisherController {
 
 
     private String keyText() {
-        return keyTextArea.getText();
+        return keyTextArea.isDisable() ? null : keyTextArea.getText();
     }
 
     private String valueText() {

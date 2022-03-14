@@ -40,7 +40,11 @@ public class MessagesTabContent extends VBox {
 
     private void setup() {
         messageSearchTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            messageTableView.getFilteredMessages().setPredicate(km -> (km.getKey() != null && StringUtils.containsIgnoreCase(km.getKey(), newValue) || (km.getValue() != null && StringUtils.containsIgnoreCase(km.getValue(), newValue))));
+            messageTableView.getFilteredMessages().setPredicate(km ->
+                    (StringUtils.trimToNull(newValue) == null
+                            || (km.getKey() != null && StringUtils.containsIgnoreCase(km.getKey(), newValue)
+                            || (km.getValue() != null && StringUtils.containsIgnoreCase(km.getValue(), newValue)))
+                    ));
         });
     }
 
@@ -66,7 +70,7 @@ public class MessagesTabContent extends VBox {
         }
     }
 
-    public KafkaMessageTableView getMessageTableView(){
+    public KafkaMessageTableView getMessageTableView() {
         return messageTableView;
     }
 }
