@@ -4,6 +4,7 @@ import at.esque.kafka.guice.GuiceEsqueModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import javafx.application.Application;
+import javafx.application.HostServices;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -19,8 +20,10 @@ public class Main extends Application {
         FXMLLoader loader = injector.getInstance(FXMLLoader.class);
         loader.setLocation(getClass().getResource("/fxml/mainScene.fxml"));
         Parent root = loader.load();
+        final HostServices hostServices = this.getHostServices();
         Controller controller = loader.getController();
         controller.setup(primaryStage);
+        controller.setHostServices(hostServices);
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
         primaryStage.setTitle("Kafkaesque");
         primaryStage.setScene(createStyledScene(root, 1600, 900));

@@ -1,17 +1,14 @@
 package at.esque.kafka;
 
+import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.handlers.VersionInfo;
 import at.esque.kafka.handlers.VersionInfoHandler;
+import javafx.application.HostServices;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
-
-import java.awt.*;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 public class AboutController {
     public ImageView imageView;
@@ -22,7 +19,10 @@ public class AboutController {
     public Label buildJvm;
     public Label buildTime;
 
-    public void setup(VersionInfoHandler versionInfoHandler) {
+    private HostServices hostServices;
+
+    public void setup(VersionInfoHandler versionInfoHandler, HostServices hostServices) {
+        this.hostServices = hostServices;
         final VersionInfo versionInfo = versionInfoHandler.getVersionInfo();
         final String tag = versionInfo.getTag();
         infoContainer.setVisible(false);
@@ -39,12 +39,11 @@ public class AboutController {
     }
 
     public void clickGithubLink(MouseEvent mouseEvent) {
-        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             try {
-                Desktop.getDesktop().browse(new URI("https://github.com/patschuh/KafkaEsque"));
-            } catch (IOException | URISyntaxException e) {
-                e.printStackTrace();
+                hostServices.showDocument("https://github.com/patschuh/KafkaEsque");
+            }catch (Exception e){
+                ErrorAlert.show(e);
             }
         }
-    }
+
 }

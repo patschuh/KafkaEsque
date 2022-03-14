@@ -5,6 +5,7 @@ import at.esque.kafka.alerts.ErrorAlert;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import javafx.application.HostServices;
 import javafx.application.Platform;
 import okhttp3.Call;
 import okhttp3.CipherSuite;
@@ -15,11 +16,7 @@ import okhttp3.Response;
 import okhttp3.TlsVersion;
 import org.gradle.util.VersionNumber;
 
-import java.awt.*;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -129,19 +126,15 @@ public class VersionInfoHandler {
         return null;
     }
 
-    public void showDialogIfUpdateIsAvailable() {
+    public void showDialogIfUpdateIsAvailable(HostServices hostServices) {
         final UpdateInfo updateInfo = availableUpdate();
         if (updateInfo != null) {
             final boolean openInBrowser = ConfirmationAlert.show("Update Available", "Version " + updateInfo.getTag() + " is available", "Do you want to open the release page?");
             if (openInBrowser) {
-                if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                    try {
-                        Desktop.getDesktop().browse(new URI(updateInfo.getReleasePage()));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
-                    }
+                try {
+                    hostServices.showDocument(updateInfo.getReleasePage());
+                }catch (Exception e){
+                    ErrorAlert.show(e);
                 }
             }
         }

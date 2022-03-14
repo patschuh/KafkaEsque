@@ -42,6 +42,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.opencsv.bean.CsvToBeanBuilder;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
+import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -152,6 +153,8 @@ public class Controller {
     private VersionInfoHandler versionInfoHandler;
     @Inject
     private Injector injector;
+
+    private HostServices hostServices;
 
     //FXML
     @FXML
@@ -272,7 +275,7 @@ public class Controller {
         dummycluster.setIdentifier("Empty");
         messageTabPane.getTabs().add(createTab(dummycluster, "Tab"));
 
-        versionInfoHandler.showDialogIfUpdateIsAvailable();
+        versionInfoHandler.showDialogIfUpdateIsAvailable(hostServices);
     }
 
     private void setupJsonFormatToggle() {
@@ -1371,7 +1374,7 @@ public class Controller {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/about.fxml"));
             Parent root1 = fxmlLoader.load();
             AboutController controller = fxmlLoader.getController();
-            controller.setup(versionInfoHandler);
+            controller.setup(versionInfoHandler, hostServices);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
             stage.initOwner(controlledStage);
@@ -1384,5 +1387,9 @@ public class Controller {
         } catch (Exception e) {
             ErrorAlert.show(e, controlledStage);
         }
+    }
+
+    public void setHostServices(HostServices hostServices) {
+        this.hostServices = hostServices;
     }
 }
