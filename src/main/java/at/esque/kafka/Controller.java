@@ -50,6 +50,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -71,6 +72,8 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -481,6 +484,13 @@ public class Controller {
                 cell.setContextMenu(contextMenu);
             }
         });
+
+        cell.setOnMouseClicked(event -> {
+            if(event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
+                this.getMessagesClick(new ActionEvent(event.getSource(), event.getTarget()));
+            }
+        });
+
         return cell;
     }
 
