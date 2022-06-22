@@ -9,10 +9,15 @@ import java.util.Collection;
 public class DescribeTopicWrapper {
     private TopicDescription topicDescription;
     private Config configurations;
+    private Exception exception;
 
     public DescribeTopicWrapper(TopicDescription topicDescription, Config configurations) {
         this.topicDescription = topicDescription;
         this.configurations = configurations;
+    }
+
+    public DescribeTopicWrapper(Exception e) {
+        this.exception = e;
     }
 
     public Collection<ConfigEntry> getConfigurations() {
@@ -29,5 +34,13 @@ public class DescribeTopicWrapper {
 
     public void setConfigurations(Config configurations) {
         this.configurations = configurations;
+    }
+
+    public Exception getException() {
+        return exception;
+    }
+
+    public boolean isFailed() {
+        return exception != null;
     }
 }

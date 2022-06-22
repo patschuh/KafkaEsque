@@ -21,10 +21,14 @@ public class ErrorAlert {
     }
 
     public static void show(Throwable ex, Window owner, boolean expandable) {
+        show(ex.getClass().getSimpleName(), ex.getClass().getName(), ex.getMessage(), ex, owner, expandable);
+    }
+
+        public static void show(String title, String headerText, String content, Throwable ex, Window owner, boolean expandable) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(ex.getClass().getSimpleName());
-        alert.setHeaderText(ex.getClass().getName());
-        alert.setContentText(ex.getMessage());
+        alert.setTitle(title);
+        alert.setHeaderText(headerText);
+        alert.setContentText(content);
         Main.applyIcon(alert);
         Main.applyStylesheet(alert.getDialogPane().getScene());
 

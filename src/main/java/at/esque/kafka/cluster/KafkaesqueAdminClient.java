@@ -4,7 +4,22 @@ import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.lag.viewer.Lag;
 import at.esque.kafka.topics.DescribeTopicWrapper;
 import javafx.application.Platform;
-import org.apache.kafka.clients.admin.*;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.Config;
+import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.CreateAclsResult;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.DeleteTopicsResult;
+import org.apache.kafka.clients.admin.DescribeAclsResult;
+import org.apache.kafka.clients.admin.DescribeConfigsResult;
+import org.apache.kafka.clients.admin.DescribeTopicsResult;
+import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsResult;
+import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
+import org.apache.kafka.clients.admin.ListTopicsOptions;
+import org.apache.kafka.clients.admin.ListTopicsResult;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.acl.AccessControlEntryFilter;
 import org.apache.kafka.common.acl.AclBinding;
@@ -16,7 +31,15 @@ import org.apache.kafka.common.resource.PatternType;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.apache.kafka.common.resource.ResourceType;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -41,7 +64,7 @@ public class KafkaesqueAdminClient {
         ListTopicsResult result = adminClient.listTopics(options);
         try {
             return result.names().get(15, TimeUnit.SECONDS);
-         } catch (Exception e) {
+        } catch (Exception e) {
             Platform.runLater(() -> ErrorAlert.show(e));
         }
         return new HashSet<>();
@@ -84,9 +107,8 @@ public class KafkaesqueAdminClient {
 
             return new DescribeTopicWrapper(topicDescription, config);
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            return new DescribeTopicWrapper(e);
         }
-        return null;
     }
 
     public List<Lag> getConsumerGroups() {
@@ -155,8 +177,7 @@ public class KafkaesqueAdminClient {
         }
     }
 
-    public void addAcl(AclBinding aclBinding)
-    {
+    public void addAcl(AclBinding aclBinding) {
         try {
 
 

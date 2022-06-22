@@ -8,6 +8,7 @@ import at.esque.kafka.exception.MissingSchemaRegistryException;
 import at.esque.kafka.serialization.KafkaEsqueDeserializer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import javafx.application.Platform;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -145,7 +146,7 @@ public class ConsumerHandler {
         try {
             consumer.assignment().forEach(topicPartition -> LOGGER.info("Set position for topicPartition[{}/{}] to [{}]", topicPartition.topic(), topicPartition.partition(), consumer.position(topicPartition, Duration.ofSeconds(10))));
         } catch (Exception e) {
-            ErrorAlert.show(e);
+            Platform.runLater(() -> ErrorAlert.show(e));
         }
     }
 

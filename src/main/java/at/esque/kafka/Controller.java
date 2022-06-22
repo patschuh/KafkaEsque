@@ -50,7 +50,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -73,7 +72,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -486,7 +484,7 @@ public class Controller {
         });
 
         cell.setOnMouseClicked(event -> {
-            if(event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
+            if (event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
                 this.getMessagesClick(new ActionEvent(event.getSource(), event.getTarget()));
             }
         });
@@ -934,6 +932,9 @@ public class Controller {
 
     private int getPartitionForKey(String topic, String key) {
         DescribeTopicWrapper topicDescription = adminClient.describeTopic(topic);
+        if (topicDescription.isFailed()) {
+            throw new RuntimeException("Failed to determine number of partitions!", topicDescription.getException());
+        }
         int numberOfPartitions = topicDescription.getTopicDescription().partitions().size();
         try {
             return Utils.toPositive(Utils.murmur2(key.getBytes("UTF-8"))) % numberOfPartitions;
@@ -1126,16 +1127,22 @@ public class Controller {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/describeTopic.fxml"));
             Parent root1 = fxmlLoader.load();
             DescribeTopicController controller = fxmlLoader.getController();
-            controller.setup(adminClient.describeTopic(topic));
-            Stage stage = new Stage();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
-            stage.initOwner(controlledStage);
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Topic Description");
-            Scene styledScene = Main.createStyledScene(root1, -1, -1);
-            stage.setScene(styledScene);
-            stage.show();
-            centerStageOnControlledStage(stage);
+            final DescribeTopicWrapper describeTopicWrapper = adminClient.describeTopic(topic);
+            if (!describeTopicWrapper.isFailed()) {
+                controller.setup(describeTopicWrapper);
+                Stage stage = new Stage();
+                stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+                stage.initOwner(controlledStage);
+                stage.initModality(Modality.APPLICATION_MODAL);
+                stage.setTitle("Topic Description");
+                Scene styledScene = Main.createStyledScene(root1, -1, -1);
+                stage.setScene(styledScene);
+                stage.show();
+                centerStageOnControlledStage(stage);
+            } else {
+                final Exception exception = describeTopicWrapper.getException();
+                ErrorAlert.show("Failed to describe topic", "Topic description failed: " + exception.getClass().getName(), exception.getMessage(), exception, controlledStage, true);
+            }
         } catch (Exception e) {
             ErrorAlert.show(e, controlledStage);
         }
