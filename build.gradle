@@ -23,7 +23,7 @@ repositories {
     maven {
         url = 'https://repository.mulesoft.org/nexus/content/repositories/public/'
     }
-    maven{
+    maven {
         url = 'https://repo.gradle.org/gradle/libs-releases-local/'
     }
 }
@@ -32,7 +32,9 @@ dependencies {
     implementation 'org.apache.kafka:kafka-clients:2.8.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.1'
-    implementation 'org.slf4j:slf4j-simple:1.7.32'
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'ch.qos.logback:logback-core:1.2.11'
+    implementation 'ch.qos.logback:logback-classic:1.2.11'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.kordamp.ikonli:ikonli-javafx:12.2.0'
     implementation 'org.kordamp.ikonli:ikonli-fontawesome-pack:12.2.0'
@@ -93,16 +95,16 @@ runtime {
     }
 }
 
-task versionFile()  {
+task versionFile() {
     doLast {
         mkdir "$buildDir/resources/main"
         new File("$buildDir/resources/main", "version.json").text = """{
 "version": "$version",
 "revision": "${grgit.head().abbreviatedId}",
 "tag": ${
-            var tag = grgit.tag.list().find{ it.commit == grgit.head() }
-            if(tag != null){
-                return "\""+tag.getName()+"\""
+            var tag = grgit.tag.list().find { it.commit == grgit.head() }
+            if (tag != null) {
+                return "\"" + tag.getName() + "\""
             }
         },
 "buildTime": "${new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date())}",
@@ -112,4 +114,4 @@ task versionFile()  {
     }
 }
 
-tasks.named('processResources') { dependsOn('versionFile')}
+tasks.named('processResources') { dependsOn('versionFile') }
