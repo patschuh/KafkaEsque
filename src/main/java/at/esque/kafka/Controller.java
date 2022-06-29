@@ -408,55 +408,77 @@ public class Controller {
             configHandler.saveTopicMessageTypeConfigs(selectedCluster().getIdentifier());
         });
 
-        MenuItem traceKeyItem = new MenuItem();
-        traceKeyItem.setGraphic(new FontIcon(FontAwesome.KEY));
-        traceKeyItem.textProperty().set("trace key");
-        traceKeyItem.setOnAction(event -> {
+        MenuItem traceItem = new MenuItem();
+        traceItem.setGraphic(new FontIcon(FontAwesome.SEARCH));
+        traceItem.textProperty().set("trace message");
+        traceItem.setOnAction(event -> {
             try {
                 TopicMessageTypeConfig topicMessageTypeConfig = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(true, topicMessageTypeConfig.getKeyType() == MessageType.AVRO, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)))
-                        .ifPresent(traceKeyInput -> {
-                            backGroundTaskHolder.setBackGroundTaskDescription("tracing key: " + traceKeyInput.getSearch());
-                            Integer partition = null;
-                            if (traceKeyInput.isFastTrace()) {
-                                partition = getPartitionForKey(selectedTopic(), traceKeyInput.getSearch());
-                            }
-                            trace(topicMessageTypeConfig, consumerConfig, (ConsumerRecord cr) -> StringUtils.equals(cr.key().toString(), traceKeyInput.getSearch()), partition, traceKeyInput.getEpoch());
-                        });
-            } catch (Exception e) {
-                ErrorAlert.show(e, controlledStage);
-            }
-        });
-
-        MenuItem traceInValueItem = new MenuItem();
-        traceInValueItem.setGraphic(new FontIcon(FontAwesome.SEARCH));
-        traceInValueItem.textProperty().set("trace in value");
-        traceInValueItem.setOnAction(event -> {
-            try {
-                TopicMessageTypeConfig topicMessageTypeConfig = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
-                Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(false, false, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)))
+                TraceInputDialog.show(topicMessageTypeConfig.getKeyType() == MessageType.AVRO, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)))
                         .ifPresent(traceInput -> {
-                            backGroundTaskHolder.setBackGroundTaskDescription("tracing in Value: " + traceInput.getSearch());
-                            Pattern pattern = Pattern.compile(traceInput.getSearch());
-                            trace(topicMessageTypeConfig, consumerConfig, (ConsumerRecord cr) -> {
-                                if (traceInput.isSearchNull()) {
-                                    return cr.value() == null;
-                                } else {
+                            backGroundTaskHolder.setBackGroundTaskDescription("tracing message");
+                            Integer partition = null;
+                            if (!traceInput.getConditionMode().equals("value only")&& !traceInput.getConditionMode().equals("OR") && topicMessageTypeConfig.getKeyType() != MessageType.AVRO && traceInput.isFastTrace()) {
+                                partition = getPartitionForKey(selectedTopic(), traceInput.getKeySearch());
+                            }
+                            Predicate<ConsumerRecord> keyPredicate = null;
+                            Predicate<ConsumerRecord> valuePredicate = null;
+                            Predicate<ConsumerRecord> actualPredicate = null;
 
-                                    if (cr.value() == null) {
-                                        return false;
-                                    }
-                                    Matcher matcher = pattern.matcher(cr.value().toString());
-                                    return matcher.find();
-                                }
-                            }, null, traceInput.getEpoch());
+
+                            if (!traceInput.getConditionMode().equals("value only")) {
+                                keyPredicate = TraceUtils.keyPredicate(traceInput.getKeySearch(), traceInput.getKeyMode());
+                            }
+                            if (!traceInput.getConditionMode().equals("key only")) {
+                                valuePredicate = TraceUtils.valuePredicate(traceInput.getValueSearch(), traceInput.isSearchNull());
+                            }
+
+                            if(traceInput.getConditionMode().equals("key only")){
+                                actualPredicate = keyPredicate;
+                            }else if(traceInput.getConditionMode().equals("value only")){
+                                actualPredicate = valuePredicate;
+                            }else if(traceInput.getConditionMode().equals("AND")){
+                                actualPredicate = keyPredicate.and(valuePredicate);
+                            }else if(traceInput.getConditionMode().equals("OR")){
+                                actualPredicate = keyPredicate.or(valuePredicate);
+                            }
+
+                            trace(topicMessageTypeConfig, consumerConfig, actualPredicate, partition, traceInput.getEpoch());
                         });
             } catch (Exception e) {
                 ErrorAlert.show(e, controlledStage);
             }
         });
+
+//        MenuItem traceInValueItem = new MenuItem();
+//        traceInValueItem.setGraphic(new FontIcon(FontAwesome.SEARCH));
+//        traceInValueItem.textProperty().set("trace in value");
+//        traceInValueItem.setOnAction(event -> {
+//            try {
+//                TopicMessageTypeConfig topicMessageTypeConfig = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
+//                Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
+//                TraceInputDialog.show(false, false, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)))
+//                        .ifPresent(traceInput -> {
+//                            backGroundTaskHolder.setBackGroundTaskDescription("tracing in Value: " + traceInput.getSearch());
+//                            Pattern pattern = Pattern.compile(traceInput.getSearch());
+//                            trace(topicMessageTypeConfig, consumerConfig, (ConsumerRecord cr) -> {
+//                                if (traceInput.isSearchNull()) {
+//                                    return cr.value() == null;
+//                                } else {
+//
+//                                    if (cr.value() == null) {
+//                                        return false;
+//                                    }
+//                                    Matcher matcher = pattern.matcher(cr.value().toString());
+//                                    return matcher.find();
+//                                }
+//                            }, null, traceInput.getEpoch());
+//                        });
+//            } catch (Exception e) {
+//                ErrorAlert.show(e, controlledStage);
+//            }
+//        });
 
         MenuItem deleteItem = new MenuItem();
         deleteItem.setGraphic(new FontIcon(FontAwesome.TRASH));
@@ -471,7 +493,7 @@ public class Controller {
                 }
             }
         });
-        contextMenu.getItems().addAll(infoItem, configMessageTypesItem, traceKeyItem, traceInValueItem, deleteItem);
+        contextMenu.getItems().addAll(infoItem, configMessageTypesItem, traceItem, deleteItem);
 
         cell.textProperty().bind(cell.itemProperty());
 
