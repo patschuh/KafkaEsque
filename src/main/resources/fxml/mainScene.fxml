@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import at.esque.kafka.controls.FilterableListView?>
+<?import at.esque.kafka.controls.InstantPicker?>
 <?import at.esque.kafka.controls.JsonTreeView?>
 <?import at.esque.kafka.controls.KafkaEsqueCodeArea?>
 <?import javafx.scene.control.Button?>
@@ -145,9 +146,14 @@
                                                         <Tooltip text="Messages per partition to get"/>
                                                     </tooltip>
                                                 </TextField>
-                                                <TextField fx:id="specificOffsetTextField" prefHeight="25.0"
-                                                           prefWidth="91.0" promptText="Specific Offset"
-                                                           visible="false"/>
+                                                <HBox fx:id = "specificFetchTypeInputHBox">
+                                                    <TextField fx:id="specificOffsetTextField" prefHeight="25.0"
+                                                               prefWidth="200.0" promptText="Specific Offset"
+                                                               visible="false"/>
+                                                    <InstantPicker fx:id="specificInstantPicker" prefHeight="25.0"
+                                                                   prefWidth="200.0"
+                                                                   visible="false"/>
+                                                </HBox>
                                                 <Pane HBox.hgrow="ALWAYS"/>
                                             </items>
                                         </ToolBar>
@@ -267,7 +273,7 @@
                             <content>
                                 <TableView fx:id="headerTableView" prefHeight="200.0" prefWidth="200.0">
                                     <columnResizePolicy>
-                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
                                     </columnResizePolicy>
                                     <columns>
                                         <TableColumn fx:id="headerKeyColumn" prefWidth="75.0" text="Key"/>
@@ -280,7 +286,7 @@
                             <content>
                                 <TableView fx:id="metdataTableView" prefHeight="200.0" prefWidth="200.0">
                                     <columnResizePolicy>
-                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
                                     </columnResizePolicy>
                                     <columns>
                                         <TableColumn fx:id="metadataNameColumn" text="Name"/>

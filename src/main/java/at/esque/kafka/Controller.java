@@ -9,6 +9,7 @@ import at.esque.kafka.cluster.ClusterConfig;
 import at.esque.kafka.cluster.KafkaesqueAdminClient;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.controls.FilterableListView;
+import at.esque.kafka.controls.InstantPicker;
 import at.esque.kafka.controls.JsonTreeView;
 import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import at.esque.kafka.controls.MessagesTabContent;
@@ -72,6 +73,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -195,7 +197,11 @@ public class Controller {
     @FXML
     private TextField numberOfMessagesToGetField;
     @FXML
+    public HBox specificFetchTypeInputHBox;
+    @FXML
     private TextField specificOffsetTextField;
+    @FXML
+    private InstantPicker specificInstantPicker;
     @FXML
     private ToggleButton formatJsonToggle;
     @FXML
@@ -251,7 +257,21 @@ public class Controller {
         fetchModeCombobox.getSelectionModel().select(FetchTypes.NEWEST);
 
         fetchModeCombobox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) ->
-                specificOffsetTextField.setVisible(newValue == FetchTypes.SPECIFIC_OFFSET));
+        {
+            specificFetchTypeInputHBox.getChildren().remove(specificOffsetTextField);
+            specificOffsetTextField.setVisible(false);
+            specificFetchTypeInputHBox.getChildren().remove(specificInstantPicker);
+            specificInstantPicker.setVisible(false);
+
+            if (newValue == FetchTypes.SPECIFIC_OFFSET) {
+                specificFetchTypeInputHBox.getChildren().add(specificOffsetTextField);
+                specificOffsetTextField.setVisible(true);
+            }
+            if (newValue == FetchTypes.STARTING_FROM_INSTANT) {
+                specificFetchTypeInputHBox.getChildren().add(specificInstantPicker);
+                specificInstantPicker.setVisible(true);
+            }
+        });
 
         clusterComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             adminClient = new KafkaesqueAdminClient(newValue.getBootStrapServers(), configHandler.getSslProperties(selectedCluster()), configHandler.getSaslProperties(selectedCluster()));
@@ -419,7 +439,7 @@ public class Controller {
                         .ifPresent(traceInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing message");
                             Integer partition = null;
-                            if (!traceInput.getConditionMode().equals("value only")&& !traceInput.getConditionMode().equals("OR") && topicMessageTypeConfig.getKeyType() != MessageType.AVRO && traceInput.isFastTrace()) {
+                            if (!traceInput.getConditionMode().equals("value only") && !traceInput.getConditionMode().equals("OR") && topicMessageTypeConfig.getKeyType() != MessageType.AVRO && traceInput.isFastTrace()) {
                                 partition = getPartitionForKey(selectedTopic(), traceInput.getKeySearch());
                             }
                             Predicate<ConsumerRecord> keyPredicate = null;
@@ -434,13 +454,13 @@ public class Controller {
                                 valuePredicate = TraceUtils.valuePredicate(traceInput.getValueSearch(), traceInput.isSearchNull());
                             }
 
-                            if(traceInput.getConditionMode().equals("key only")){
+                            if (traceInput.getConditionMode().equals("key only")) {
                                 actualPredicate = keyPredicate;
-                            }else if(traceInput.getConditionMode().equals("value only")){
+                            } else if (traceInput.getConditionMode().equals("value only")) {
                                 actualPredicate = valuePredicate;
-                            }else if(traceInput.getConditionMode().equals("AND")){
+                            } else if (traceInput.getConditionMode().equals("AND")) {
                                 actualPredicate = keyPredicate.and(valuePredicate);
-                            }else if(traceInput.getConditionMode().equals("OR")){
+                            } else if (traceInput.getConditionMode().equals("OR")) {
                                 actualPredicate = keyPredicate.or(valuePredicate);
                             }
 
@@ -569,6 +589,8 @@ public class Controller {
                 getMessagesFromSpecificOffset(topicMessageTypeConfig, consumerConfig);
             } else if (fetchMode == FetchTypes.CONTINUOUS) {
                 getMessagesContinuously(topicMessageTypeConfig, consumerConfig);
+            }else if (fetchMode == FetchTypes.STARTING_FROM_INSTANT) {
+                getMessagesStartingFromInstant(topicMessageTypeConfig, consumerConfig);
             }
         } catch (IOException e) {
             ErrorAlert.show(e, controlledStage);
@@ -1028,6 +1050,43 @@ public class Controller {
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 consumerHandler.seekToOffset(consumerId, specifiedOffset);
+                PinTab tab = getActiveTabOrAddNew(topic, false);
+                ObservableList<KafkaMessage> baseList = getAndClearBaseList(tab);
+                Map<TopicPartition, Long> currentOffsets = consumerHandler.getCurrentOffsets(consumerId);
+                Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("getting messages..."));
+                consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
+                    while (!backGroundTaskHolder.getStopBackGroundTask() && !reachedMaxOffsetForAllPartitionsOrGotEnoughMessages(maxOffsets, minOffsets, currentOffsets, messagesConsumed, getNumberOfMessagesToConsume())) {
+                        receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume(), baseList);
+                    }
+                });
+            } finally {
+                consumerHandler.deregisterConsumer(consumerId);
+                backGroundTaskHolder.backgroundTaskStopped();
+            }
+        });
+    }
+
+    private void getMessagesStartingFromInstant(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
+        runInDaemonThread(() -> {
+            UUID consumerId = null;
+            final Instant specifiedInstant = specificInstantPicker.getInstantValue();
+            if(specifiedInstant == null){
+                return;
+            }
+            try {
+                consumerId = consumerHandler.registerConsumer(selectedCluster(), topic, consumerConfig);
+            } catch (MissingSchemaRegistryException e) {
+                ErrorAlert.show(e, controlledStage);
+                return;
+            }
+            try {
+                Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
+                Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("preparing consumer..."));
+                backGroundTaskHolder.setIsInProgress(true);
+                consumerHandler.subscribe(consumerId, selectedTopic());
+                Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
+                Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
+                consumerHandler.seekToTime(consumerId, specifiedInstant.toEpochMilli());
                 PinTab tab = getActiveTabOrAddNew(topic, false);
                 ObservableList<KafkaMessage> baseList = getAndClearBaseList(tab);
                 Map<TopicPartition, Long> currentOffsets = consumerHandler.getCurrentOffsets(consumerId);
