@@ -202,6 +202,8 @@ public class Controller {
     @FXML
     private TextField specificOffsetTextField;
     @FXML
+    public ComboBox<Integer> partitionCombobox;
+    @FXML
     private InstantPicker specificInstantPicker;
     @FXML
     private ToggleButton formatJsonToggle;
@@ -279,8 +281,29 @@ public class Controller {
             refreshTopicList(newValue);
         });
 
+        partitionCombobox.getItems().add(-1);
+        partitionCombobox.getSelectionModel().select(Integer.valueOf(-1));
+
         topicListView.getListView().setCellFactory(lv -> topicListCellFactory());
         topicListView.setListComparator(String::compareTo);
+        topicListView.getListView().getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                try {
+                    final Integer selectedItem = partitionCombobox.getSelectionModel().getSelectedItem();
+                    final List<Integer> topicPatitions = adminClient.getTopicPatitions(newValue);
+                    partitionCombobox.getItems().clear();
+                    partitionCombobox.getItems().add(-1);
+                    partitionCombobox.getItems().addAll(topicPatitions);
+                    if (selectedItem != null && partitionCombobox.getItems().contains(selectedItem)) {
+                        partitionCombobox.getSelectionModel().select(selectedItem);
+                    } else {
+                        partitionCombobox.getSelectionModel().select(-1);
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("failed to get topic partitions", e);
+                }
+            }
+        });
 
         configHandler.configureKafkaEsqueCodeArea(keyTextArea);
         configHandler.configureKafkaEsqueCodeArea(valueTextArea);
@@ -779,7 +802,7 @@ public class Controller {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
                 Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("preparing consumer..."));
                 backGroundTaskHolder.setIsInProgress(true);
-                consumerHandler.subscribe(consumerId, selectedTopic());
+                subscribeOrAssignToSelectedPartition(topic, consumerId);
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 consumerHandler.seekToOffset(consumerId, -1);
@@ -855,7 +878,7 @@ public class Controller {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
                 Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("preparing consumer..."));
                 backGroundTaskHolder.setIsInProgress(true);
-                consumerHandler.subscribe(consumerId, topic.getName());
+                subscribeOrAssignToSelectedPartition(topic, consumerId);
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
 
@@ -892,6 +915,15 @@ public class Controller {
         });
     }
 
+    private void subscribeOrAssignToSelectedPartition(TopicMessageTypeConfig topic, UUID consumerId) {
+        final Integer selectedPartition = partitionCombobox.getSelectionModel().getSelectedItem();
+        if (selectedPartition >= 0) {
+            consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(Collections.singletonList(new TopicPartition(selectedTopic(), selectedPartition))));
+        } else {
+            consumerHandler.subscribe(consumerId, topic.getName());
+        }
+    }
+
     private <KT, VT> void getMessagesContinuously(TopicMessageTypeConfig topic, Map<String, String> consumerConfig) {
         UUID tempconsumerId = null;
         try {
@@ -905,7 +937,7 @@ public class Controller {
             try {
                 AtomicLong messagesConsumed = new AtomicLong(0);
                 backGroundTaskHolder.setIsInProgress(true);
-                consumerHandler.subscribe(consumerId, selectedTopic());
+                subscribeOrAssignToSelectedPartition(topic, consumerId);
                 consumerHandler.seekToOffset(consumerId, -2);
                 PinTab tab = getActiveTabOrAddNew(topic, false);
                 ObservableList<KafkaMessage> baseList = getAndClearBaseList(tab);
@@ -1047,7 +1079,7 @@ public class Controller {
                 long specifiedOffset = Long.parseLong(specificOffsetTextField.getText());
                 Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("preparing consumer..."));
                 backGroundTaskHolder.setIsInProgress(true);
-                consumerHandler.subscribe(consumerId, selectedTopic());
+                subscribeOrAssignToSelectedPartition(topic, consumerId);
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 consumerHandler.seekToOffset(consumerId, specifiedOffset);
@@ -1084,7 +1116,7 @@ public class Controller {
                 Map<Integer, AtomicLong> messagesConsumed = new HashMap<>();
                 Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("preparing consumer..."));
                 backGroundTaskHolder.setIsInProgress(true);
-                consumerHandler.subscribe(consumerId, selectedTopic());
+                subscribeOrAssignToSelectedPartition(topic, consumerId);
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 consumerHandler.seekToTime(consumerId, specifiedInstant.toEpochMilli());

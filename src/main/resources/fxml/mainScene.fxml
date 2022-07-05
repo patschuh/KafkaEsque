@@ -27,9 +27,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import java.lang.String?>
-<SplitPane dividerPositions="0.6929460580912863" orientation="VERTICAL" prefHeight="533.0" prefWidth="961.0"
-           xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="at.esque.kafka.Controller">
+<SplitPane dividerPositions="0.6929460580912863" orientation="VERTICAL" prefHeight="533.0" prefWidth="961.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.Controller">
     <items>
         <BorderPane>
             <center>
@@ -43,53 +41,44 @@
                                             <children>
                                                 <HBox maxWidth="1.7976931348623157E308">
                                                     <children>
-                                                        <Button maxHeight="-Infinity" maxWidth="-Infinity"
-                                                                minHeight="30.0" mnemonicParsing="false"
-                                                                onAction="#addClusterConfigClick" prefWidth="30.0">
+                                                        <Button maxHeight="-Infinity" maxWidth="-Infinity" minHeight="30.0" mnemonicParsing="false" onAction="#addClusterConfigClick" prefWidth="30.0">
                                                             <tooltip>
-                                                                <Tooltip text="Add Cluster Config"/>
+                                                                <Tooltip text="Add Cluster Config" />
                                                             </tooltip>
                                                             <styleClass>
-                                                                <String fx:value="btn"/>
-                                                                <String fx:value="success"/>
-                                                                <String fx:value="first"/>
+                                                                <String fx:value="btn" />
+                                                                <String fx:value="success" />
+                                                                <String fx:value="first" />
                                                             </styleClass>
                                                             <graphic>
-                                                                <FontIcon iconColor="WHITE" iconLiteral="fa-plus"
-                                                                          iconSize="20"/>
+                                                                <FontIcon iconColor="WHITE" iconLiteral="fa-plus" iconSize="20" />
                                                             </graphic>
                                                         </Button>
-                                                        <Button minHeight="30.0" mnemonicParsing="false"
-                                                                onAction="#deleteClusterConfigsClick" prefWidth="30.0">
+                                                        <Button minHeight="30.0" mnemonicParsing="false" onAction="#deleteClusterConfigsClick" prefWidth="30.0">
                                                             <styleClass>
-                                                                <String fx:value="danger"/>
-                                                                <String fx:value="middle"/>
+                                                                <String fx:value="danger" />
+                                                                <String fx:value="middle" />
                                                             </styleClass>
                                                             <graphic>
-                                                                <FontIcon iconColor="WHITE" iconLiteral="fa-trash"
-                                                                          iconSize="20"/>
+                                                                <FontIcon iconColor="WHITE" iconLiteral="fa-trash" iconSize="20" />
                                                             </graphic>
                                                             <tooltip>
-                                                                <Tooltip text="remove cluster configs"/>
+                                                                <Tooltip text="remove cluster configs" />
                                                             </tooltip>
                                                         </Button>
-                                                        <Button fx:id="editClusterButton" layoutX="42.0" layoutY="10.0"
-                                                                minHeight="30.0" mnemonicParsing="false"
-                                                                onAction="#editClusterConfigsClick" prefWidth="30.0">
+                                                        <Button fx:id="editClusterButton" layoutX="42.0" layoutY="10.0" minHeight="30.0" mnemonicParsing="false" onAction="#editClusterConfigsClick" prefWidth="30.0">
                                                             <styleClass>
-                                                                <String fx:value="warning"/>
-                                                                <String fx:value="last"/>
+                                                                <String fx:value="warning" />
+                                                                <String fx:value="last" />
                                                             </styleClass>
                                                             <graphic>
-                                                                <FontIcon iconColor="WHITE" iconLiteral="fa-wrench"
-                                                                          iconSize="20"/>
+                                                                <FontIcon iconColor="WHITE" iconLiteral="fa-wrench" iconSize="20" />
                                                             </graphic>
                                                             <tooltip>
-                                                                <Tooltip text="edit cluster config"/>
+                                                                <Tooltip text="edit cluster config" />
                                                             </tooltip>
                                                         </Button>
-                                                        <ComboBox fx:id="clusterComboBox" prefWidth="150.0"
-                                                                  promptText="Select Cluster" styleClass="last"/>
+                                                        <ComboBox fx:id="clusterComboBox" prefWidth="150.0" promptText="Select Cluster" styleClass="last" />
                                                     </children>
                                                 </HBox>
                                             </children>
@@ -98,15 +87,13 @@
                                 </ToolBar>
                             </top>
                             <center>
-                                <FilterableListView fx:id="topicListView" onAddAction="#createTopicButtonClick"
-                                                    onRefreshAction="#refreshButtonClick"
-                                                    BorderPane.alignment="CENTER"/>
+                                <FilterableListView fx:id="topicListView" onAddAction="#createTopicButtonClick" onRefreshAction="#refreshButtonClick" BorderPane.alignment="CENTER" />
                             </center>
                         </BorderPane>
                         <BorderPane prefHeight="200.0" prefWidth="200.0">
                             <center>
                                 <StackPane BorderPane.alignment="CENTER">
-                                    <TabPane fx:id="messageTabPane" prefHeight="200.0" prefWidth="200.0" minHeight="0"/>
+                                    <TabPane fx:id="messageTabPane" minHeight="0" prefHeight="200.0" prefWidth="200.0" />
                                 </StackPane>
                             </center>
                             <top>
@@ -116,45 +103,41 @@
                                             <items>
                                                 <HBox>
                                                     <children>
-                                                        <Button fx:id="publishMessageButton" mnemonicParsing="false"
-                                                                onAction="#onPublishMessageClick" styleClass="first">
+                                                        <Button fx:id="publishMessageButton" mnemonicParsing="false" onAction="#onPublishMessageClick" styleClass="first">
                                                             <tooltip>
-                                                                <Tooltip text="publish Message"/>
+                                                                <Tooltip text="publish Message" />
                                                             </tooltip>
                                                             <graphic>
-                                                                <FontIcon iconLiteral="fa-cloud-upload" iconSize="15"/>
+                                                                <FontIcon iconLiteral="fa-cloud-upload" iconSize="15" />
                                                             </graphic>
                                                         </Button>
-                                                        <Button fx:id="getMessagesButton" mnemonicParsing="false"
-                                                                onAction="#getMessagesClick" styleClass="last">
+                                                        <Button fx:id="getMessagesButton" mnemonicParsing="false" onAction="#getMessagesClick" styleClass="last">
                                                             <tooltip>
-                                                                <Tooltip text="get Messages"/>
+                                                                <Tooltip text="get Messages" />
                                                             </tooltip>
                                                             <graphic>
-                                                                <FontIcon iconLiteral="fa-cloud-download"
-                                                                          iconSize="15"/>
+                                                                <FontIcon iconLiteral="fa-cloud-download" iconSize="15" />
                                                             </graphic>
                                                         </Button>
                                                     </children>
                                                 </HBox>
-                                                <ComboBox id="fetchModeCombobox" fx:id="fetchModeCombobox"
-                                                          prefHeight="25.0" promptText="Mode"/>
-                                                <TextField fx:id="numberOfMessagesToGetField" prefHeight="25.0"
-                                                           prefWidth="77.0" promptText="Messages Per Partition"
-                                                           text="10">
+                                                <ComboBox id="fetchModeCombobox" fx:id="fetchModeCombobox" prefHeight="25.0" promptText="Mode" />
+                                                <TextField fx:id="numberOfMessagesToGetField" prefHeight="25.0" prefWidth="77.0" promptText="Messages Per Partition" text="10">
                                                     <tooltip>
-                                                        <Tooltip text="Messages per partition to get"/>
+                                                        <Tooltip text="Messages per partition to get" />
                                                     </tooltip>
                                                 </TextField>
-                                                <HBox fx:id = "specificFetchTypeInputHBox">
-                                                    <TextField fx:id="specificOffsetTextField" prefHeight="25.0"
-                                                               prefWidth="200.0" promptText="Specific Offset"
-                                                               visible="false"/>
-                                                    <InstantPicker fx:id="specificInstantPicker" prefHeight="25.0"
-                                                                   prefWidth="200.0"
-                                                                   visible="false"/>
+                                    <Label text="Partition:" underline="true">
+                                       <tooltip>
+                                          <Tooltip text="Partition to get messages from&#10;-1 means all partitions" />
+                                       </tooltip>
+                                    </Label>
+                                    <ComboBox fx:id="partitionCombobox" prefWidth="150.0" promptText="Partition" styleClass="last" />
+                                                <HBox fx:id="specificFetchTypeInputHBox">
+                                                    <TextField fx:id="specificOffsetTextField" prefHeight="25.0" prefWidth="200.0" promptText="Specific Offset" visible="false" />
+                                                    <InstantPicker fx:id="specificInstantPicker" prefHeight="25.0" prefWidth="200.0" visible="false" />
                                                 </HBox>
-                                                <Pane HBox.hgrow="ALWAYS"/>
+                                                <Pane HBox.hgrow="ALWAYS" />
                                             </items>
                                         </ToolBar>
                                     </items>
@@ -169,78 +152,70 @@
                     <menus>
                         <Menu mnemonicParsing="false" text="Settings">
                             <items>
-                                <MenuItem fx:id="settings" mnemonicParsing="false"
-                                          onAction="#showSettingsDialog" text="Settings">
+                                <MenuItem fx:id="settings" mnemonicParsing="false" onAction="#showSettingsDialog" text="Settings">
                                     <graphic>
-                                        <FontIcon iconLiteral="fa-wrench"/>
+                                        <FontIcon iconLiteral="fa-wrench" />
                                     </graphic>
                                 </MenuItem>
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Cluster">
                             <items>
-                                <MenuItem fx:id="playMessageBookMenu" mnemonicParsing="false"
-                                          onAction="#playMessageBook" text="Play Message Book">
+                                <MenuItem fx:id="playMessageBookMenu" mnemonicParsing="false" onAction="#playMessageBook" text="Play Message Book">
                                     <graphic>
-                                        <FontIcon iconLiteral="fa-play"/>
+                                        <FontIcon iconLiteral="fa-play" />
                                     </graphic>
                                 </MenuItem>
-                                <MenuItem fx:id="applyTopicTemplatesMenu" mnemonicParsing="false"
-                                          onAction="#applyTopicTemplatesClick" text="Apply Topic Templates">
+                                <MenuItem fx:id="applyTopicTemplatesMenu" mnemonicParsing="false" onAction="#applyTopicTemplatesClick" text="Apply Topic Templates">
                                     <graphic>
-                                        <FontIcon iconLiteral="fa-copy"/>
+                                        <FontIcon iconLiteral="fa-copy" />
                                     </graphic>
                                 </MenuItem>
-                                <MenuItem mnemonicParsing="false" onAction="#crossClusterClick"
-                                          text="Cross Cluster Operations">
+                                <MenuItem mnemonicParsing="false" onAction="#crossClusterClick" text="Cross Cluster Operations">
                                     <graphic>
-                                        <FontIcon iconLiteral="fa-copy"/>
+                                        <FontIcon iconLiteral="fa-copy" />
                                     </graphic>
                                 </MenuItem>
                                 <MenuItem mnemonicParsing="false" onAction="#lagViewerClick" text="LagViewer">
                                     <graphic>
-                                        <FontIcon iconLiteral="fa-copy"/>
+                                        <FontIcon iconLiteral="fa-copy" />
                                     </graphic>
                                 </MenuItem>
                                 <MenuItem mnemonicParsing="false" onAction="#aclViewer" text="AclViewer">
                                     <graphic>
-                                        <FontIcon iconLiteral="fa-lock"/>
+                                        <FontIcon iconLiteral="fa-lock" />
                                     </graphic>
                                 </MenuItem>
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Schema Registry">
                             <items>
-                                <MenuItem mnemonicParsing="false" onAction="#schemaRegistryClick"
-                                          text="Schema registry Browser">
+                                <MenuItem mnemonicParsing="false" onAction="#schemaRegistryClick" text="Schema registry Browser">
                                     <graphic>
-                                        <FontIcon iconLiteral="fa-registered"/>
+                                        <FontIcon iconLiteral="fa-registered" />
                                     </graphic>
                                 </MenuItem>
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Kafka Connect">
                             <items>
-                                <MenuItem mnemonicParsing="false" onAction="#kafkaConnectClick"
-                                          text="Kafka Connect Browser">
+                                <MenuItem mnemonicParsing="false" onAction="#kafkaConnectClick" text="Kafka Connect Browser">
                                     <graphic>
-                                        <FontIcon iconLiteral="fa-plug"/>
+                                        <FontIcon iconLiteral="fa-plug" />
                                     </graphic>
                                 </MenuItem>
-                                <MenuItem mnemonicParsing="false" onAction="#kafkaConnectInstalledPluginClick"
-                                          text="View installed connector plugins">
+                                <MenuItem mnemonicParsing="false" onAction="#kafkaConnectInstalledPluginClick" text="View installed connector plugins">
                                     <graphic>
-                                        <FontIcon iconLiteral="fa-plug"/>
+                                        <FontIcon iconLiteral="fa-plug" />
                                     </graphic>
                                 </MenuItem>
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
-                                <MenuItem mnemonicParsing="false" onAction="#aboutClick"
-                                          text="About">
+                                <MenuItem mnemonicParsing="false" onAction="#aboutClick" text="About">
                                     <graphic>
-                                        <FontIcon iconLiteral="fa-info"/>
+                                        <FontIcon iconLiteral="fa-info" />
                                     </graphic>
                                 </MenuItem>
                             </items>
@@ -255,17 +230,14 @@
                     <tabs>
                         <Tab text="Key">
                             <content>
-                                <KafkaEsqueCodeArea fx:id="keyTextArea" editable="false" prefHeight="200.0"
-                                                    prefWidth="200.0"/>
+                                <KafkaEsqueCodeArea fx:id="keyTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
                             </content>
                         </Tab>
                         <Tab fx:id="valueTab" text="Value">
                             <content>
-                                <SplitPane fx:id="valueSplitPane" dividerPositions="0.32533889468196037"
-                                           prefHeight="200.0" prefWidth="200.0">
-                                    <JsonTreeView fx:id="jsonTreeView" maxWidth="1.7976931348623157E308"/>
-                                    <KafkaEsqueCodeArea fx:id="valueTextArea" editable="false" prefHeight="200.0"
-                                                        prefWidth="200.0" HBox.hgrow="ALWAYS"/>
+                                <SplitPane fx:id="valueSplitPane" dividerPositions="0.32533889468196037" prefHeight="200.0" prefWidth="200.0">
+                                    <JsonTreeView fx:id="jsonTreeView" maxWidth="1.7976931348623157E308" />
+                                    <KafkaEsqueCodeArea fx:id="valueTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
                                 </SplitPane>
                             </content>
                         </Tab>
@@ -273,11 +245,11 @@
                             <content>
                                 <TableView fx:id="headerTableView" prefHeight="200.0" prefWidth="200.0">
                                     <columnResizePolicy>
-                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                     </columnResizePolicy>
                                     <columns>
-                                        <TableColumn fx:id="headerKeyColumn" prefWidth="75.0" text="Key"/>
-                                        <TableColumn fx:id="headerValueColumn" prefWidth="75.0" text="Value"/>
+                                        <TableColumn fx:id="headerKeyColumn" prefWidth="75.0" text="Key" />
+                                        <TableColumn fx:id="headerValueColumn" prefWidth="75.0" text="Value" />
                                     </columns>
                                 </TableView>
                             </content>
@@ -286,11 +258,11 @@
                             <content>
                                 <TableView fx:id="metdataTableView" prefHeight="200.0" prefWidth="200.0">
                                     <columnResizePolicy>
-                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                     </columnResizePolicy>
                                     <columns>
-                                        <TableColumn fx:id="metadataNameColumn" text="Name"/>
-                                        <TableColumn fx:id="metadataValueColumn" text="Value"/>
+                                        <TableColumn fx:id="metadataNameColumn" text="Name" />
+                                        <TableColumn fx:id="metadataValueColumn" text="Value" />
                                     </columns>
                                 </TableView>
                             </content>
@@ -301,20 +273,16 @@
             <top>
                 <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                     <items>
-                        <ToggleButton fx:id="formatJsonToggle" mnemonicParsing="false" styleClass="info"
-                                      text="Format as  Json" textAlignment="CENTER"/>
-                        <TextField fx:id="jqQueryField" promptText="jq query"/>
-                        <ProgressIndicator fx:id="loadingIndicator" maxHeight="-Infinity" maxWidth="-Infinity"
-                                           minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0"
-                                           prefWidth="30.0"/>
-                        <Label fx:id="backgroundTaskDescription" text="backgroundTask" visible="false"/>
-                        <Pane HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="taskProgressLabel" text="taskProgressLabel"/>
-                        <Button fx:id="interruptMessagePollingButton" mnemonicParsing="false" onAction="#stopPolling"
-                                text="stop polling">
+                        <ToggleButton fx:id="formatJsonToggle" mnemonicParsing="false" styleClass="info" text="Format as  Json" textAlignment="CENTER" />
+                        <TextField fx:id="jqQueryField" promptText="jq query" />
+                        <ProgressIndicator fx:id="loadingIndicator" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="30.0" />
+                        <Label fx:id="backgroundTaskDescription" text="backgroundTask" visible="false" />
+                        <Pane HBox.hgrow="ALWAYS" />
+                        <Label fx:id="taskProgressLabel" text="taskProgressLabel" />
+                        <Button fx:id="interruptMessagePollingButton" mnemonicParsing="false" onAction="#stopPolling" text="stop polling">
                             <styleClass>
-                                <String fx:value="btn"/>
-                                <String fx:value="warning"/>
+                                <String fx:value="btn" />
+                                <String fx:value="warning" />
                             </styleClass>
                         </Button>
                     </items>
