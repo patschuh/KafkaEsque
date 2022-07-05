@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import at.esque.kafka.controls.JsonTreeView?>
+<?import at.esque.kafka.controls.PatchJsonTreeView?>
+<?import javafx.scene.control.SplitPane?>
+<fx:root type="javafx.scene.control.SplitPane" dividerPositions="0.5" prefHeight="447.0" prefWidth="636.0"
+         xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+    <items>
+        <PatchJsonTreeView fx:id="patchedTreeView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"/>
+        <JsonTreeView fx:id="patchTreeView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"/>
+    </items>
+</fx:root>

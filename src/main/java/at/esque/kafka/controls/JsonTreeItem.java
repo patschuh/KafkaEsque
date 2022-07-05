@@ -5,11 +5,17 @@ import javafx.scene.control.TreeItem;
 public class JsonTreeItem extends TreeItem<String> {
     private String propertyName;
     private String propertyValue;
+    private String propertyChangedType;
 
     public JsonTreeItem(String propertyName, String propertyValue) {
+        this(propertyName, propertyValue, null);
+    }
+
+    public JsonTreeItem(String propertyName, String propertyValue, String propertyChangedType) {
         super();
         this.propertyName = propertyName;
         this.propertyValue = propertyValue;
+        this.propertyChangedType = propertyChangedType;
         updateValue();
     }
 
@@ -31,6 +37,14 @@ public class JsonTreeItem extends TreeItem<String> {
         updateValue();
     }
 
+    public String getPropertyChangedType() {
+        return propertyChangedType;
+    }
+
+    public void setPropertyChangedType(String propertyChangedType) {
+        this.propertyChangedType = propertyChangedType;
+    }
+
     private void updateValue() {
         if (propertyName == null && propertyValue == null) {
             this.setValue("<null>");
@@ -41,7 +55,16 @@ public class JsonTreeItem extends TreeItem<String> {
         } else {
             this.setValue(propertyName + ": " + propertyValue);
         }
+    }
 
+    public String getPath(){
+        return getPath(this);
+    }
 
+    private String getPath(JsonTreeItem jsonTreeItem){
+        if(jsonTreeItem.getParent() == null){
+            return "";
+        }
+        return getPath((JsonTreeItem) jsonTreeItem.getParent()) + "/"+jsonTreeItem.getPropertyName();
     }
 }

@@ -63,6 +63,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -589,7 +590,7 @@ public class Controller {
                 getMessagesFromSpecificOffset(topicMessageTypeConfig, consumerConfig);
             } else if (fetchMode == FetchTypes.CONTINUOUS) {
                 getMessagesContinuously(topicMessageTypeConfig, consumerConfig);
-            }else if (fetchMode == FetchTypes.STARTING_FROM_INSTANT) {
+            } else if (fetchMode == FetchTypes.STARTING_FROM_INSTANT) {
                 getMessagesStartingFromInstant(topicMessageTypeConfig, consumerConfig);
             }
         } catch (IOException e) {
@@ -1070,7 +1071,7 @@ public class Controller {
         runInDaemonThread(() -> {
             UUID consumerId = null;
             final Instant specifiedInstant = specificInstantPicker.getInstantValue();
-            if(specifiedInstant == null){
+            if (specifiedInstant == null) {
                 return;
             }
             try {
@@ -1244,6 +1245,26 @@ public class Controller {
     }
 
     // Experimental Area
+
+    private void showJsonDiffDialog(KafkaMessage source, KafkaMessage target) {
+        try {
+            FXMLLoader fxmlLoader = injector.getInstance(FXMLLoader.class);
+            fxmlLoader.setLocation(getClass().getResource("/fxml/MessageDiffView.fxml"));
+            Parent root1 = fxmlLoader.load();
+            MessageDiffView controller = fxmlLoader.getController();
+            controller.setup(source, target);
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.initOwner(controlledStage);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Json Diff");
+            stage.setScene(Main.createStyledScene(root1, -1, -1));
+            stage.show();
+            centerStageOnControlledStage(stage);
+        } catch (Exception e) {
+            ErrorAlert.show(e, controlledStage);
+        }
+    }
 
     @FXML
     public void applyTopicTemplatesClick(ActionEvent event) {
@@ -1440,7 +1461,19 @@ public class Controller {
                     MenuItem openAsJson = new MenuItem("open in json editor");
                     openAsJson.setGraphic(new FontIcon(FontAwesome.EDIT));
                     openAsJson.setOnAction(event -> openInTextEditor(row.getItem(), "json"));
-                    rowMenu.getItems().addAll(openinPublisher, openAsTxt, openAsJson);
+                    MenuItem jsonDiff = new MenuItem("Json Diff");
+                    jsonDiff.setGraphic(new FontIcon(FontAwesome.EXCHANGE));
+                    jsonDiff.disableProperty().bind(Bindings.createBooleanBinding(() -> messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems() != null && messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems().size() != 2, messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems()));
+                    jsonDiff.setOnAction(event -> {
+                        final ObservableList<KafkaMessage> selectedItems = messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems();
+                        if (selectedItems != null && selectedItems.size() == 2) {
+                            showJsonDiffDialog(selectedItems.get(0), selectedItems.get(1));
+                        } else {
+                            ErrorAlert.show("Unsupported selection", "Selection has to be exactly 2 message", null, null, controlledStage, false);
+                        }
+
+                    });
+                    rowMenu.getItems().addAll(openinPublisher, openAsTxt, openAsJson, jsonDiff);
 
                     // only display context menu for non-null items:
                     row.contextMenuProperty().bind(
@@ -1449,6 +1482,7 @@ public class Controller {
                                     .otherwise((ContextMenu) null));
                     return row;
                 });
+        messagesTabContent.getMessageTableView().getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         messagesTabContent.getMessageTableView().getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             selectedMessage = newValue;
             updateKeyValueTextArea(selectedMessage, formatJsonToggle.isSelected());

@@ -64,4 +64,17 @@ public class JsonTreeView extends TreeView<String> {
             }
         }
     }
+
+    public void expand() {
+        final TreeItem<String> root = this.getRoot();
+        expand(root);
+    }
+
+    private void expand(TreeItem<?> item) {
+        if (item.getChildren() != null && !item.getChildren().isEmpty()) {
+            item.getChildren().forEach(this::expand);
+        }
+        item.setExpanded(true);
+    }
+
 }
