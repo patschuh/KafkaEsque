@@ -166,10 +166,10 @@ public final class JsonUtils {
 
     private static void replaceValue(JsonTreeItem path, JsonNode jsonNode) {
         if (jsonNode.get("value").isNull()) {
-            path.setPropertyValue((path.getPropertyValue() == null ? "" : path.getPropertyValue()) + " -> " + jsonNode.get("value").textValue());
+            path.setPropertyValue((path.getPropertyValue() == null ? "" : path.getPropertyValue()) + " -> " + ((jsonNode.get("value") instanceof TextNode)?jsonNode.get("value").textValue():jsonNode.get("value")));
             applyChangeTypeAndPropagateToChilds(path, "remove");
         } else {
-            path.setPropertyValue(path.getPropertyValue() + " -> " + jsonNode.get("value").textValue());
+            path.setPropertyValue(path.getPropertyValue() + " -> " + ((jsonNode.get("value") instanceof TextNode)?jsonNode.get("value").textValue():jsonNode.get("value")));
             path.setPropertyChangedType(jsonNode.get("op").textValue());
         }
     }
