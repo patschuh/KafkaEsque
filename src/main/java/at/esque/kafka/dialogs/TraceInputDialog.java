@@ -2,6 +2,7 @@ package at.esque.kafka.dialogs;
 
 import at.esque.kafka.Main;
 import at.esque.kafka.topics.TraceDialogController;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -19,7 +20,7 @@ public class TraceInputDialog {
 
     public static final LinkedList<String> recentTrace = new LinkedList<>();
 
-    public static Optional<TraceInput> show(boolean isAvroKeyType, boolean traceQuickSelectEnabled, List<Duration> durations, int recentTraceMaxEntries) throws IOException {
+    public static Optional<TraceInput> show(boolean isAvroKeyType, boolean traceQuickSelectEnabled, List<Duration> durations, int recentTraceMaxEntries, ObservableList<Integer> partitions) throws IOException {
         Dialog<TraceInput> dialog = new Dialog<>();
         dialog.setResizable(true);
         Main.applyIcon(dialog);
@@ -31,7 +32,7 @@ public class TraceInputDialog {
         Parent root1 = fxmlLoader.load();
         TraceDialogController controller = fxmlLoader.getController();
 
-        controller.setup(isAvroKeyType, traceQuickSelectEnabled, durations, recentTraceMaxEntries);
+        controller.setup(isAvroKeyType, traceQuickSelectEnabled, durations, recentTraceMaxEntries, partitions);
 
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
@@ -52,7 +53,7 @@ public class TraceInputDialog {
                     updateRecentTrace(controller.keyTextBox.getText(), recentTraceMaxEntries);
                     updateRecentTrace(controller.valueTextBox.getText(), recentTraceMaxEntries);
                 }
-                return new TraceInput(controller.keyTextBox.getText(), controller.valueTextBox.getText(), keyMode, conditionMode, controller.fastTraceToggle.isSelected(), controller.tombstoneToggle.isSelected(), controller.epochInstantPicker.getInstantValue() == null ? null : controller.epochInstantPicker.getInstantValue().toEpochMilli());
+                return new TraceInput(controller.keyTextBox.getText(), controller.valueTextBox.getText(), keyMode, conditionMode, controller.fastTraceToggle.isSelected(), controller.tombstoneToggle.isSelected(), controller.epochInstantPicker.getInstantValue() == null ? null : controller.epochInstantPicker.getInstantValue().toEpochMilli(), controller.specificParitionComboBox.getValue());
             }
             return null;
         });
@@ -78,8 +79,9 @@ public class TraceInputDialog {
         private boolean fastTrace;
         private boolean searchNull;
         private Long epoch;
+        private Integer partition;
 
-        public TraceInput(String keySearch, String valueSearch, String keyMode, String conditionMode, boolean fastTrace, boolean searchNull, Long epoch) {
+        public TraceInput(String keySearch, String valueSearch, String keyMode, String conditionMode, boolean fastTrace, boolean searchNull, Long epoch, Integer partition) {
             this.keySearch = keySearch;
             this.valueSearch = valueSearch;
             this.keyMode = keyMode;
@@ -87,6 +89,7 @@ public class TraceInputDialog {
             this.fastTrace = fastTrace;
             this.searchNull = searchNull;
             this.epoch = epoch;
+            this.partition = partition;
         }
 
         public String getKeySearch() {
@@ -143,6 +146,14 @@ public class TraceInputDialog {
 
         public void setEpoch(Long epoch) {
             this.epoch = epoch;
+        }
+
+        public Integer getPartition() {
+            return partition;
+        }
+
+        public void setPartition(Integer partition) {
+            this.partition = partition;
         }
     }
 }

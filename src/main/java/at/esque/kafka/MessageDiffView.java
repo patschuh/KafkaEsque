@@ -28,6 +28,10 @@ public class MessageDiffView {
     public Label sourceKey;
     @FXML
     public Label targetKey;
+    @FXML
+    public Label sourceTimestamp;
+    @FXML
+    public Label targetTimestamp;
 
     @FXML
     public void initialize() {
@@ -37,10 +41,13 @@ public class MessageDiffView {
         sourcePartition.textProperty().bind(Bindings.createStringBinding(() -> sourceKafkaMessage.get() != null ? sourceKafkaMessage.get().getPartition() + "" : null, sourceKafkaMessage));
         sourceOffset.textProperty().bind(Bindings.createStringBinding(() -> sourceKafkaMessage.get() != null ? sourceKafkaMessage.get().getOffset() + "" : null, sourceKafkaMessage));
         sourceKey.textProperty().bind(Bindings.createStringBinding(() -> sourceKafkaMessage.get() != null ? sourceKafkaMessage.get().getKey() : null, sourceKafkaMessage));
+        sourceTimestamp.textProperty().bind(Bindings.createStringBinding(() -> sourceKafkaMessage.get() != null ? sourceKafkaMessage.get().getTimestamp() : null, sourceKafkaMessage));
 
         targetPartition.textProperty().bind(Bindings.createStringBinding(() -> targetKafkaMessage.get() != null ? targetKafkaMessage.get().getPartition() + "" : null, targetKafkaMessage));
         targetOffset.textProperty().bind(Bindings.createStringBinding(() -> targetKafkaMessage.get() != null ? targetKafkaMessage.get().getOffset() + "" : null, targetKafkaMessage));
         targetKey.textProperty().bind(Bindings.createStringBinding(() -> targetKafkaMessage.get() != null ? targetKafkaMessage.get().getKey() : null, targetKafkaMessage));
+        targetTimestamp.textProperty().bind(Bindings.createStringBinding(() -> targetKafkaMessage.get() != null ? targetKafkaMessage.get().getTimestamp() : null, targetKafkaMessage));
+
     }
 
     public void switchSourceAndTarget(ActionEvent event) {

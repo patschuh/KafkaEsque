@@ -4,9 +4,11 @@ import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.controls.InstantPicker;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
@@ -26,12 +28,11 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
-public class TraceDialogController {
+import static at.esque.kafka.dialogs.TraceInputDialog.recentTrace;
 
-    public static final LinkedList<String> recentTrace = new LinkedList<>();
+public class TraceDialogController {
 
     public HBox quickSelectButtonBar;
     public InstantPicker epochInstantPicker;
@@ -52,6 +53,7 @@ public class TraceDialogController {
     public CheckBox tombstoneToggle;
     public TitledPane keyOptionsPane;
     public TitledPane valueOptionsPane;
+    public ComboBox<Integer> specificParitionComboBox;
 
     public TraceDialogController() {
     }
@@ -61,10 +63,9 @@ public class TraceDialogController {
         keyOptionsPane.disableProperty().bind(traceModeValueRadio.selectedProperty());
         valueOptionsPane.disableProperty().bind(traceModeKeyOnlyRadio.selectedProperty());
         epochInstantPicker.displayAsEpochProperty().bind(epochToggleButton.selectedProperty());
-
     }
 
-    public void setup(boolean isAvroKeyType, boolean traceQuickSelectEnabled, List<Duration> durations, int recentTraceMaxEntries) {
+    public void setup(boolean isAvroKeyType, boolean traceQuickSelectEnabled, List<Duration> durations, int recentTraceMaxEntries, ObservableList<Integer> partitions) {
         clearButtonBar();
         if (traceQuickSelectEnabled) {
             fillButtonBar(durations);
@@ -75,6 +76,8 @@ public class TraceDialogController {
         }else{
             fastTraceToggle.setDisable(true);
         }
+        specificParitionComboBox.setItems(partitions);
+        specificParitionComboBox.getSelectionModel().select(Integer.valueOf(-1));
         ListView<String> recentTracesKey = buildRecentTracesView(keyTextBox);
         PopOver popOverKey = buildPopover(recentTracesKey);
         ListView<String> recentTracesValue = buildRecentTracesView(valueTextBox);

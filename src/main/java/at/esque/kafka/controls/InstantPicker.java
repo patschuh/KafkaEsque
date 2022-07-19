@@ -27,7 +27,7 @@ public class InstantPicker extends DatePicker {
     public static final String DefaultFormat = "yyyy-MM-dd HH:mm:ss.SSS z";
 
     private DateTimeFormatter formatter;
-    private ObjectProperty<Instant> instantValue = new SimpleObjectProperty<>(Instant.now());
+    private ObjectProperty<Instant> instantValue = new SimpleObjectProperty<>(null);
     private ObjectProperty<String> format = new SimpleObjectProperty<String>() {
         public void set(String newValue) {
             super.set(newValue);

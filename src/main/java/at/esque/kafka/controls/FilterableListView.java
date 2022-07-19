@@ -27,6 +27,7 @@ import javafx.scene.layout.VBox;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.function.Function;
@@ -47,8 +48,9 @@ public class FilterableListView<T> extends VBox {
     private FilteredList<T> filteredList;
     private SortedList<T> sortedList;
 
-    public BooleanProperty addButtonVisible = new SimpleBooleanProperty(true);
-    public BooleanProperty refreshButtonVisible = new SimpleBooleanProperty(true);
+    private BooleanProperty addButtonVisible = new SimpleBooleanProperty(true);
+    private BooleanProperty refreshButtonVisible = new SimpleBooleanProperty(true);
+    private BooleanProperty usePartialMatching = new SimpleBooleanProperty(true);
     private Function<T, String> stringifierFunction = String::valueOf;
 
     public FilterableListView() {
@@ -77,7 +79,10 @@ public class FilterableListView<T> extends VBox {
             } else {
                 filteredList.setPredicate(item -> {
                     String stringifiedItem = getSelectedItemStringified(item);
-
+                    if (usePartialMatching.get()) {
+                        final String[] split = newValue.split("\\s+");
+                        return Arrays.stream(split).allMatch(s -> StringUtils.containsIgnoreCase(stringifiedItem, s));
+                    }
                     return StringUtils.containsIgnoreCase(stringifiedItem, newValue);
                 });
             }
@@ -136,6 +141,18 @@ public class FilterableListView<T> extends VBox {
 
     public void setRefreshButtonVisible(boolean refreshButtonVisible) {
         this.refreshButtonVisible.set(refreshButtonVisible);
+    }
+
+    public boolean isUsePartialMatching() {
+        return usePartialMatching.get();
+    }
+
+    public BooleanProperty usePartialMatchingProperty() {
+        return usePartialMatching;
+    }
+
+    public void setUsePartialMatching(boolean usePartialMatching) {
+        this.usePartialMatching.set(usePartialMatching);
     }
 
     public final ObjectProperty<EventHandler<ActionEvent>> onAddActionProperty() {
@@ -217,15 +234,15 @@ public class FilterableListView<T> extends VBox {
         };
     }
 
-    public BooleanProperty refreshButtonDisableProperty(){
+    public BooleanProperty refreshButtonDisableProperty() {
         return refreshButton.disableProperty();
     }
 
-    public BooleanProperty addButtonDisableProperty(){
+    public BooleanProperty addButtonDisableProperty() {
         return refreshButton.disableProperty();
     }
 
-    public BooleanProperty filterTextFieldDisableProperty(){
+    public BooleanProperty filterTextFieldDisableProperty() {
         return filtertextField.disableProperty();
     }
 

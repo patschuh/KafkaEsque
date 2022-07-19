@@ -22,8 +22,8 @@ public class Main extends Application {
         Parent root = loader.load();
         final HostServices hostServices = this.getHostServices();
         Controller controller = loader.getController();
-        controller.setup(primaryStage);
         controller.setHostServices(hostServices);
+        controller.setup(primaryStage);
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
         primaryStage.setTitle("Kafkaesque");
         primaryStage.setScene(createStyledScene(root, 1600, 900));

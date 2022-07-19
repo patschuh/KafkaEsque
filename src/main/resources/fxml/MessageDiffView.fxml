@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
-<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="554.0" prefWidth="631.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.MessageDiffView">
+<BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="0.0" minWidth="0.0" prefHeight="554.0" prefWidth="631.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.MessageDiffView">
     <center>
         <JsonTreeDiffView fx:id="jsonDiffView" />
     </center>
@@ -21,9 +21,10 @@
         </columnConstraints>
         <rowConstraints>
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="24.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="24.0" vgrow="SOMETIMES" />
+          <RowConstraints minHeight="10.0" prefHeight="24.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="24.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
@@ -39,9 +40,13 @@
             <Label fx:id="targetOffset" layoutX="169.0" layoutY="77.0" GridPane.columnIndex="3" GridPane.rowIndex="3" />
             <Label fx:id="sourceKey" layoutX="169.0" layoutY="47.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
             <Label fx:id="targetKey" layoutX="169.0" layoutY="17.0" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#switchSourceAndTarget" text="Switch Source and Target" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#switchSourceAndTarget" text="Switch Source and Target" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" GridPane.rowIndex="5" />
             <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Source" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" />
             <Label alignment="CENTER" layoutX="10.0" layoutY="17.0" maxWidth="1.7976931348623157E308" text="Target" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS" />
+            <Label text="Timestamp" GridPane.rowIndex="4" />
+            <Label layoutX="10.0" layoutY="137.0" text="Timestamp" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+            <Label fx:id="sourceTimestamp" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            <Label fx:id="targetTimestamp" layoutX="168.0" layoutY="137.0" GridPane.columnIndex="3" GridPane.rowIndex="4" />
          </children>
       </GridPane>
    </top>

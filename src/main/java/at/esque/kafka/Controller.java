@@ -459,12 +459,14 @@ public class Controller {
             try {
                 TopicMessageTypeConfig topicMessageTypeConfig = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(topicMessageTypeConfig.getKeyType() == MessageType.AVRO, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)))
+                TraceInputDialog.show(topicMessageTypeConfig.getKeyType() == MessageType.AVRO, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)), partitionCombobox.getItems())
                         .ifPresent(traceInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing message");
                             Integer partition = null;
                             if (!traceInput.getConditionMode().equals("value only") && !traceInput.getConditionMode().equals("OR") && topicMessageTypeConfig.getKeyType() != MessageType.AVRO && traceInput.isFastTrace()) {
                                 partition = getPartitionForKey(selectedTopic(), traceInput.getKeySearch());
+                            } else if (!traceInput.isFastTrace() && traceInput.getPartition() != null && traceInput.getPartition() > -1) {
+                                partition = traceInput.getPartition();
                             }
                             Predicate<ConsumerRecord> keyPredicate = null;
                             Predicate<ConsumerRecord> valuePredicate = null;
