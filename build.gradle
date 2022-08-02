@@ -74,6 +74,8 @@ javafx {
 
 runtime {
     options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    modules = ['jdk.crypto.ec']
+    additive = true
     launcher {
         noConsole = true
     }
