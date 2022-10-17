@@ -1,5 +1,8 @@
 package at.esque.kafka;
 
+//import at.esque.kafka.serialization.FakeUUIDConversion;
+
+import at.esque.kafka.serialization.logicaltypes.KafkaEsqueConversions;
 import ch.qos.logback.classic.util.ContextInitializer;
 
 import java.io.File;
@@ -11,6 +14,7 @@ public class Launcher {
         if (logbackFile.exists()) {
             System.setProperty(ContextInitializer.CONFIG_FILE_PROPERTY, logbackFile.getAbsolutePath());
         }
+        KafkaEsqueConversions.load();
     }
 
     public static void main(String[] args) {

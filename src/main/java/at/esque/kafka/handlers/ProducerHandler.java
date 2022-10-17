@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import io.confluent.kafka.serializers.subject.TopicRecordNameStrategy;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
@@ -25,9 +26,11 @@ import org.apache.kafka.common.header.Header;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tech.allegro.schema.json2avro.converter.JsonAvroConverter;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +48,8 @@ public class ProducerHandler {
 
     @Inject
     private ConfigHandler configHandler;
+
+    private JsonAvroConverter jsonAvroConverter = new JsonAvroConverter();
 
     private Map<UUID, ProducerWrapper> registeredProducers = new ConcurrentHashMap<>();
 
@@ -72,10 +77,11 @@ public class ProducerHandler {
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaEsqueSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaEsqueSerializer.class);
         TopicMessageTypeConfig configForTopic = configHandler.getConfigForTopic(clusterConfig.getIdentifier(), topic);
-        if(configForTopic.getKeyType().equals(MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY)){
+        props.put(KafkaAvroSerializerConfig.AVRO_USE_LOGICAL_TYPE_CONVERTERS_CONFIG, configHandler.getSettingsProperties().get(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS));
+        if (configForTopic.getKeyType().equals(MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY)) {
             props.put("key.subject.name.strategy", TopicRecordNameStrategy.class);
         }
-        if(configForTopic.getValueType().equals(MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY)){
+        if (configForTopic.getValueType().equals(MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY)) {
             props.put("value.subject.name.strategy", TopicRecordNameStrategy.class);
         }
         props.setProperty("auto.register.schemas", "false");
@@ -105,11 +111,11 @@ public class ProducerHandler {
 
     public void deregisterProducer(UUID producerId) {
         ProducerWrapper deregisteredProducer = registeredProducers.get(producerId);
-        if(deregisteredProducer != null) {
+        if (deregisteredProducer != null) {
             deregisteredProducer.getProducer().close();
             registeredProducers.remove(producerId);
             LOGGER.info("Deregistered producer with id [{}]", producerId);
-        }else {
+        } else {
             LOGGER.info("No producer with id [{}] registered - ignoring", producerId);
         }
     }
@@ -179,9 +185,13 @@ public class ProducerHandler {
         org.apache.avro.Schema avroSchema = new org.apache.avro.Schema.Parser().parse(schema.getSchema());
 
         Decoder jsonDecoder = new ExtendedJsonDecoder(avroSchema, json);
-        DatumReader<GenericRecord> reader = new GenericDatumReader<>(avroSchema);
-
-        return reader.read(null, jsonDecoder);
+        boolean avroLogicalTypeConversionsEnabled = Boolean.parseBoolean(configHandler.getSettingsProperties().get(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS));
+        if (avroLogicalTypeConversionsEnabled) {
+            return jsonAvroConverter.convertToGenericDataRecord(json.getBytes(StandardCharsets.UTF_8), avroSchema);
+        } else {
+            DatumReader<GenericRecord> reader = new GenericDatumReader<>(avroSchema);
+            return reader.read(null, jsonDecoder);
+        }
     }
 
     private Schema getSchemaFromRegistry(RestService schemaRegistryRestService, String subject) throws IOException, RestClientException {

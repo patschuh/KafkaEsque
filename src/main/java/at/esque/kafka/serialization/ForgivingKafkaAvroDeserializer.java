@@ -20,7 +20,7 @@ public class ForgivingKafkaAvroDeserializer extends KafkaAvroDeserializer {
 
     public Object deserialize(String s, byte[] bytes) {
         try {
-            return super.deserialize(bytes);
+            return super.deserialize(s, bytes);
         } catch (Exception e) {
             logger.warn("Failed Avro deserialization in topic {}", s);
         }
@@ -29,7 +29,7 @@ public class ForgivingKafkaAvroDeserializer extends KafkaAvroDeserializer {
 
     public Object deserialize(String s, byte[] bytes, Schema readerSchema) {
         try {
-            return super.deserialize(bytes);
+            return super.deserialize(bytes, readerSchema);
         } catch (Exception e) {
             logger.warn("Failed Avro deserialization in topic {}", s);
         }

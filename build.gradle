@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'at.esque.kafka'
-version = '2.2.2'
+version = '2.3.0'
 
 repositories {
     mavenCentral()
@@ -39,8 +39,9 @@ dependencies {
     implementation 'org.kordamp.ikonli:ikonli-javafx:12.2.0'
     implementation 'org.kordamp.ikonli:ikonli-fontawesome-pack:12.2.0'
     implementation 'com.opencsv:opencsv:5.5.2'
-    implementation 'io.confluent:kafka-schema-registry:6.2.1'
-    implementation 'io.confluent:kafka-avro-serializer:6.2.1'
+    implementation 'io.confluent:kafka-schema-registry:6.2.7'
+    implementation 'io.confluent:kafka-avro-serializer:6.2.7'
+    implementation 'org.apache.avro:avro:1.11.1'
     implementation 'com.google.inject:guice:5.0.1'
     implementation 'org.fxmisc.richtext:richtextfx:0.10.7'
     implementation 'net.thisptr:jackson-jq:1.0.0-preview.20210928'
@@ -50,6 +51,7 @@ dependencies {
     implementation 'org.gradle:gradle-core:6.1.1'
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     implementation 'com.flipkart.zjsonpatch:zjsonpatch:0.4.12'
+    implementation 'tech.allegro.schema.json2avro:converter:0.2.15'
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.springframework.kafka:spring-kafka-test:2.4.13.RELEASE'

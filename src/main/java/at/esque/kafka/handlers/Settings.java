@@ -39,6 +39,9 @@ public class Settings {
     public static final String CHECK_FOR_UPDATES_ENABLED_DEFAULT = "true";
     public static final String CHECK_FOR_UPDATES_DURATION_BETWEEN_HOURS = "check.for.updates.duration.between.hours";
     public static final String CHECK_FOR_UPDATES_DURATION_BETWEEN_HOURS_DEFAULT = "24";
+    public static final String ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS = "avro.logical.type.conversions.enabled";
+    public static final String ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS_DEFAULT = "true";
+
 
     public static List<Duration> readDurationSetting(Map<String, String> settings) {
         return readDurationSetting(settings.get(TRACE_QUICK_SELECT_DURATION_LIST));

@@ -48,7 +48,12 @@ public class SettingsDialog {
                                 .tooltip(Settings.DEFAULT_VALUE_MESSAGE_TYPE)
                                 .placeholder(Settings.DEFAULT_VALUE_MESSAGE_TYPE)
                                 .id(Settings.DEFAULT_VALUE_MESSAGE_TYPE)
-                                .required("This field is required")
+                                .required("This field is required"),
+                        Field.ofBooleanType(Boolean.parseBoolean(existingConfig.getOrDefault(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS, Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS_DEFAULT)))
+                                .label("(experimantal) " + Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS)
+                                .tooltip("(experimantal) " + Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS)
+                                .placeholder(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS)
+                                .id(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS)
                 ),
                 Group.of(
                         Field.ofStringType(existingConfig.getOrDefault(Settings.RECENT_TRACE_MAX_ENTRIES, Settings.RECENT_TRACE_MAX_ENTRIES_DEFAULT))

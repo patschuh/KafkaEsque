@@ -8,6 +8,7 @@ import at.esque.kafka.exception.MissingSchemaRegistryException;
 import at.esque.kafka.serialization.KafkaEsqueDeserializer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import javafx.application.Platform;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -59,6 +60,7 @@ public class ConsumerHandler {
         consumerProps.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, KafkaEsqueDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaEsqueDeserializer.class);
+        consumerProps.put(KafkaAvroSerializerConfig.AVRO_USE_LOGICAL_TYPE_CONVERTERS_CONFIG, configHandler.getSettingsProperties().get(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS));
         consumerProps.setProperty("kafkaesque.cluster.id", config.getIdentifier());
         consumerProps.put("kafkaesque.confighandler", configHandler);
         if (topicMessageTypeConfig.containsAvro() && StringUtils.isEmpty(config.getSchemaRegistry())) {
