@@ -101,7 +101,7 @@ public class PublisherController {
         headerKeyColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         headerValueColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         headerKeyColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().key()));
-        headerValueColumn.setCellValueFactory(param -> new SimpleStringProperty(new String(param.getValue().value())));
+        headerValueColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().value() == null ? null : new String(param.getValue().value())));
         headerKeyColumn.setOnEditCommit(event -> {
             Header current = event.getTableView().getItems().get(event.getTablePosition().getRow());
             event.getTableView().getItems().set(event.getTablePosition().getRow(), new RecordHeader(event.getNewValue(), current.value()));

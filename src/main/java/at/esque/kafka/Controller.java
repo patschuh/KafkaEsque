@@ -251,7 +251,7 @@ public class Controller {
         interruptMessagePollingButton.disableProperty().bind(backGroundTaskHolder.isInProgressProperty().not());
 
         headerKeyColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().key()));
-        headerValueColumn.setCellValueFactory(param -> new SimpleStringProperty(new String(param.getValue().value())));
+        headerValueColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().value() == null ? null : new String(param.getValue().value())));
 
         metadataNameColumn.setCellValueFactory(param -> param.getValue().nameProperty());
         metadataValueColumn.setCellValueFactory(param -> param.getValue().valueAsString());
