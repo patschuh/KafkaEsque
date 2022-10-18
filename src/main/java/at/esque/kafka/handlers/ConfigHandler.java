@@ -173,6 +173,10 @@ public class ConfigHandler {
             settings.put(Settings.CHECK_FOR_UPDATES_DURATION_BETWEEN_HOURS, Settings.CHECK_FOR_UPDATES_DURATION_BETWEEN_HOURS_DEFAULT);
             changed = true;
         }
+        if (!settings.containsKey(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS)) {
+            settings.put(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS, Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS_DEFAULT);
+            changed = true;
+        }
         return changed;
     }
 
