@@ -33,6 +33,7 @@ public class ClusterConfigDialog {
     public static final String LABEL_KAFKA_CONNECT_BASIC_AUTH_USER = "Kafka Connect Basic Auth User";
     public static final String LABEL_KAFKA_CONNECT_BASIC_AUTH_PASSWORD = "Kafka Connect Basic Auth Password";
     public static final String LABEL_USE_SSL_CONFIGURATION = "use SSL Configuration";
+    public static final String LABEL_SUPPRESS_CERT_PATH_VALIDATION = "suppress Cert Path Validation";
     public static final String LABEL_SUPPRESS_SSL_ENDPOINT_IDENTIFICATION = "no SSL Endpoint Identification";
 
     private ClusterConfigDialog(){}
@@ -80,7 +81,11 @@ public class ClusterConfigDialog {
                         Field.ofBooleanType(copy.isSchemaRegistryUseSsl())
                                 .label(LABEL_USE_SSL_CONFIGURATION)
                                 .tooltip(LABEL_USE_SSL_CONFIGURATION)
-                                .bind(copy.schemaRegistryUseSslProperty())
+                                .bind(copy.schemaRegistryUseSslProperty()),
+                        Field.ofBooleanType(copy.isSchemaRegistrySuppressCertPathValidation())
+                                .label(LABEL_SUPPRESS_CERT_PATH_VALIDATION)
+                                .tooltip(LABEL_SUPPRESS_CERT_PATH_VALIDATION)
+                                .bind(copy.suppressCertPathValidation())
                 ),
                 Group.of(
                         Field.ofStringType(copy.getkafkaConnectUrl()==null?"":copy.getkafkaConnectUrl())

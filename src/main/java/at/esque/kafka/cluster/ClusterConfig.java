@@ -16,6 +16,7 @@ public class ClusterConfig {
     private StringProperty schemaRegistryBasicAuthUserInfo = new SimpleStringProperty();
     private BooleanProperty schemaRegistryUseSsl = new SimpleBooleanProperty();
     private BooleanProperty sslEnabled = new SimpleBooleanProperty();
+    private BooleanProperty certPathValidationSuppressed = new SimpleBooleanProperty();
     private StringProperty keyStoreLocation = new SimpleStringProperty();
     private StringProperty keyStorePassword = new SimpleStringProperty();
     private StringProperty trustStoreLocation = new SimpleStringProperty();
@@ -43,6 +44,7 @@ public class ClusterConfig {
             this.setSchemaRegistry(existingConfig.getSchemaRegistry());
             this.setSchemaRegistryBasicAuthUserInfo(existingConfig.getSchemaRegistryBasicAuthUserInfo());
             this.setSchemaRegistryUseSsl(existingConfig.isSchemaRegistryUseSsl());
+            this.setSchemaRegistrySuppressCertPathValidation(existingConfig.isSchemaRegistrySuppressCertPathValidation());
             this.setSslEnabled(existingConfig.isSslEnabled());
             this.setKeyStoreLocation(existingConfig.getKeyStoreLocation());
             this.setKeyStorePassword(existingConfig.getKeyStorePassword());
@@ -109,6 +111,18 @@ public class ClusterConfig {
 
     public void setSslEnabled(boolean sslEnabled) {
         this.sslEnabled.set(sslEnabled);
+    }
+
+    @JsonProperty("certPathValidationSuppressed")
+    public boolean isSchemaRegistrySuppressCertPathValidation() {
+        return certPathValidationSuppressed.get();
+    }
+    public BooleanProperty suppressCertPathValidation() {
+        return certPathValidationSuppressed;
+    }
+
+    public void setSchemaRegistrySuppressCertPathValidation(boolean suppressCertPathValidation) {
+        this.certPathValidationSuppressed.set(suppressCertPathValidation);
     }
 
     @JsonProperty("keyStoreLocation")
