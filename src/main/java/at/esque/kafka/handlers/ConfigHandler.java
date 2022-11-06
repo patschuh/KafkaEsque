@@ -257,6 +257,7 @@ public class ConfigHandler {
 
         if (config.issuppressSslEndPointIdentification()) {
             props.put("ssl.endpoint.identification.algorithm", "");
+            props.put("schema-registry.ssl.endpoint.identification.algorithm", "");
         }
 
         if (config.isSchemaRegistryHttps()) {

@@ -134,8 +134,16 @@ With default config the API does a host name identification which fails in those
 ```
 java.security.cert.CertificateException: No subject alternative names matching IP address .... found
 ```
-If you select the toggle "No SSL Endpoint Identification" the kafka property "ssl.endpoint.identification.algorithm" 
-is set to an empty string so that this identification is suppressed 
+If you select the toggle "No SSL Endpoint Identification" the kafka property "ssl.endpoint.identification.algorithm" and schema-registry property "schema-registry.ssl.endpoint.identification.algorithm"
+are set to an empty string so that this identification is suppressed 
+
+###### suppress cert path validation
+In some situation you might need to suppress domain name validation for schema-registry.
+With default config the API does a cert path validation which fails when using an ssh tunnel.
+```
+PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+```
+If you select the toggle "suppress Cert Path Validation" an empty trustmanager is set.
 
 ###### Settings
 

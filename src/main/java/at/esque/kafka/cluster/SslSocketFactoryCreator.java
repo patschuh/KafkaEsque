@@ -25,8 +25,10 @@ public class SslSocketFactoryCreator {
                 public X509Certificate[] getAcceptedIssuers() {
                     return null;
                 }
+
                 public void checkClientTrusted(X509Certificate[] certs, String authType) {
                 }
+
                 public void checkServerTrusted(X509Certificate[] certs, String authType) {
                 }
             }
@@ -34,27 +36,22 @@ public class SslSocketFactoryCreator {
 
     public static SSLSocketFactory buildSSlSocketFactory(ClusterConfig clusterConfig, ConfigHandler configHandler) {
         try {
-            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-            Map<String, String> sslProperties = configHandler.getSslProperties(clusterConfig);
-
             SSLContext sc = SSLContext.getInstance("TLSv1.2");
+            Map<String, String> sslProperties = configHandler.getSslProperties(clusterConfig);
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 
-            if (clusterConfig.isSchemaRegistrySuppressCertPathValidation()) {
-                sc.init(null, UNQUESTIONING_TRUST_MANAGER, null);
-
-            }
-            if (clusterConfig.isSchemaRegistryUseSsl()) {
+            if (useKeyStore(configHandler.getSslProperties(clusterConfig))) {
+                KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
                 ks.load(new FileInputStream(sslProperties.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG)), sslProperties.get(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG).toCharArray());
-
+                kmf.init(ks, sslProperties.get(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG).toCharArray());
+            }
+            if (clusterConfig.isSchemaRegistrySuppressCertPathValidation()) {
+                sc.init(kmf.getKeyManagers(), UNQUESTIONING_TRUST_MANAGER, null);
+            } else {
                 KeyStore ts = KeyStore.getInstance(KeyStore.getDefaultType());
                 ts.load(new FileInputStream(sslProperties.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG)), sslProperties.get(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG).toCharArray());
-
-                KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-                kmf.init(ks, sslProperties.get(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG).toCharArray());
-
                 TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
                 tmf.init(ts);
-
 
                 sc.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
             }
@@ -65,5 +62,9 @@ public class SslSocketFactoryCreator {
             at.esque.kafka.alerts.ErrorAlert.show(e);
             return null;
         }
+    }
+
+    private static boolean useKeyStore(Map<String, String> sslProperties) {
+        return sslProperties.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG) != null && sslProperties.get(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG) != null;
     }
 }
