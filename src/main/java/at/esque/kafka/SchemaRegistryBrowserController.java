@@ -47,7 +47,7 @@ public class SchemaRegistryBrowserController {
     public void setup(ClusterConfig selectedConfig, ConfigHandler configHandler) {
         schemaRegistryRestService = new RestService(selectedConfig.getSchemaRegistry());
 
-        if (selectedConfig.isSchemaRegistryUseSsl()) {
+        if (selectedConfig.isSchemaRegistrySuppressCertPathValidation() || selectedConfig.isSchemaRegistryUseSsl()) {
             SSLSocketFactory sslSocketFactory = SslSocketFactoryCreator.buildSSlSocketFactory(selectedConfig, configHandler);
             schemaRegistryRestService.setSslSocketFactory(sslSocketFactory);
         }
@@ -84,14 +84,14 @@ public class SchemaRegistryBrowserController {
                         versionComboBox.getSelectionModel().select(versionComboBox.getItems().size() - 1);
                     }
                 } catch (Exception e) {
-                    ErrorAlert.show(e, getWindow());
+                    ErrorAlert.show(e);
                 }
             });
 
             subjectListView.setItems(FXCollections.observableArrayList(schemaRegistryRestService.getAllSubjects()));
 
         } catch (Exception e) {
-            ErrorAlert.show(e, getWindow());
+            ErrorAlert.show(e);
         }
     }
 
