@@ -20,6 +20,7 @@ jobs:
           distribution: 'zulu'
           java-version: ${{ matrix.java }}
           java-package: jdk+fx
+          cache: 'gradle'
       - name: Echo JAVA_HOME
         run: echo $JAVA_HOME
       - name: Verify Gradle Wrapper
