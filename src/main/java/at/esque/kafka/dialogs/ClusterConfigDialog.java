@@ -29,6 +29,7 @@ public class ClusterConfigDialog {
     public static final String LABEL_SASL_MECHANISM = "SASL Mechanism";
     public static final String LABEL_SASL_JAAS_CONFIG = "SASL JAAS Config";
     public static final String LABEL_SASL_SECURITY_PROTOCOL = "SASL Security Protocol";
+    public static final String LABEL_SASL_CLIENT_CALLBACK_HANDLER_CLASS = "SASL Client Callback Handler Class";
     public static final String LABEL_KAFKA_CONNECT_URL = "Kafka Connect URL";
     public static final String LABEL_KAFKA_CONNECT_BASIC_AUTH_USER = "Kafka Connect Basic Auth User";
     public static final String LABEL_KAFKA_CONNECT_BASIC_AUTH_PASSWORD = "Kafka Connect Basic Auth Password";
@@ -163,7 +164,14 @@ public class ClusterConfigDialog {
                                 .tooltip(LABEL_SASL_JAAS_CONFIG)
                                 .placeholder(LABEL_SASL_JAAS_CONFIG)
                                 .format(new  NullFormatStringConverter())
-                                .bind(copy.saslJaasConfigProperty())
+                                .bind(copy.saslJaasConfigProperty()),
+                        Field.ofStringType(copy.getSaslClientCallbackHandlerClass()==null?"":copy.getSaslClientCallbackHandlerClass())
+                                .label(LABEL_SASL_CLIENT_CALLBACK_HANDLER_CLASS)
+                                .tooltip(LABEL_SASL_CLIENT_CALLBACK_HANDLER_CLASS)
+                                .placeholder(LABEL_SASL_CLIENT_CALLBACK_HANDLER_CLASS)
+                                .valueDescription(String.format("Is used f.e. %s=AWS_MSK_IAM, %s=software.amazon.msk.auth.iam.IAMClientCallbackHandler", LABEL_SASL_MECHANISM,LABEL_SASL_CLIENT_CALLBACK_HANDLER_CLASS))
+                                .format(new  NullFormatStringConverter())
+                                .bind(copy.saslClientCallbackHandlerClassProperty())
                 )
         ).title(isCreatingNew ? "Add new Kafka Cluster" : "Change Kafka Cluster")
                 .binding(BindingMode.CONTINUOUS);
