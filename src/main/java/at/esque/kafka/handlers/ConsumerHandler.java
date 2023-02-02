@@ -55,8 +55,10 @@ public class ConsumerHandler {
     public UUID registerConsumer(ClusterConfig config, TopicMessageTypeConfig topicMessageTypeConfig, Map<String, String> consumerConfigs) throws MissingSchemaRegistryException {
         Properties consumerProps = new Properties();
         consumerProps.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, config.getBootStrapServers());
+        String groupIdPrefix = Optional.ofNullable(consumerConfigs.get("group.id.prefix"))
+                .orElse("kafkaesque-");
         UUID consumerId = UUID.randomUUID();
-        consumerProps.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "kafkaesque-" + consumerId);
+        consumerProps.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupIdPrefix + consumerId);
         consumerProps.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, KafkaEsqueDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaEsqueDeserializer.class);
