@@ -23,6 +23,7 @@ public class ClusterConfig {
     private StringProperty trustStorePassword = new SimpleStringProperty();
     private StringProperty saslSecurityProtocol = new SimpleStringProperty();
     private StringProperty saslMechanism = new SimpleStringProperty();
+    private StringProperty saslClientCallbackHandlerClass = new SimpleStringProperty();
     private StringProperty saslJaasConfig = new SimpleStringProperty();
     private StringProperty kafkaConnectUrl = new SimpleStringProperty();
     private StringProperty kafkaConnectBasicAuthUser = new SimpleStringProperty();
@@ -52,6 +53,7 @@ public class ClusterConfig {
             this.setTrustStorePassword(existingConfig.getTrustStorePassword());
             this.setSaslSecurityProtocol(existingConfig.getSaslSecurityProtocol());
             this.setSaslMechanism(existingConfig.getSaslMechanism());
+            this.setSaslClientCallbackHandlerClass(existingConfig.getSaslClientCallbackHandlerClass());
             this.setSaslJaasConfig(existingConfig.getSaslJaasConfig());
             this.setkafkaConnectUrl(existingConfig.getkafkaConnectUrl());
             this.setkafkaConnectBasicAuthUser(existingConfig.getkafkaConnectBasicAuthUser());
@@ -202,6 +204,19 @@ public class ClusterConfig {
 
     public void setSaslMechanism(String saslMechanism) {
         this.saslMechanism.set(saslMechanism);
+    }
+
+    @JsonProperty("saslClientCallbackHandlerClass")
+    public String getSaslClientCallbackHandlerClass() {
+        return saslClientCallbackHandlerClass.get();
+    }
+
+    public StringProperty saslClientCallbackHandlerClassProperty() {
+        return saslClientCallbackHandlerClass;
+    }
+
+    public void setSaslClientCallbackHandlerClass(String saslClientCallbackHandlerClass) {
+        this.saslClientCallbackHandlerClass.set(saslClientCallbackHandlerClass);
     }
 
     @JsonProperty("saslJaasConfig")

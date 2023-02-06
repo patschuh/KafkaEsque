@@ -304,9 +304,12 @@ public class ConfigHandler {
             props.put(SaslConfigs.SASL_MECHANISM, config.getSaslMechanism());
         }
 
-
         if (StringUtils.isNotEmpty(config.getSaslJaasConfig())) {
             props.put(SaslConfigs.SASL_JAAS_CONFIG, config.getSaslJaasConfig());
+        }
+
+        if (StringUtils.isNotEmpty(config.getSaslClientCallbackHandlerClass())) {
+            props.put(SaslConfigs.SASL_CLIENT_CALLBACK_HANDLER_CLASS, config.getSaslClientCallbackHandlerClass());
         }
 
         return props;
