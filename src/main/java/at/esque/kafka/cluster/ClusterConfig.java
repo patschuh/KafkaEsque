@@ -3,10 +3,10 @@ package at.esque.kafka.cluster;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+
+import java.util.Arrays;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ClusterConfig {
@@ -14,6 +14,9 @@ public class ClusterConfig {
     private StringProperty bootStrapServers = new SimpleStringProperty();
     private StringProperty schemaRegistry = new SimpleStringProperty();
     private StringProperty schemaRegistryBasicAuthUserInfo = new SimpleStringProperty();
+    private StringProperty schemaRegistryAuthConfig = new SimpleStringProperty();
+    private ListProperty<SchemaRegistryAuthMode> schemaRegistryAuthModes = new SimpleListProperty<>( FXCollections.observableArrayList(Arrays.asList(SchemaRegistryAuthMode.NONE,SchemaRegistryAuthMode.BASIC, SchemaRegistryAuthMode.TOKEN)));
+    private ObjectProperty<SchemaRegistryAuthMode> schemaRegistryAuthMode = new SimpleObjectProperty<>();
     private BooleanProperty schemaRegistryUseSsl = new SimpleBooleanProperty();
     private BooleanProperty sslEnabled = new SimpleBooleanProperty();
     private BooleanProperty certPathValidationSuppressed = new SimpleBooleanProperty();
@@ -33,7 +36,11 @@ public class ClusterConfig {
 
     public ClusterConfig() {
     }
-
+    public enum SchemaRegistryAuthMode {
+        NONE,
+        BASIC,
+        TOKEN
+    }
     public ClusterConfig(ClusterConfig existingConfig) {
         update(existingConfig);
     }
@@ -44,6 +51,8 @@ public class ClusterConfig {
             this.setBootStrapServers(existingConfig.getBootStrapServers());
             this.setSchemaRegistry(existingConfig.getSchemaRegistry());
             this.setSchemaRegistryBasicAuthUserInfo(existingConfig.getSchemaRegistryBasicAuthUserInfo());
+            this.setSchemaRegistryAuthConfig(existingConfig.getSchemaRegistryAuthConfig());
+            this.setSchemaRegistryAuthMode(existingConfig.getSchemaRegistryAuthMode());
             this.setSchemaRegistryUseSsl(existingConfig.isSchemaRegistryUseSsl());
             this.setSchemaRegistrySuppressCertPathValidation(existingConfig.isSchemaRegistrySuppressCertPathValidation());
             this.setSslEnabled(existingConfig.isSslEnabled());
@@ -243,6 +252,36 @@ public class ClusterConfig {
 
     public void setSchemaRegistryBasicAuthUserInfo(String schemaRegistryBasicAuthUserInfo) {
         this.schemaRegistryBasicAuthUserInfo.set(schemaRegistryBasicAuthUserInfo);
+    }
+
+    @JsonProperty("schemaRegistryAuthConfig")
+    public String getSchemaRegistryAuthConfig() {
+        return schemaRegistryAuthConfig.get();
+    }
+
+    public StringProperty schemaRegistryAuthConfigProperty() {
+        return schemaRegistryAuthConfig;
+    }
+
+    public void setSchemaRegistryAuthConfig(String schemaRegistryAuthConfig) {
+        this.schemaRegistryAuthConfig.set(schemaRegistryAuthConfig);
+    }
+
+    public ListProperty<SchemaRegistryAuthMode> schemaRegistryAuthModesProperty() {
+        return schemaRegistryAuthModes;
+    }
+
+    @JsonProperty("schemaRegistryAuthMode")
+    public SchemaRegistryAuthMode getSchemaRegistryAuthMode() {
+        return schemaRegistryAuthMode.get();
+    }
+
+    public ObjectProperty<SchemaRegistryAuthMode> schemaRegistryAuthModeProperty() {
+        return schemaRegistryAuthMode;
+    }
+
+    public void setSchemaRegistryAuthMode(SchemaRegistryAuthMode schemaRegistryAuthMode) {
+        this.schemaRegistryAuthMode.set(schemaRegistryAuthMode);
     }
 
     @JsonProperty("schemaRegistryUseSsl")
