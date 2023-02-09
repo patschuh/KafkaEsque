@@ -325,8 +325,8 @@ public class ConfigHandler {
             props.put(SchemaRegistryClientConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO");
             props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + SchemaRegistryClientConfig.USER_INFO_CONFIG, config.getSchemaRegistryAuthConfig());
         }else if (ClusterConfig.SchemaRegistryAuthMode.TOKEN.equals(config.getSchemaRegistryAuthMode())){
-            props.put(SchemaRegistryClientConfig.BEARER_AUTH_CREDENTIALS_SOURCE, "USER_INFO");
-            props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + SchemaRegistryClientConfig.BEARER_AUTH_TOKEN_CONFIG, config.getSchemaRegistryAuthConfig());
+            props.put(SchemaRegistryClientConfig.BEARER_AUTH_CREDENTIALS_SOURCE, "STATIC_TOKEN");
+            props.put(SchemaRegistryClientConfig.BEARER_AUTH_TOKEN_CONFIG, config.getSchemaRegistryAuthConfig());
         }
 
         return props;

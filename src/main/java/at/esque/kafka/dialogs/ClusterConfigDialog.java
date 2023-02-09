@@ -20,8 +20,8 @@ public class ClusterConfigDialog {
     public static final String LABEL_IDENTIFIER = "Identifier";
     public static final String LABEL_BOOTSTRAP_SERVERS = "Bootstrap-Servers";
     public static final String LABEL_SCHEMA_REGISTRY_URL = "Schema Registry URL";
-    public static final String LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO = "LEGACY -Schema Registry Basic Auth User Info";
-    public static final String LABEL_SCHEMA_REGISTRY_AUTH_USER_INFO = "Schema Registry Auth User Info";
+    public static final String LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO = "<<Deprecated>>Schema Registry Basic Auth User Info";
+    public static final String LABEL_SCHEMA_REGISTRY_AUTH_USER_INFO = "Schema Registry Auth Info";
     public static final String LABEL_SCHEMA_REGISTRY_AUTH_MODE = "Schema Registry Auth Mode";
     public static final String LABEL_ENABLE_SSL = "Enable SSL";
     public static final String LABEL_KEY_STORE_LOCATION = "Key Store Location";

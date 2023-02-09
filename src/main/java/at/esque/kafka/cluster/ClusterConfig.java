@@ -15,8 +15,8 @@ public class ClusterConfig {
     private StringProperty schemaRegistry = new SimpleStringProperty();
     private StringProperty schemaRegistryBasicAuthUserInfo = new SimpleStringProperty();
     private StringProperty schemaRegistryAuthConfig = new SimpleStringProperty();
-    private ListProperty<SchemaRegistryAuthMode> schemaRegistryAuthModes = new SimpleListProperty<>( FXCollections.observableArrayList(Arrays.asList(SchemaRegistryAuthMode.NONE,SchemaRegistryAuthMode.BASIC, SchemaRegistryAuthMode.TOKEN)));
-    private ObjectProperty<SchemaRegistryAuthMode> schemaRegistryAuthMode = new SimpleObjectProperty<>();
+    private ListProperty<SchemaRegistryAuthMode> schemaRegistryAuthModes = new SimpleListProperty<>(FXCollections.observableArrayList(Arrays.asList(SchemaRegistryAuthMode.NONE, SchemaRegistryAuthMode.BASIC, SchemaRegistryAuthMode.TOKEN)));
+    private ObjectProperty<SchemaRegistryAuthMode> schemaRegistryAuthMode = new SimpleObjectProperty<>(SchemaRegistryAuthMode.NONE);
     private BooleanProperty schemaRegistryUseSsl = new SimpleBooleanProperty();
     private BooleanProperty sslEnabled = new SimpleBooleanProperty();
     private BooleanProperty certPathValidationSuppressed = new SimpleBooleanProperty();
@@ -36,17 +36,19 @@ public class ClusterConfig {
 
     public ClusterConfig() {
     }
+
     public enum SchemaRegistryAuthMode {
         NONE,
         BASIC,
         TOKEN
     }
+
     public ClusterConfig(ClusterConfig existingConfig) {
         update(existingConfig);
     }
 
     public void update(ClusterConfig existingConfig) {
-        if(existingConfig != null) {
+        if (existingConfig != null) {
             this.setIdentifier(existingConfig.getIdentifier());
             this.setBootStrapServers(existingConfig.getBootStrapServers());
             this.setSchemaRegistry(existingConfig.getSchemaRegistry());
@@ -128,6 +130,7 @@ public class ClusterConfig {
     public boolean isSchemaRegistrySuppressCertPathValidation() {
         return certPathValidationSuppressed.get();
     }
+
     public BooleanProperty suppressCertPathValidation() {
         return certPathValidationSuppressed;
     }
@@ -241,17 +244,40 @@ public class ClusterConfig {
         this.saslJaasConfig.set(saslJaasConfig);
     }
 
+    /**
+     * Deprecated use schemaRegistryAuthConfig instead for basic and token auth
+     */
+    @Deprecated
     @JsonProperty("schemaRegistryBasicAuthUserInfo")
     public String getSchemaRegistryBasicAuthUserInfo() {
         return schemaRegistryBasicAuthUserInfo.get();
     }
 
+    /**
+     * Deprecated use schemaRegistryAuthConfig instead for basic and token auth
+     */
     public StringProperty schemaRegistryBasicAuthUserInfoProperty() {
         return schemaRegistryBasicAuthUserInfo;
     }
 
+    /**
+     * Deprecated use schemaRegistryAuthConfig instead for basic and token auth
+     */
     public void setSchemaRegistryBasicAuthUserInfo(String schemaRegistryBasicAuthUserInfo) {
         this.schemaRegistryBasicAuthUserInfo.set(schemaRegistryBasicAuthUserInfo);
+    }
+
+    @JsonProperty("schemaRegistryAuthMode")
+    public SchemaRegistryAuthMode getSchemaRegistryAuthMode() {
+        return schemaRegistryAuthMode.get();
+    }
+
+    public ObjectProperty<SchemaRegistryAuthMode> schemaRegistryAuthModeProperty() {
+        return schemaRegistryAuthMode;
+    }
+
+    public void setSchemaRegistryAuthMode(SchemaRegistryAuthMode schemaRegistryAuthMode) {
+        this.schemaRegistryAuthMode.set(schemaRegistryAuthMode);
     }
 
     @JsonProperty("schemaRegistryAuthConfig")
@@ -269,19 +295,6 @@ public class ClusterConfig {
 
     public ListProperty<SchemaRegistryAuthMode> schemaRegistryAuthModesProperty() {
         return schemaRegistryAuthModes;
-    }
-
-    @JsonProperty("schemaRegistryAuthMode")
-    public SchemaRegistryAuthMode getSchemaRegistryAuthMode() {
-        return schemaRegistryAuthMode.get();
-    }
-
-    public ObjectProperty<SchemaRegistryAuthMode> schemaRegistryAuthModeProperty() {
-        return schemaRegistryAuthMode;
-    }
-
-    public void setSchemaRegistryAuthMode(SchemaRegistryAuthMode schemaRegistryAuthMode) {
-        this.schemaRegistryAuthMode.set(schemaRegistryAuthMode);
     }
 
     @JsonProperty("schemaRegistryUseSsl")
