@@ -1,5 +1,6 @@
 import org.gradle.internal.jvm.Jvm
 import org.gradle.internal.os.OperatingSystem
+
 import java.text.SimpleDateFormat
 
 plugins {
@@ -10,7 +11,7 @@ plugins {
 }
 
 group = 'at.esque.kafka'
-version = '2.4.0'
+version = '2.5.0'
 
 repositories {
     mavenCentral()
@@ -39,7 +40,7 @@ dependencies {
     implementation 'org.kordamp.ikonli:ikonli-javafx:12.2.0'
     implementation 'org.kordamp.ikonli:ikonli-fontawesome-pack:12.2.0'
     implementation 'com.opencsv:opencsv:5.5.2'
-    implementation 'io.confluent:kafka-schema-registry:6.2.7'
+    implementation 'io.confluent:kafka-schema-registry:7.3.0'
     implementation 'io.confluent:kafka-avro-serializer:6.2.7'
     implementation 'org.apache.avro:avro:1.11.1'
     implementation 'com.google.inject:guice:5.0.1'

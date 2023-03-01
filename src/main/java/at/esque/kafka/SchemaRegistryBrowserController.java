@@ -10,25 +10,37 @@ import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import at.esque.kafka.dialogs.SubjectConfigDialog;
 import at.esque.kafka.handlers.ConfigHandler;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
+import io.confluent.kafka.schemaregistry.client.rest.entities.Config;
+import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
-import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLSocketFactory;
+import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
 
 
 public class SchemaRegistryBrowserController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigHandler.class);
 
     private RestService schemaRegistryRestService;
     @FXML
@@ -42,6 +54,8 @@ public class SchemaRegistryBrowserController {
 
     @FXML
     private Label schemaIdLabel;
+    @FXML
+    public Label compatibilityLabel;
 
 
     public void setup(ClusterConfig selectedConfig, ConfigHandler configHandler) {
@@ -66,6 +80,20 @@ public class SchemaRegistryBrowserController {
                     schemaIdLabel.setText(String.valueOf(schema.getId()));
                     schemaTextArea.setText(JsonUtils.formatJson(schema.getSchema()));
                 } catch (Exception e) {
+                    ErrorAlert.show(e, getWindow());
+                }
+                try {
+                    // get and set global config manually before requesting subject config, for compatibility with older schema-registry versions (pre 7.0)
+                    Config globalConfig = schemaRegistryRestService.getConfig(null);
+                    compatibilityLabel.setText(globalConfig.getCompatibilityLevel());
+                    Config config = schemaRegistryRestService.getConfig(Map.of(), subjectListView.getListView().getSelectionModel().getSelectedItem(), true);
+                    compatibilityLabel.setText(config.getCompatibilityLevel());
+                } catch (RestClientException e) {
+                    if (e.getErrorCode() == 40401 || e.getErrorCode() == 40408) {
+                        //for compatibility with older schema-registry versions, on current versions (7.0+) the defaultToGlobal flag should prevent 404 error codes and return the global config
+                        LOGGER.warn("Error while trying to retrieve subject config, might be because of schema-registry version before 7.0", e);
+                    }
+                } catch (IOException e) {
                     ErrorAlert.show(e, getWindow());
                 }
             }));

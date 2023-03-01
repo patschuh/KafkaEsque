@@ -27,8 +27,8 @@ public class SubjectConfigDialog {
     private SubjectConfigDialog() {
     }
 
-    private enum schemaCompatibilityLevel {
-        BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE;
+    private enum SchemaCompatibilityLevel {
+        BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE, UNDEFINED;
     }
 
     public static void show(RestService schemaRegistryRestService, String selectedSubject) {
@@ -41,11 +41,11 @@ public class SubjectConfigDialog {
             globalCompatibilityLevel.set(globalConfig.getCompatibilityLevel());
 
             // if configured also get the configured level on subject
-            SimpleObjectProperty<schemaCompatibilityLevel> subjectCompatibilityLevel = new SimpleObjectProperty<>();
+            SimpleObjectProperty<SchemaCompatibilityLevel> subjectCompatibilityLevel = new SimpleObjectProperty<>();
             try {
                 Config subjectConfig = schemaRegistryRestService.getConfig(selectedSubject);
 
-                schemaCompatibilityLevel configuredLevel = schemaCompatibilityLevel.valueOf(subjectConfig.getCompatibilityLevel());
+                SchemaCompatibilityLevel configuredLevel = SchemaCompatibilityLevel.valueOf(subjectConfig.getCompatibilityLevel());
 
                 if (configuredLevel == null) {
                     throw new IllegalArgumentException(String.format("Schema Registry returned an unknown compatibility level (%s)", subjectConfig.getCompatibilityLevel()));
@@ -54,32 +54,33 @@ public class SubjectConfigDialog {
                 subjectCompatibilityLevel.set(configuredLevel);
             } catch (RestClientException e) {
                 //Nothing configured on subject level
-                if (e.getErrorCode() == 40401) {
-                    subjectCompatibilityLevel.set(null);
+                // 40401 for compatibility with older versions
+                if (e.getErrorCode() == 40401 || e.getErrorCode() == 40408) {
+                    subjectCompatibilityLevel.set(SchemaCompatibilityLevel.UNDEFINED);
                 } else {
                     throw e;
                 }
             }
 
-            ListProperty<schemaCompatibilityLevel> schemaCompatibilityLevels = new SimpleListProperty<>(FXCollections.observableArrayList(schemaCompatibilityLevel.values()));
+            ListProperty<SchemaCompatibilityLevel> schemaCompatibilityLevels = new SimpleListProperty<>(FXCollections.observableArrayList(SchemaCompatibilityLevel.values()));
 
-            SimpleObjectProperty<schemaCompatibilityLevel> existingSubjectCompatibilityLevel = new SimpleObjectProperty(subjectCompatibilityLevel.get());
+            SimpleObjectProperty<SchemaCompatibilityLevel> existingSubjectCompatibilityLevel = new SimpleObjectProperty(subjectCompatibilityLevel.get());
 
             // Show dialog
             Form form = Form.of(
-                    Group.of(
-                            Field.ofStringType("Configured schema compatibility level:")
-                                    .editable(false),
-                            Field.ofStringType(globalCompatibilityLevel.getValueSafe())
-                                    .label("Global:")
-                                    .tooltip("Global Schema Compatibility Level")
-                                    .editable(false),
-                            Field.ofSingleSelectionType(schemaCompatibilityLevels)
-                                    .label("Subject:")
-                                    .tooltip("Subject Schema Compatibility Leve")
-                                    .bind(schemaCompatibilityLevels, subjectCompatibilityLevel)
-                    )
-            ).title("Schema Compatibility")
+                            Group.of(
+                                    Field.ofStringType("Configured schema compatibility level:")
+                                            .editable(false),
+                                    Field.ofStringType(globalCompatibilityLevel.getValueSafe())
+                                            .label("Global:")
+                                            .tooltip("Global Schema Compatibility Level")
+                                            .editable(false),
+                                    Field.ofSingleSelectionType(schemaCompatibilityLevels)
+                                            .label("Subject:")
+                                            .tooltip("Subject Schema Compatibility Leve")
+                                            .bind(schemaCompatibilityLevels, subjectCompatibilityLevel)
+                            )
+                    ).title("Schema Compatibility")
                     .binding(BindingMode.CONTINUOUS);
 
             Dialog<SimpleObjectProperty> dialog = new Dialog<>();
@@ -106,8 +107,12 @@ public class SubjectConfigDialog {
             Optional<SimpleObjectProperty> newSubjectLevel = dialog.showAndWait();
 
             if (newSubjectLevel.isPresent() && !newSubjectLevel.get().get().equals(existingSubjectCompatibilityLevel.getValue())) {
-                schemaCompatibilityLevel newLevel = (schemaCompatibilityLevel) newSubjectLevel.get().get();
-                schemaRegistryRestService.updateCompatibility(newLevel.name(), selectedSubject);
+                SchemaCompatibilityLevel newLevel = (SchemaCompatibilityLevel) newSubjectLevel.get().get();
+                if (newLevel.equals(SchemaCompatibilityLevel.UNDEFINED)) {
+                    schemaRegistryRestService.deleteConfig(selectedSubject);
+                } else {
+                    schemaRegistryRestService.updateCompatibility(newLevel.name(), selectedSubject);
+                }
             }
 
         } catch (Exception e) {
