@@ -1,7 +1,6 @@
 package kafka;
 
 import kafka.server.KafkaServer;
-import kafka.server.NotRunning;
 import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.test.TestUtils;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
@@ -63,10 +62,8 @@ public class WindowsEmbeddedKafkaRule extends EmbeddedKafkaRule {
     }
 
     private void shutdown(KafkaServer kafkaServer) {
-        if (kafkaServer.brokerState().get().value() != NotRunning.state()) {
             kafkaServer.shutdown();
             kafkaServer.awaitShutdown();
-        }
     }
 
     private void deleteLogDir(KafkaServer kafkaServer) {
