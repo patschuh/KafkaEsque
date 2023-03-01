@@ -13,6 +13,8 @@ import at.esque.kafka.handlers.ConfigHandler;
 import at.esque.kafka.handlers.ConsumerHandler;
 import at.esque.kafka.handlers.CrossClusterOperationHandler;
 import at.esque.kafka.handlers.ProducerHandler;
+import at.esque.kafka.topics.KafkaMessage;
+import at.esque.kafka.topics.metadata.NumericMetadata;
 import com.google.inject.Inject;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -20,6 +22,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -27,6 +30,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.stage.Window;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -38,6 +43,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -57,6 +63,8 @@ public class CrossClusterController {
     private TextField valueRegexFilterField;
     @FXML
     private TextField amountLimit;
+    @FXML
+    public CheckBox reserializeMessagesToggle;
 
     @FXML
     private FilterableListView<String> fromClusterTopicsList;
@@ -123,7 +131,7 @@ public class CrossClusterController {
                                 case "Stopped":
                                     return FontIcon.of(FontAwesome.STOP_CIRCLE);
                                 default:
-                                    if(cell.getItem().finishedExceptionaly()) {
+                                    if (cell.getItem().finishedExceptionaly()) {
                                         cell.setOnMouseClicked(mouseEvent -> ErrorAlert.show(cell.getItem().getException(), getWindow()));
                                     }
                                     return FontIcon.of(FontAwesome.WARNING);
@@ -144,7 +152,7 @@ public class CrossClusterController {
         if (adminClient != null) {
             adminClient.close();
         }
-        adminClient = new KafkaesqueAdminClient(clusterConfig.getBootStrapServers(), configHandler.getSslProperties(clusterConfig),configHandler.getSaslProperties(clusterConfig));
+        adminClient = new KafkaesqueAdminClient(clusterConfig.getBootStrapServers(), configHandler.getSslProperties(clusterConfig), configHandler.getSaslProperties(clusterConfig));
         KafkaesqueAdminClient finalAdminClient = adminClient;
         runInDaemonThread(() -> {
             ObservableList<String> topics = FXCollections.observableArrayList(finalAdminClient.getTopics());
@@ -181,9 +189,14 @@ public class CrossClusterController {
                     records.forEach(consumerRecord -> {
                         try {
                             if (operation.getFilterFunction().test(consumerRecord)) {
-                                ProducerRecord producerRecord = new ProducerRecord(operation.getToTopic().getName(), consumerRecord.key(), consumerRecord.value());
-                                consumerRecord.headers().forEach(header -> producerRecord.headers().add(header));
-                                producerHandler.sendRecord(producerId, producerRecord);
+                                if (reserializeMessagesToggle.isSelected()) {
+                                    KafkaMessage convert = convert(consumerRecord);
+                                    producerHandler.sendMessage(producerId, operation.getToTopic().getName(), -1, convert.getKey(), convert.getValue(), convert.getKeyType(), convert.getValueType(), convert.getHeaders());
+                                } else {
+                                    ProducerRecord producerRecord = new ProducerRecord(operation.getToTopic().getName(), consumerRecord.key(), consumerRecord.value());
+                                    consumerRecord.headers().forEach(header -> producerRecord.headers().add(header));
+                                    producerHandler.sendRecord(producerId, producerRecord);
+                                }
                                 count.incrementAndGet();
                             }
                         } catch (Exception e) {
@@ -266,5 +279,35 @@ public class CrossClusterController {
         if (selectedItem != null && selectedItem.getOperationId() != null) {
             crossClusterOperationHandler.markOperationForStop(selectedItem.getOperationId());
         }
+    }
+
+    private <KT, VT> KafkaMessage convert(ConsumerRecord<KT, VT> cr) {
+        KafkaMessage kafkaMessage = new KafkaMessage();
+        kafkaMessage.setOffset(cr.offset());
+        kafkaMessage.setPartition(cr.partition());
+        kafkaMessage.setKey(cr.key() == null ? null : cr.key().toString());
+        kafkaMessage.setValue(cr.value() == null ? null : cr.value().toString());
+
+        if (cr.value() instanceof GenericData.Record) {
+            kafkaMessage.setValueType(extractTypeFromGenericRecord((GenericData.Record) cr.value()));
+        }
+        if (cr.key() instanceof GenericData.Record) {
+            kafkaMessage.setKeyType(extractTypeFromGenericRecord((GenericData.Record) cr.key()));
+        }
+
+        kafkaMessage.setTimestamp(Instant.ofEpochMilli(cr.timestamp()).toString());
+        kafkaMessage.setHeaders(FXCollections.observableArrayList(cr.headers().toArray()));
+
+        kafkaMessage.getMetaData().add(new NumericMetadata("Serialized Key Size", (long) cr.serializedKeySize()));
+        kafkaMessage.getMetaData().add(new NumericMetadata("Serialized Value Size", (long) cr.serializedValueSize()));
+        return kafkaMessage;
+    }
+
+    private String extractTypeFromGenericRecord(GenericData.Record genericRecord) {
+        if (genericRecord == null || genericRecord.getSchema() == null) {
+            return null;
+        }
+        Schema schema = genericRecord.getSchema();
+        return schema.getNamespace() + "." + schema.getName();
     }
 }
