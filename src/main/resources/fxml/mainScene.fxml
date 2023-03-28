@@ -273,6 +273,14 @@
             <top>
                 <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                     <items>
+                        <Label>
+                            <graphic>
+                                <FontIcon iconColor="#5bc0de" iconLiteral="fa-question-circle" iconSize="20"/>
+                            </graphic>
+                            <tooltip>
+                                <Tooltip fx:id="helpIconToolTip"/>
+                            </tooltip>
+                        </Label>
                         <ToggleButton fx:id="formatJsonToggle" mnemonicParsing="false" styleClass="info" text="Format as  Json" textAlignment="CENTER" />
                         <TextField fx:id="jqQueryField" promptText="jq query" />
                         <ProgressIndicator fx:id="loadingIndicator" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="30.0" />

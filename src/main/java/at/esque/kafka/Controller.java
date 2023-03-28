@@ -51,6 +51,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -72,7 +73,12 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
@@ -109,6 +115,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -126,6 +133,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -161,6 +169,8 @@ public class Controller {
     private HostServices hostServices;
 
     //FXML
+    @FXML
+    private Tooltip helpIconToolTip;
     @FXML
     private KafkaEsqueCodeArea keyTextArea;
     @FXML
@@ -305,6 +315,9 @@ public class Controller {
             }
         });
 
+        headerTableView.setOnKeyPressed(generateHeaderTableEventHandler());
+        metdataTableView.setOnKeyPressed(generateMetadataTableEventHandler());
+
         configHandler.configureKafkaEsqueCodeArea(keyTextArea);
         configHandler.configureKafkaEsqueCodeArea(valueTextArea);
 
@@ -319,6 +332,7 @@ public class Controller {
         ClusterConfig dummycluster = new ClusterConfig();
         dummycluster.setIdentifier("Empty");
         messageTabPane.getTabs().add(createTab(dummycluster, "Tab"));
+        helpIconToolTip.setText(buildToolTip());
 
         versionInfoHandler.showDialogIfUpdateIsAvailable(hostServices);
     }
@@ -1409,7 +1423,8 @@ public class Controller {
                                     });
                                     producerHandler.sendMessage(producerId, message.getTargetTopic(), message.getPartition() == -1 ? null : message.getPartition(), message.getKey(), message.getValue(), message.getKeyType(), message.getValueType());
                                     Platform.runLater(() -> backGroundTaskHolder.setProgressMessage("published " + counter.incrementAndGet() + " messages"));
-                                } catch (InterruptedException | ExecutionException | TimeoutException | IOException | RestClientException e) {
+                                } catch (InterruptedException | ExecutionException | TimeoutException | IOException |
+                                         RestClientException e) {
                                     throw new RuntimeException(e);
                                 }
                             });
@@ -1555,7 +1570,32 @@ public class Controller {
         }
     }
 
+    private EventHandler<? super KeyEvent> generateHeaderTableEventHandler() {
+        Map<KeyCodeCombination, Function<Header, String>> copyCombinations = Map.of(
+                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN), header -> new String(header.value(), StandardCharsets.UTF_8),
+                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN), Header::key
+        );
+
+        return SystemUtils.generateTableCopySelectedItemCopyEventHandler(headerTableView, copyCombinations);
+    }
+
+    private EventHandler<? super KeyEvent> generateMetadataTableEventHandler() {
+        Map<KeyCodeCombination, Function<MessageMetaData, String>> copyCombinations = Map.of(
+                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN), metadata -> metadata.valueAsString().getValue(),
+                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN), metadata -> metadata.nameProperty().getName()
+        );
+
+        return SystemUtils.generateTableCopySelectedItemCopyEventHandler(metdataTableView, copyCombinations);
+    }
+
+
     public void setHostServices(HostServices hostServices) {
         this.hostServices = hostServices;
+    }
+
+    private String buildToolTip() {
+        return String.format("The following KeyCombinations let you copy data from the selected element in the metadata and header table%n" +
+                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy Key/Name%n" +
+                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy Value%n");
     }
 }
