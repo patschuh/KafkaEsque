@@ -88,6 +88,8 @@ runtime {
 
         def currentOs = OperatingSystem.current()
         def imgType = currentOs.windows ? 'ico' : currentOs.macOsX ? 'icns' : 'png'
+
+        jvmArgs += ['-Dprism.dirtyopts=false']
         imageOptions += ['--icon', "src/main/resources/icons/package/KafkaEsque.$imgType"]
         installerOptions += ['--resource-dir', "src/main/resources"]
         installerOptions += ['--vendor', 'Patrick Schuh']

@@ -1,7 +1,5 @@
 package at.esque.kafka;
 
-//import at.esque.kafka.serialization.FakeUUIDConversion;
-
 import at.esque.kafka.serialization.logicaltypes.KafkaEsqueConversions;
 import ch.qos.logback.classic.util.ContextInitializer;
 
