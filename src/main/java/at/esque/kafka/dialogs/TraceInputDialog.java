@@ -2,6 +2,7 @@ package at.esque.kafka.dialogs;
 
 import at.esque.kafka.Main;
 import at.esque.kafka.topics.TraceDialogController;
+import at.esque.kafka.topics.model.KafkaHeaderFilterOption;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -12,6 +13,7 @@ import javafx.scene.control.RadioButton;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +58,7 @@ public class TraceInputDialog {
                     updateRecentTrace(controller.keyTextBox.getText(), recentTraceMaxEntries);
                     updateRecentTrace(controller.valueTextBox.getText(), recentTraceMaxEntries);
                 }
-                return new TraceInput(controller.keyTextBox.getText(), controller.valueTextBox.getText(), keyMode, conditionMode, controller.fastTraceToggle.isSelected(), controller.tombstoneToggle.isSelected(), controller.epochStartInstantPicker.getInstantValue() == null ? null : controller.epochStartInstantPicker.getInstantValue().toEpochMilli(), controller.epochEndInstantPicker.getInstantValue() == null ? null : controller.epochEndInstantPicker.getInstantValue().toEpochMilli(), controller.specificParitionComboBox.getValue());
+                return new TraceInput(controller.keyTextBox.getText(), controller.valueTextBox.getText(), keyMode, conditionMode, controller.fastTraceToggle.isSelected(), controller.tombstoneToggle.isSelected(), controller.epochStartInstantPicker.getInstantValue() == null ? null : controller.epochStartInstantPicker.getInstantValue().toEpochMilli(), controller.epochEndInstantPicker.getInstantValue() == null ? null : controller.epochEndInstantPicker.getInstantValue().toEpochMilli(), controller.specificParitionComboBox.getValue(), controller.headerTableView.getItems());
             }
             return null;
         });
@@ -85,7 +87,9 @@ public class TraceInputDialog {
         private Long epochEnd;
         private Integer partition;
 
-        public TraceInput(String keySearch, String valueSearch, String keyMode, String conditionMode, boolean fastTrace, boolean searchNull, Long epochStart, Long epochEnd, Integer partition) {
+        private List<KafkaHeaderFilterOption> kafkaHeaderFilterOptions = new ArrayList<>();
+
+        public TraceInput(String keySearch, String valueSearch, String keyMode, String conditionMode, boolean fastTrace, boolean searchNull, Long epochStart, Long epochEnd, Integer partition, List<KafkaHeaderFilterOption> kafkaHeaderFilterOptions) {
             this.keySearch = keySearch;
             this.valueSearch = valueSearch;
             this.keyMode = keyMode;
@@ -95,6 +99,7 @@ public class TraceInputDialog {
             this.epochStart = epochStart;
             this.epochEnd = epochEnd;
             this.partition = partition;
+            this.kafkaHeaderFilterOptions = kafkaHeaderFilterOptions;
         }
 
         public String getKeySearch() {
@@ -167,6 +172,14 @@ public class TraceInputDialog {
 
         public void setPartition(Integer partition) {
             this.partition = partition;
+        }
+
+        public List<KafkaHeaderFilterOption> getKafkaHeaderFilterOptions() {
+            return kafkaHeaderFilterOptions;
+        }
+
+        public void setKafkaHeaderFilterOptions(List<KafkaHeaderFilterOption> kafkaHeaderFilterOptions) {
+            this.kafkaHeaderFilterOptions = kafkaHeaderFilterOptions;
         }
     }
 }

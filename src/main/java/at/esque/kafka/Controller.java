@@ -499,6 +499,18 @@ public class Controller {
                                 actualPredicate = keyPredicate.or(valuePredicate);
                             }
 
+                            if (traceInput.getKafkaHeaderFilterOptions() != null && !traceInput.getKafkaHeaderFilterOptions().isEmpty()) {
+                                List<Predicate<ConsumerRecord>> predicates = traceInput.getKafkaHeaderFilterOptions()
+                                        .stream()
+                                        .map(TraceUtils::consumerRecordHeaderPredicate)
+                                        .toList();
+
+                                for (Predicate<ConsumerRecord> predicate : predicates) {
+                                    actualPredicate = actualPredicate.and(predicate);
+                                }
+
+                            }
+
                             trace(topicMessageTypeConfig, consumerConfig, actualPredicate, partition, traceInput.getEpochStart(), traceInput.getEpochEnd() == null ? null : consumerRecord -> consumerRecord.timestamp() >= traceInput.getEpochEnd());
                         });
             } catch (Exception e) {
