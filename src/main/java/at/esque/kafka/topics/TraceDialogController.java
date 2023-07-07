@@ -34,8 +34,10 @@ import static at.esque.kafka.dialogs.TraceInputDialog.recentTrace;
 
 public class TraceDialogController {
 
-    public HBox quickSelectButtonBar;
-    public InstantPicker epochInstantPicker;
+    public HBox quickSelectStartEpochButtonBar;
+    public InstantPicker epochStartInstantPicker;
+    public HBox quickSelectEndEpochButtonBar;
+    public InstantPicker epochEndInstantPicker;
     public ToggleButton epochToggleButton;
     public RadioButton traceModeKeyOnlyRadio;
     public ToggleGroup conditionMode;
@@ -55,20 +57,18 @@ public class TraceDialogController {
     public TitledPane valueOptionsPane;
     public ComboBox<Integer> specificParitionComboBox;
 
-    public TraceDialogController() {
-    }
-
     @FXML
     public void initialize() {
         keyOptionsPane.disableProperty().bind(traceModeValueRadio.selectedProperty());
         valueOptionsPane.disableProperty().bind(traceModeKeyOnlyRadio.selectedProperty());
-        epochInstantPicker.displayAsEpochProperty().bind(epochToggleButton.selectedProperty());
+        epochStartInstantPicker.displayAsEpochProperty().bind(epochToggleButton.selectedProperty());
     }
 
-    public void setup(boolean isAvroKeyType, boolean traceQuickSelectEnabled, List<Duration> durations, int recentTraceMaxEntries, ObservableList<Integer> partitions) {
+    public void setup(boolean isAvroKeyType, boolean traceQuickSelectEnabled, List<Duration> durations, ObservableList<Integer> partitions) {
         clearButtonBar();
         if (traceQuickSelectEnabled) {
-            fillButtonBar(durations);
+            fillButtonBar(durations, quickSelectStartEpochButtonBar, epochStartInstantPicker);
+            fillButtonBar(durations, quickSelectEndEpochButtonBar, epochEndInstantPicker);
         }
         if(!isAvroKeyType){
             fastTraceToggle.setDisable(false);
@@ -88,27 +88,27 @@ public class TraceDialogController {
     }
 
     private void clearButtonBar() {
-        quickSelectButtonBar.getChildren().clear();
+        quickSelectStartEpochButtonBar.getChildren().clear();
     }
 
-    private void fillButtonBar(List<Duration> durations) {
+    private void fillButtonBar(List<Duration> durations, HBox buttonBar, InstantPicker targetInstantPicker) {
         Button todayButton = new Button("Today");
         todayButton.setOnAction(event -> {
             OffsetDateTime offsetDateTime = Instant.now().atOffset(ZoneOffset.UTC);
             Instant today = OffsetDateTime.of(offsetDateTime.toLocalDate(), LocalTime.of(0, 0, 0, 0), ZoneOffset.UTC).toInstant();
-            epochInstantPicker.setInstantValue(today);
+            targetInstantPicker.setInstantValue(today);
         });
-        quickSelectButtonBar.getChildren().add(todayButton);
+        buttonBar.getChildren().add(todayButton);
         durations.forEach(duration -> {
             Button button = new Button("Now - " + stringifyDuration(duration));
             button.setOnAction(event -> {
                 try {
-                    epochInstantPicker.setInstantValue(Instant.now().minus(duration));
+                    targetInstantPicker.setInstantValue(Instant.now().minus(duration));
                 } catch (Exception e) {
                     ErrorAlert.show(e);
                 }
             });
-            quickSelectButtonBar.getChildren().add(button);
+            buttonBar.getChildren().add(button);
         });
     }
 
