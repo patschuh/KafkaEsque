@@ -30,12 +30,12 @@
                     <Pane HBox.hgrow="ALWAYS"/>
                     <TextField fx:id="messageSearchTextField" promptText="Search" styleClass="first"/>
                     <Button maxHeight="-Infinity" minHeight="-Infinity" mnemonicParsing="false"
-                            onAction="#exportCsvClick">
+                            onAction="#exportFileClick">
                         <graphic>
                             <FontIcon iconColor="WHITE" iconLiteral="fa-share"/>
                         </graphic>
                         <tooltip>
-                            <Tooltip text="Export as CSV"/>
+                            <Tooltip text="Export currently displayed messages as a file"/>
                         </tooltip>
                         <styleClass>
                             <String fx:value="last"/>

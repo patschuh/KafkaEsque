@@ -1,6 +1,9 @@
 package at.esque.kafka.topics;
 
+import at.esque.kafka.serialization.jackson.HeaderObservableListConverter;
+import at.esque.kafka.serialization.jackson.MessageMetaDataObservableListConverter;
 import at.esque.kafka.topics.metadata.MessageMetaData;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.LongProperty;
@@ -20,9 +23,11 @@ public class KafkaMessage {
     private StringProperty key = new SimpleStringProperty();
     private StringProperty value = new SimpleStringProperty();
     private StringProperty timestamp = new SimpleStringProperty();
+    @JsonDeserialize(converter = HeaderObservableListConverter.class)
     private ListProperty<Header> headers = new SimpleListProperty<>();
     private StringProperty keyType = new SimpleStringProperty();
     private StringProperty valueType = new SimpleStringProperty();
+    @JsonDeserialize(converter = MessageMetaDataObservableListConverter.class)
     private ObservableList<MessageMetaData> metaData = FXCollections.observableArrayList();
 
     public long getOffset() {

@@ -1471,6 +1471,10 @@ public class Controller {
     }
 
     private PinTab createTab(ClusterConfig clusterConfig, String name) {
+        return createTab(clusterConfig, name, null);
+    }
+
+    private PinTab createTab(ClusterConfig clusterConfig, String name, List<KafkaMessage> kafkaMessages) {
 
         MessagesTabContent messagesTabContent = new MessagesTabContent();
 
@@ -1518,6 +1522,12 @@ public class Controller {
             KafkaMessage selectedItem = messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItem();
             updateKeyValueTextArea(selectedItem, formatJsonToggle.isSelected());
         });
+
+        if (kafkaMessages != null) {
+            messagesTabContent.getMessageTableView().getBaseList().clear();
+            messagesTabContent.getMessageTableView().getBaseList().addAll(kafkaMessages);
+
+        }
 
         return new PinTab(clusterConfig.getIdentifier() + " - " + name, messagesTabContent);
     }
@@ -1574,5 +1584,21 @@ public class Controller {
         return String.format("The following KeyCombinations let you copy data from the selected element in the metadata and header table%n" +
                 new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy Key/Name%n" +
                 new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy Value%n");
+    }
+
+    @FXML
+    public void loadFileToTabClick(ActionEvent actionEvent) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Load Message File");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON File (*.json)", "*.json"));
+        File selectedFile = fileChooser.showOpenDialog(controlledStage);
+        try (FileReader fileReader = new FileReader(selectedFile)) {
+            List<KafkaMessage> kafkaMessages = JsonUtils.readMessages(fileReader);
+            ClusterConfig dummyFileClusterConfig = new ClusterConfig();
+            dummyFileClusterConfig.setIdentifier("Loaded File");
+            messageTabPane.getTabs().add(createTab(dummyFileClusterConfig, selectedFile.getName(), kafkaMessages));
+        } catch (Exception e) {
+            ErrorAlert.show(e, controlledStage);
+        }
     }
 }

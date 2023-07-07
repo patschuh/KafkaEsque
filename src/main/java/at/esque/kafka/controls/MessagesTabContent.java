@@ -1,5 +1,6 @@
 package at.esque.kafka.controls;
 
+import at.esque.kafka.JsonUtils;
 import at.esque.kafka.SystemUtils;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.topics.KafkaMessage;
@@ -62,21 +63,32 @@ public class MessagesTabContent extends VBox {
     }
 
     @FXML
-    public void exportCsvClick(ActionEvent event) {
+    public void exportFileClick(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save messages as csv");
+        fileChooser.setTitle("Save messages to file");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON File (*.json)", "*.json"));
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV File (*.csv)", "*.csv"));
         File selectedFile = fileChooser.showSaveDialog(this.getScene().getWindow());
         if (selectedFile != null) {
+            String fileName = selectedFile.getName();
+            String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
             try (Writer writer = new FileWriter(selectedFile.getAbsolutePath())) {
-                StatefulBeanToCsv<KafkaMessage> beanToCsv = new StatefulBeanToCsvBuilder<KafkaMessage>(writer).build();
-                messageTableView.getItems().forEach(message -> {
+                if ("json".equals(fileExtension)) {
                     try {
-                        beanToCsv.write(message);
+                        JsonUtils.writeMessageToJsonFile(messageTableView.getItems(), writer);
                     } catch (Exception e) {
                         ErrorAlert.show(e);
                     }
-                });
+                } else {
+                    StatefulBeanToCsv<KafkaMessage> beanToCsv = new StatefulBeanToCsvBuilder<KafkaMessage>(writer).build();
+                    messageTableView.getItems().forEach(message -> {
+                        try {
+                            beanToCsv.write(message);
+                        } catch (Exception e) {
+                            ErrorAlert.show(e);
+                        }
+                    });
+                }
             } catch (Exception e) {
                 ErrorAlert.show(e);
             }
