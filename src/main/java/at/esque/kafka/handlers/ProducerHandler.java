@@ -8,9 +8,12 @@ import at.esque.kafka.serialization.ExtendedJsonDecoder;
 import at.esque.kafka.serialization.KafkaEsqueSerializer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.Message;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
 import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
+import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
+import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchemaUtils;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import io.confluent.kafka.serializers.subject.TopicRecordNameStrategy;
 import org.apache.avro.generic.GenericDatumReader;
@@ -150,6 +153,8 @@ public class ProducerHandler {
             return createRecord(producerWrapper, key, topic, b);
         } else if (MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(type)) {
             return createRecord(producerWrapper, key, topic, recordType);
+        } else if (MessageType.PROTOBUF_SR.equals(type)) {
+            return createProtobufMessage(producerWrapper, key, topic, b);
         }
         return key;
     }
@@ -179,6 +184,15 @@ public class ProducerHandler {
         }
         Schema schema = getSchemaFromRegistry(producerWrapper.getSchemaRegistryRestService(), topic + "-" + recordName);
         return createGenericRecord(json, schema);
+    }
+
+    private Message createProtobufMessage(ProducerWrapper producerWrapper, String json, String topic, boolean isKey) throws IOException, RestClientException {
+        if (json == null) {
+            return null;
+        }
+        Schema schema = getSchemaFromRegistry(producerWrapper.getSchemaRegistryRestService(), topic + (isKey ? "-key" : "-value"));
+
+        return (Message) ProtobufSchemaUtils.toObject(json, new ProtobufSchema(schema.getSchema()));
     }
 
     private GenericRecord createGenericRecord(String json, Schema schema) throws IOException {
