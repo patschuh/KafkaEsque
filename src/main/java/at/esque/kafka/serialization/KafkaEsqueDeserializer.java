@@ -3,7 +3,6 @@ package at.esque.kafka.serialization;
 import at.esque.kafka.MessageType;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.handlers.ConfigHandler;
-import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serdes;
@@ -37,7 +36,7 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
 
         Integer schemaId = null;
 
-        if (MessageType.AVRO.equals(messageType) || MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(messageType)) {
+        if (isSchemaRegistryMessageType(messageType)) {
             schemaId = getSchemaId(bytes);
         }
         if ((deserializedObj instanceof GenericData.Record)) {
@@ -49,22 +48,24 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
         return deserializedObj;
     }
 
+    private static boolean isSchemaRegistryMessageType(MessageType messageType) {
+        return MessageType.AVRO.equals(messageType)
+                || MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(messageType)
+                || MessageType.PROTOBUF_SR.equals(messageType);
+    }
+
 
     public void configure(Map<String, ?> configs, boolean isKey) {
         this.isKey = isKey;
         deserializerMap.values().forEach(deserializer -> {
-            if (deserializer instanceof ForgivingKafkaAvroDeserializer && configs.get("schema.registry.url") == null) {
+            if ((deserializer instanceof ForgivingKafkaAvroDeserializer || deserializer instanceof ForgivingProtobufAvroDeserializer) && configs.get("schema.registry.url") == null) {
                 //Don't call configure for the AvroDeserializer if there is no schema registry url to prevent exception, in cases where avro is not even used
-            }else {
+            } else {
                 deserializer.configure(configs, isKey);
             }
         });
         this.clusterId = (String) configs.get("kafkaesque.cluster.id");
         this.configHandler = (ConfigHandler) configs.get("kafkaesque.confighandler");
-    }
-
-    public Object deserialize(String s, byte[] bytes, Schema readerSchema) {
-        return this.deserialize(s, bytes);
     }
 
     public void close() {
@@ -92,6 +93,8 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
                 return Serdes.Bytes().deserializer();
             case UUID:
                 return Serdes.UUID().deserializer();
+            case PROTOBUF_SR:
+                return new ForgivingProtobufAvroDeserializer();
             case AVRO:
             case AVRO_TOPIC_RECORD_NAME_STRATEGY:
                 return new ForgivingKafkaAvroDeserializer();

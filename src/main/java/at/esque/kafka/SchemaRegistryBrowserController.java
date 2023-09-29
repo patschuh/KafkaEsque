@@ -55,7 +55,9 @@ public class SchemaRegistryBrowserController {
     @FXML
     private Label schemaIdLabel;
     @FXML
-    public Label compatibilityLabel;
+    private Label compatibilityLabel;
+    @FXML
+    private Label typeLabel;
 
 
     public void setup(ClusterConfig selectedConfig, ConfigHandler configHandler) {
@@ -78,7 +80,8 @@ public class SchemaRegistryBrowserController {
                 try {
                     Schema schema = schemaRegistryRestService.getVersion(subjectListView.getListView().getSelectionModel().getSelectedItem(), newValue1);
                     schemaIdLabel.setText(String.valueOf(schema.getId()));
-                    schemaTextArea.setText(JsonUtils.formatJson(schema.getSchema()));
+                    schemaTextArea.setText("AVRO".equals(schema.getSchemaType()) ? JsonUtils.formatJson(schema.getSchema()) : schema.getSchema());
+                    typeLabel.setText(schema.getSchemaType());
                 } catch (Exception e) {
                     ErrorAlert.show(e, getWindow());
                 }

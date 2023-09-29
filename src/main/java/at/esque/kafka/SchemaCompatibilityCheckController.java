@@ -11,7 +11,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import org.apache.avro.Schema;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,10 +39,7 @@ public class SchemaCompatibilityCheckController {
 
     public void addSchema(ActionEvent actionEvent) {
 
-        Schema.Parser parser = new Schema.Parser();
         try {
-            parser.parse(schemaTextArea.getText());
-
             List<String> compatibility = restService.testCompatibility(schemaTextArea.getText(), subjectTextField.getText(), versionTextField.getText());
 
             if (compatibility.isEmpty()) {

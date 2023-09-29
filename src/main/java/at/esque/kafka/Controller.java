@@ -41,6 +41,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.protobuf.Message;
 import com.opencsv.bean.CsvToBeanBuilder;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import javafx.application.HostServices;
@@ -136,6 +137,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 public class Controller {
@@ -468,7 +470,7 @@ public class Controller {
             try {
                 TopicMessageTypeConfig topicMessageTypeConfig = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(topicMessageTypeConfig.getKeyType() == MessageType.AVRO, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)), partitionCombobox.getItems())
+                TraceInputDialog.show(topicMessageTypeConfig.getKeyType() == MessageType.AVRO || topicMessageTypeConfig.getKeyType() == MessageType.PROTOBUF_SR, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)), partitionCombobox.getItems())
                         .ifPresent(traceInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing message");
                             Integer partition = null;
@@ -565,7 +567,8 @@ public class Controller {
             backGroundTaskHolder.setIsInProgress(true);
             Set<String> topics = adminClient.getTopics();
             Platform.runLater(() -> topicListView.setItems(topics));
-
+        } catch (Exception e) {
+            Platform.runLater(() -> ErrorAlert.show(e));
         } finally {
             stopWatch.stop();
             LOGGER.info("Finished getting topics for cluster [{}]", stopWatch);
@@ -908,7 +911,10 @@ public class Controller {
         if (selectedPartition >= 0) {
             consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(Collections.singletonList(new TopicPartition(selectedTopic(), selectedPartition))));
         } else {
-            consumerHandler.subscribe(consumerId, topic.getName());
+            List<TopicPartition> partitions = adminClient.getPatitions(topic.getName()).stream()
+                    .map(integer -> new TopicPartition(topic.getName(), integer))
+                    .collect(Collectors.toList());
+            consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(partitions));
         }
     }
 
@@ -1035,9 +1041,23 @@ public class Controller {
         if (cr.value() instanceof GenericData.Record recordValue) {
             kafkaMessage.setValueType(extractTypeFromGenericRecord(recordValue));
             kafkaMessage.getMetaData().add(new StringMetadata("Value Schema ID", extractSchemaIdFromGenericRecord(recordValue)));
+        } else if (cr.value() instanceof Message message) {
+            kafkaMessage.setValueType(message.getDescriptorForType().getFullName());
+            try {
+                kafkaMessage.setValue(JsonUtils.toJson(message));
+            } catch (IOException e) {
+                LOGGER.error("Failed printing protobuf message as json", e);
+            }
         }
         if (cr.key() instanceof GenericData.Record recordKey) {
             kafkaMessage.setKeyType(extractTypeFromGenericRecord(recordKey));
+        } else if (cr.key() instanceof Message messageKey) {
+            kafkaMessage.setKeyType(messageKey.getDescriptorForType().getFullName());
+            try {
+                kafkaMessage.setKey(JsonUtils.toJson(messageKey));
+            } catch (IOException e) {
+                LOGGER.error("Failed printing protobuf message as json", e);
+            }
         }
 
         kafkaMessage.setTimestamp(Instant.ofEpochMilli(cr.timestamp()).toString());

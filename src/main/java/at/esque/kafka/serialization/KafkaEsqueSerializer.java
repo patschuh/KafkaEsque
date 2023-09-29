@@ -1,9 +1,12 @@
 package at.esque.kafka.serialization;
 
+import at.esque.kafka.JsonUtils;
 import at.esque.kafka.MessageType;
 import at.esque.kafka.cluster.TopicMessageTypeConfig;
 import at.esque.kafka.handlers.ConfigHandler;
+import com.google.protobuf.Message;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.confluent.kafka.serializers.protobuf.KafkaProtobufSerializer;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.utils.Bytes;
@@ -18,7 +21,8 @@ import java.util.function.Function;
 
 public class KafkaEsqueSerializer implements Serializer<Object> {
 
-    private KafkaAvroSerializer avroSerialier = new KafkaAvroSerializer();
+    private KafkaAvroSerializer avroSerializer = new KafkaAvroSerializer();
+    private KafkaProtobufSerializer protobufSerializer = new KafkaProtobufSerializer();
 
     private static final List<MessageType> AVRO_TYPES = Arrays.asList(MessageType.AVRO, MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY);
 
@@ -37,7 +41,9 @@ public class KafkaEsqueSerializer implements Serializer<Object> {
     public byte[] serialize(String s, Object object) {
         TopicMessageTypeConfig topicConfig = configHandler.getConfigForTopic(clusterId, s);
         if (isKey ? AVRO_TYPES.contains(topicConfig.getKeyType()) : AVRO_TYPES.contains(topicConfig.getValueType())) {
-            return avroSerialier.serialize(s, object);
+            return avroSerializer.serialize(s, object);
+        } else if ((isKey ? MessageType.PROTOBUF_SR.equals(topicConfig.getKeyType()) : MessageType.PROTOBUF_SR.equals(topicConfig.getValueType())) && object instanceof Message message) {
+            return protobufSerializer.serialize(s, message);
         } else {
             SerializerWrapper serializerWrapper = serializerMap.get(isKey ? topicConfig.getKeyType() : topicConfig.getValueType());
             return serializerWrapper.serializer.serialize(s, serializerWrapper.function.apply(object));
@@ -49,7 +55,8 @@ public class KafkaEsqueSerializer implements Serializer<Object> {
         this.isKey = isKey;
         serializerMap.values().forEach(serializer -> serializer.serializer.configure(configs, isKey));
         if (configs.get("schema.registry.url") != null) {
-            avroSerialier.configure(configs, isKey);
+            avroSerializer.configure(configs, isKey);
+            protobufSerializer.configure(configs, isKey);
         }
         this.clusterId = (String) configs.get("kafkaesque.cluster.id");
         this.configHandler = (ConfigHandler) configs.get("kafkaesque.confighandler");
@@ -61,7 +68,7 @@ public class KafkaEsqueSerializer implements Serializer<Object> {
     private SerializerWrapper serializerByType(MessageType type) {
         switch (type) {
             case STRING:
-                return new SerializerWrapper<String>(s->s, Serdes.String().serializer());
+                return new SerializerWrapper<String>(s -> s, Serdes.String().serializer());
             case SHORT:
                 return new SerializerWrapper<Short>(Short::parseShort, Serdes.Short().serializer());
             case INTEGER:
@@ -75,16 +82,19 @@ public class KafkaEsqueSerializer implements Serializer<Object> {
             case BYTEARRAY:
                 return new SerializerWrapper<byte[]>(String::getBytes, Serdes.ByteArray().serializer());
             case BYTEBUFFER:
-                return new SerializerWrapper<ByteBuffer>( s -> ByteBuffer.wrap(s.getBytes()), Serdes.ByteBuffer().serializer());
+                return new SerializerWrapper<ByteBuffer>(s -> ByteBuffer.wrap(s.getBytes()), Serdes.ByteBuffer().serializer());
             case BYTES:
                 return new SerializerWrapper<Bytes>(s -> Bytes.wrap(s.getBytes()), Serdes.Bytes().serializer());
             case UUID:
                 return new SerializerWrapper<UUID>(UUID::fromString, Serdes.UUID().serializer());
+            case PROTOBUF_SR:
+                return new SerializerWrapper<Message>(JsonUtils::fromJson, protobufSerializer);
             default:
                 throw new UnsupportedOperationException("no serializer for Message type: " + type);
         }
     }
-    public class SerializerWrapper<T>{
+
+    public class SerializerWrapper<T> {
         private Function<String, T> function;
         private Serializer<T> serializer;
 

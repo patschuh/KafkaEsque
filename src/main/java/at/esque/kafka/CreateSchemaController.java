@@ -10,7 +10,6 @@ import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import org.apache.avro.Schema;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,9 +30,7 @@ public class CreateSchemaController {
 
     public void addSchema(ActionEvent actionEvent) {
 
-        Schema.Parser parser = new Schema.Parser();
         try {
-            parser.parse(schemaTextArea.getText());
             restService.registerSchema(schemaTextArea.getText(), subjectTextField.getText());
             SuccessAlert.show("Success", null, "Schema added successfully!", getWindow());
         } catch (Exception e) {

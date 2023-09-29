@@ -86,6 +86,11 @@
                                        fx:id="compatibilityLabel"
                                        minWidth="5"
                                 />
+                                <Text text="Type: "/>
+                                <Label text="     "
+                                       fx:id="typeLabel"
+                                       minWidth="5"
+                                />
                             </items>
                         </ToolBar>
                     </top>

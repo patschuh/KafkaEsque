@@ -13,6 +13,11 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.Struct;
+import com.google.protobuf.util.JsonFormat;
 import javafx.scene.control.TreeItem;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
@@ -349,5 +354,22 @@ public final class JsonUtils {
         } else {
             recursivelyAddElements((String.valueOf(value)), treeItem);
         }
+    }
+
+    public static Message fromJson(String json) {
+        Struct.Builder structBuilder = Struct.newBuilder();
+        try {
+            JsonFormat.parser().ignoringUnknownFields().merge(json, structBuilder);
+        } catch (InvalidProtocolBufferException e) {
+            throw new RuntimeException(e);
+        }
+        return structBuilder.build();
+    }
+
+    public static String toJson(MessageOrBuilder messageOrBuilder) throws IOException {
+        if (messageOrBuilder == null) {
+            return null;
+        }
+        return JsonFormat.printer().print(messageOrBuilder);
     }
 }

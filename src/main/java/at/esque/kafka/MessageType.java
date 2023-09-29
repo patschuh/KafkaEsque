@@ -12,5 +12,6 @@ public enum MessageType {
     BYTEARRAY,
     BYTEBUFFER,
     BYTES,
-    UUID
+    UUID,
+    PROTOBUF_SR
 }
