@@ -58,7 +58,13 @@ public class TopicMessageTypeConfig {
         this.valueType.set(valueType.name());
     }
 
-    public boolean containsAvro() {
-        return getValueType() == MessageType.AVRO || getValueType() == MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY || getKeyType() == MessageType.AVRO || getKeyType() == MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY;
+    public boolean requiresSchemaRegistry() {
+        return getValueType() == MessageType.AVRO ||
+                getValueType() == MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY ||
+                getValueType() == MessageType.PROTOBUF_SR ||
+                getKeyType() == MessageType.AVRO ||
+                getKeyType() == MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY ||
+                getKeyType() == MessageType.PROTOBUF_SR
+                ;
     }
 }

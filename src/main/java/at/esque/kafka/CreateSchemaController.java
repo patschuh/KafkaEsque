@@ -4,13 +4,14 @@ import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.alerts.SuccessAlert;
 import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import org.apache.avro.Schema;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +25,8 @@ public class CreateSchemaController {
     private TextField subjectTextField;
     @FXML
     private KafkaEsqueCodeArea schemaTextArea;
+    @FXML
+    private ComboBox<String> schemaTypeComboBox;
 
     private RestService restService;
 
@@ -31,10 +34,13 @@ public class CreateSchemaController {
 
     public void addSchema(ActionEvent actionEvent) {
 
-        Schema.Parser parser = new Schema.Parser();
         try {
-            parser.parse(schemaTextArea.getText());
-            restService.registerSchema(schemaTextArea.getText(), subjectTextField.getText());
+            restService.registerSchema(
+                    schemaTextArea.getText(),
+                    schemaTypeComboBox.getSelectionModel().getSelectedItem(),
+                    null,
+                    subjectTextField.getText());
+
             SuccessAlert.show("Success", null, "Schema added successfully!", getWindow());
         } catch (Exception e) {
             ErrorAlert.show(e, getWindow());
@@ -61,6 +67,8 @@ public class CreateSchemaController {
 
     public void setup(String selectedSubject, RestService restService, Stage stage) {
         this.restService = restService;
+        this.schemaTypeComboBox.setItems(FXCollections.observableArrayList("AVRO", "PROTOBUF"));
+        this.schemaTypeComboBox.getSelectionModel().select(0);
         this.stage = stage;
         if (selectedSubject != null) {
             subjectTextField.setText(selectedSubject);

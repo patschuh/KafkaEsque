@@ -37,6 +37,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -44,12 +45,14 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class CrossClusterController {
 
@@ -168,7 +171,10 @@ public class CrossClusterController {
             try {
                 producerId = producerHandler.registerProducer(operation.getToCluster(), operation.getToTopic().getName());
                 consumerId = consumerHandler.registerConsumer(operation.getFromCluster(), operation.getFromTopic(), configHandler.readConsumerConfigs(operation.getToCluster().getIdentifier()));
-                consumerHandler.subscribe(consumerId, operation.getFromTopic().getName());
+                List<TopicPartition> partitions = fromAdmin.getPatitions(operation.getFromTopic().getName()).stream()
+                        .map(integer -> new TopicPartition(operation.getFromTopic().getName(), integer))
+                        .collect(Collectors.toList());
+                consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(partitions));
                 if (instantPicker.getInstantValue() != null) {
                     consumerHandler.seekToTime(consumerId, instantPicker.getInstantValue().toEpochMilli());
                 } else {

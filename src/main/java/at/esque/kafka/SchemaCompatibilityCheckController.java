@@ -3,6 +3,7 @@ package at.esque.kafka;
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.controls.KafkaEsqueCodeArea;
 import io.confluent.kafka.schemaregistry.client.rest.RestService;
+import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -11,7 +12,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import org.apache.avro.Schema;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,11 +40,9 @@ public class SchemaCompatibilityCheckController {
 
     public void addSchema(ActionEvent actionEvent) {
 
-        Schema.Parser parser = new Schema.Parser();
         try {
-            parser.parse(schemaTextArea.getText());
-
-            List<String> compatibility = restService.testCompatibility(schemaTextArea.getText(), subjectTextField.getText(), versionTextField.getText());
+            Schema schema = restService.getVersion(subjectTextField.getText(), Integer.parseInt(versionTextField.getText()));
+            List<String> compatibility = restService.testCompatibility(schemaTextArea.getText(), schema.getSchemaType(), null, subjectTextField.getText(), versionTextField.getText(), false);
 
             if (compatibility.isEmpty()) {
                 resultLabel.setTextFill(Color.web("#3d7a3d"));
