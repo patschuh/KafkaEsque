@@ -126,8 +126,7 @@ public class PublisherController {
                 }
             }
         }
-        if (MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(configForTopic.getValueType())
-                || MessageType.PROTOBUF_SR.equals(configForTopic.getValueType())) {
+        if (MessageType.AVRO_TOPIC_RECORD_NAME_STRATEGY.equals(configForTopic.getValueType())) {
             valueTypeSelectCombobox.setVisible(true);
             if (topicMessageTypes == null) {
                 try {
