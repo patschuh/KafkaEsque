@@ -121,13 +121,15 @@ jobs:
           matrix.os == 'windows-2022'
         with:
           files: build/jpackage/*.exe
-      - name: Extract version
+      - name: Extract version (macOS)
         id: extract-version
-        if: startsWith(github.ref, 'refs/tags/')
+        if: |
+          startsWith(github.ref, 'refs/tags/') &&
+          matrix.os == 'macos-12'
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
           echo "tag-name=${TAG_NAME:1}" >> $GITHUB_OUTPUT
-      - name: Bump Homebrew cask version
+      - name: Bump Homebrew cask version (macOS)
         uses: MWin123/bump-homebrew-formula-action@v0.3.0
         if: |
           startsWith(github.ref, 'refs/tags/') &&
