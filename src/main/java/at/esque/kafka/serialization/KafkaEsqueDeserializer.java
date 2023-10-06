@@ -91,6 +91,8 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
                 return Serdes.ByteBuffer().deserializer();
             case BYTES:
                 return Serdes.Bytes().deserializer();
+            case BASE64:
+                return new Base64Deserializer();
             case UUID:
                 return Serdes.UUID().deserializer();
             case PROTOBUF_SR:

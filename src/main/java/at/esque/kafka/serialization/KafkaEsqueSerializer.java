@@ -85,6 +85,8 @@ public class KafkaEsqueSerializer implements Serializer<Object> {
                 return new SerializerWrapper<ByteBuffer>(s -> ByteBuffer.wrap(s.getBytes()), Serdes.ByteBuffer().serializer());
             case BYTES:
                 return new SerializerWrapper<Bytes>(s -> Bytes.wrap(s.getBytes()), Serdes.Bytes().serializer());
+            case BASE64:
+                return new SerializerWrapper<String>(s -> s, new Base64Serializer());
             case UUID:
                 return new SerializerWrapper<UUID>(UUID::fromString, Serdes.UUID().serializer());
             case PROTOBUF_SR:
