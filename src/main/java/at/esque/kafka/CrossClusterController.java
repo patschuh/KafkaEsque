@@ -105,11 +105,11 @@ public class CrossClusterController {
         toClusterComboBox.setItems(clusterConfigs.getClusterConfigs());
 
         fromClusterComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            setupClusterControls(newValue, fromAdmin, fromClusterTopicsList);
+            fromAdmin = setupClusterControls(newValue, fromAdmin, fromClusterTopicsList);
         });
 
         toClusterComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            setupClusterControls(newValue, toAdmin, toClusterTopicsList);
+            toAdmin = setupClusterControls(newValue, toAdmin, toClusterTopicsList);
         });
 
         runningOperationsList.setCellFactory(ropl -> {
@@ -151,7 +151,7 @@ public class CrossClusterController {
         refreshOperationList(null);
     }
 
-    private void setupClusterControls(ClusterConfig clusterConfig, KafkaesqueAdminClient adminClient, FilterableListView topicList) {
+    private KafkaesqueAdminClient setupClusterControls(ClusterConfig clusterConfig, KafkaesqueAdminClient adminClient, FilterableListView topicList) {
         if (adminClient != null) {
             adminClient.close();
         }
@@ -161,6 +161,7 @@ public class CrossClusterController {
             ObservableList<String> topics = FXCollections.observableArrayList(finalAdminClient.getTopics());
             Platform.runLater(() -> topicList.setItems(topics));
         });
+        return finalAdminClient;
     }
 
     private void startOperation(UUID operationId) {
@@ -192,7 +193,8 @@ public class CrossClusterController {
                 while (!operation.getStop().get() && (limit == null || count.get() < limit) && !operation.getStatus().equals("Error")) {
                     ConsumerRecords consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(5));
                     Iterable<ConsumerRecord> records = consumerRecords.records(operation.getFromTopic().getName());
-                    records.forEach(consumerRecord -> {
+                    while ((limit == null || count.get() < limit) && records.iterator().hasNext()) {
+                        ConsumerRecord consumerRecord = records.iterator().next();
                         try {
                             if (operation.getFilterFunction().test(consumerRecord)) {
                                 if (reserializeMessagesToggle.isSelected()) {
@@ -211,7 +213,7 @@ public class CrossClusterController {
                                 operation.setStatus("Error");
                             });
                         }
-                    });
+                    }
                 }
                 if (operation.getStop().get()) {
                     Platform.runLater(() -> operation.setStatus("Stopped"));
