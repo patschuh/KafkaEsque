@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -193,8 +194,9 @@ public class CrossClusterController {
                 while (!operation.getStop().get() && (limit == null || count.get() < limit) && !operation.getStatus().equals("Error")) {
                     ConsumerRecords consumerRecords = kafkaConsumer.poll(Duration.ofSeconds(5));
                     Iterable<ConsumerRecord> records = consumerRecords.records(operation.getFromTopic().getName());
-                    while ((limit == null || count.get() < limit) && records.iterator().hasNext()) {
-                        ConsumerRecord consumerRecord = records.iterator().next();
+                    Iterator<ConsumerRecord> iterator = records.iterator();
+                    while ((limit == null || count.get() < limit) && iterator.hasNext()) {
+                        ConsumerRecord consumerRecord = iterator.next();
                         try {
                             if (operation.getFilterFunction().test(consumerRecord)) {
                                 if (reserializeMessagesToggle.isSelected()) {
