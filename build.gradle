@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'at.esque.kafka'
-version = '2.7.2'
+version = '2.7.3'
 
 repositories {
     mavenCentral()
@@ -68,12 +68,12 @@ application {
 }
 
 java {
-    sourceCompatibility = '21'
-    targetCompatibility = '21'
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
 }
 
 javafx {
-    version = '21'
+    version = '17'
     modules = ['javafx.controls', 'javafx.fxml']
 }
 

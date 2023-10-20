@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         os: [ macos-12, ubuntu-22.04, windows-2022 ]
-        java: [ '21' ]
+        java: [ '17' ]
       fail-fast: false
     name: ${{ matrix.os }}
     steps:
@@ -141,6 +141,6 @@ jobs:
           base-branch: main
           create-pullrequest: true
           tag-name: ${{ steps.extract-version.outputs.tag-name }}
-          download-url: https://github.com/patschuh/KafkaEsque/releases/download/v${{ steps.extract-version.outputs.tag-name }}/kafkaesque-${{ steps.extract-version.outputs.tag-name }}.dmg
+          download-url: https://github.com/patschuh/KafkaEsque/releases/download/v${{ steps.extract-version.outputs.tag-name }}/KafkaEsque-${{ steps.extract-version.outputs.tag-name }}.dmg
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
