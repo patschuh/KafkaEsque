@@ -7,11 +7,12 @@ import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.model.util.BindingMode;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
+import com.dlsc.formsfx.view.util.ColSpan;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
-import javafx.scene.control.*;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.input.ZoomEvent;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.util.StringConverter;
 
 import java.util.Optional;
@@ -21,6 +22,7 @@ public class ClusterConfigDialog {
     public static final String LABEL_IDENTIFIER = "Identifier";
     public static final String LABEL_BOOTSTRAP_SERVERS = "Bootstrap-Servers";
     public static final String LABEL_SCHEMA_REGISTRY_URL = "Schema Registry URL";
+    public static final String LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO = "<<Deprecated>>Schema Registry Basic Auth User Info";
     public static final String LABEL_SCHEMA_REGISTRY_AUTH_USER_INFO = "Schema Registry Auth Info";
     public static final String LABEL_SCHEMA_REGISTRY_AUTH_MODE = "Schema Registry Auth Mode";
     public static final String LABEL_ENABLE_SSL = "Enable SSL";
@@ -75,6 +77,12 @@ public class ClusterConfigDialog {
                                 .placeholder(LABEL_SCHEMA_REGISTRY_URL)
                                 .format(new NullFormatStringConverter())
                                 .bind(copy.schemaRegistryProperty()),
+                        Field.ofStringType(copy.getSchemaRegistryBasicAuthUserInfo() == null ? "" : copy.getSchemaRegistryBasicAuthUserInfo())
+                                .label(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
+                                .tooltip(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
+                                .placeholder(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
+                                .format(new NullFormatStringConverter())
+                                .bind(copy.schemaRegistryBasicAuthUserInfoProperty()),
                         Field.ofSingleSelectionType(copy.schemaRegistryAuthModesProperty())
                                 .label(LABEL_SCHEMA_REGISTRY_AUTH_MODE)
                                 .tooltip(LABEL_SCHEMA_REGISTRY_AUTH_MODE)
@@ -88,11 +96,13 @@ public class ClusterConfigDialog {
                         Field.ofBooleanType(copy.isSchemaRegistryUseSsl())
                                 .label(LABEL_USE_SSL_CONFIGURATION)
                                 .tooltip(LABEL_USE_SSL_CONFIGURATION)
-                                .bind(copy.schemaRegistryUseSslProperty()),
+                                .bind(copy.schemaRegistryUseSslProperty())
+                                .span(ColSpan.HALF),
                         Field.ofBooleanType(copy.isSchemaRegistrySuppressCertPathValidation())
                                 .label(LABEL_SUPPRESS_CERT_PATH_VALIDATION)
                                 .tooltip(LABEL_SUPPRESS_CERT_PATH_VALIDATION)
                                 .bind(copy.suppressCertPathValidation())
+                                .span(ColSpan.HALF)
                 ),
                 Group.of(
                         Field.ofStringType(copy.getkafkaConnectUrl()==null?"":copy.getkafkaConnectUrl())
@@ -122,11 +132,13 @@ public class ClusterConfigDialog {
                         Field.ofBooleanType(copy.isSslEnabled())
                                 .label(LABEL_ENABLE_SSL)
                                 .tooltip(LABEL_ENABLE_SSL)
-                                .bind(copy.sslEnabledProperty()),
+                                .bind(copy.sslEnabledProperty())
+                                .span(ColSpan.HALF),
                         Field.ofBooleanType(copy.issuppressSslEndPointIdentification())
                                 .label(LABEL_SUPPRESS_SSL_ENDPOINT_IDENTIFICATION)
                                 .tooltip(LABEL_SUPPRESS_SSL_ENDPOINT_IDENTIFICATION)
-                                .bind(copy.suppressSslEndPointIdentificationProperty()),
+                                .bind(copy.suppressSslEndPointIdentificationProperty())
+                                .span(ColSpan.HALF),
                         Field.ofStringType(copy.getKeyStoreLocation()==null?"":copy.getKeyStoreLocation())
                                 .label(LABEL_KEY_STORE_LOCATION)
                                 .tooltip(LABEL_KEY_STORE_LOCATION)
@@ -158,13 +170,15 @@ public class ClusterConfigDialog {
                                 .tooltip(LABEL_SASL_SECURITY_PROTOCOL)
                                 .placeholder(LABEL_SASL_SECURITY_PROTOCOL)
                                 .format(new NullFormatStringConverter())
-                                .bind(copy.saslSecurityProtocolProperty()),
+                                .bind(copy.saslSecurityProtocolProperty())
+                                .span(ColSpan.HALF),
                         Field.ofStringType(copy.getSaslMechanism()==null?"":copy.getSaslMechanism())
                                 .label(LABEL_SASL_MECHANISM)
                                 .tooltip(LABEL_SASL_MECHANISM)
                                 .placeholder(LABEL_SASL_MECHANISM)
                                 .format(new  NullFormatStringConverter())
-                                .bind(copy.saslMechanismProperty()),
+                                .bind(copy.saslMechanismProperty())
+                                .span(ColSpan.HALF),
                         Field.ofStringType(copy.getSaslJaasConfig()==null?"":copy.getSaslJaasConfig())
                                 .label(LABEL_SASL_JAAS_CONFIG)
                                 .tooltip(LABEL_SASL_JAAS_CONFIG)
@@ -209,13 +223,13 @@ public class ClusterConfigDialog {
 
     }
 
-    private static class NullFormatStringConverter extends StringConverter<String> {
+    private static class NullFormatStringConverter extends StringConverter<String>{
         public NullFormatStringConverter() {
         }
 
         @Override
         public String toString(String s) {
-            if (s == null || "null".equals(s)) {
+            if(s == null || "null".equals(s)){
                 return "";
             }
             return s;
@@ -223,7 +237,7 @@ public class ClusterConfigDialog {
 
         @Override
         public String fromString(String s) {
-            if ("".equals(s) || "null".equals(s)) {
+            if("".equals(s) || "null".equals(s)){
                 return null;
             }
             return s;
