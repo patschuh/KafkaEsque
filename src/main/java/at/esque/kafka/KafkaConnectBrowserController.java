@@ -25,8 +25,13 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -35,13 +40,17 @@ import org.kordamp.ikonli.fontawesome.FontAwesome;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.Map;
+import java.util.function.Function;
 
 
 public class KafkaConnectBrowserController {
 
-    private static final String RIGHT_PANE_CONNECTOR_ACTION_PAUSE   = "pause connector";
-    private static final String RIGHT_PANE_CONNECTOR_ACTION_RESUME  = "resume connector";
+    private static final String RIGHT_PANE_CONNECTOR_ACTION_PAUSE = "pause connector";
+    private static final String RIGHT_PANE_CONNECTOR_ACTION_RESUME = "resume connector";
     private static final String RIGHT_PANE_CONNECTOR_ACTION_RESTART = "restart connector";
+
+    @FXML
+    private Tooltip helpIconToolTip;
 
     @FXML
     private FilterableListView<String> connectorListView;
@@ -114,8 +123,7 @@ public class KafkaConnectBrowserController {
                                     }
 
                                     updateRightPane(selectedConnectorInRightPane);
-                                } catch (Exception e)
-                                {
+                                } catch (Exception e) {
                                     ErrorAlert.show(e, getWindow());
                                 }
 
@@ -127,20 +135,19 @@ public class KafkaConnectBrowserController {
                     }
                 });
 
-
-
+        taskTableView.setOnKeyPressed(generateMessageTableCopyEventHandler());
+        helpIconToolTip.setText(buildToolTip());
     }
 
     private Window getWindow() {
         return connectorConfigTextArea.getScene().getWindow();
     }
 
-    public void updateRightPane(String selectedConnector)
-    {
+    public void updateRightPane(String selectedConnector) {
         try {
-            if(selectedConnector != null) {
+            if (selectedConnector != null) {
                 Map<String, String> connectorConfig = kafkaesqueConnectClient.getConnectorConfig(selectedConnector);
-                connectorConfigTextArea.setText(ConnectUtil.buildConfigString(connectorConfig,ConnectUtil.PARAM_BLACK_LIST_VIEW));
+                connectorConfigTextArea.setText(ConnectUtil.buildConfigString(connectorConfig, ConnectUtil.PARAM_BLACK_LIST_VIEW));
 
                 Status status = kafkaesqueConnectClient.getConnectorStatus(selectedConnector);
                 connectorStatus.setText(status.getStatus());
@@ -149,9 +156,7 @@ public class KafkaConnectBrowserController {
                 selectedConnectorInRightPane = selectedConnector;
 
                 taskTableView.setItems(FXCollections.observableArrayList(status.getTaskStatusList()));
-            }
-            else
-            {
+            } else {
                 connectorConfigTextArea.setText("");
                 connectorStatus.setText("");
                 updateDisableFlagOfConnectorActionButtonStatus(null);
@@ -180,8 +185,7 @@ public class KafkaConnectBrowserController {
         }
     }
 
-    private void showConnectConfigDialog(String selectedConnector)
-    {
+    private void showConnectConfigDialog(String selectedConnector) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/createConnector.fxml"));
             Parent root1 = fxmlLoader.load();
@@ -208,21 +212,20 @@ public class KafkaConnectBrowserController {
         deleteItem.setGraphic(new FontIcon(FontAwesome.TRASH));
         deleteItem.textProperty().set("delete");
         deleteItem.setOnAction(event -> {
-                if (ConfirmationAlert.show("Delete Connector", "Connector [" + cell.itemProperty().get() + "] will be deleted.", "Are you sure you want to delete this connector", getWindow())) {
-                    try {
-                        boolean result = kafkaesqueConnectClient.deleteConnector(cell.itemProperty().get());
+            if (ConfirmationAlert.show("Delete Connector", "Connector [" + cell.itemProperty().get() + "] will be deleted.", "Are you sure you want to delete this connector", getWindow())) {
+                try {
+                    boolean result = kafkaesqueConnectClient.deleteConnector(cell.itemProperty().get());
 
-                        if(result == true) {
-                            SuccessAlert.show("Delete Connector", null, "Connector [" + cell.itemProperty().get() + "] deleted.", getWindow());
-                        } else
-                        {
-                            WarningAlert.show( "Delete Connector", null, "It wasn't possible to delete the connector", getWindow());
-                        }
-                    } catch (Exception e) {
-                        ErrorAlert.show(e, getWindow());
+                    if (result == true) {
+                        SuccessAlert.show("Delete Connector", null, "Connector [" + cell.itemProperty().get() + "] deleted.", getWindow());
+                    } else {
+                        WarningAlert.show("Delete Connector", null, "It wasn't possible to delete the connector", getWindow());
                     }
+                } catch (Exception e) {
+                    ErrorAlert.show(e, getWindow());
                 }
-            });
+            }
+        });
 
         MenuItem configItem = new MenuItem();
         configItem.setGraphic(new FontIcon(FontAwesome.COG));
@@ -247,12 +250,11 @@ public class KafkaConnectBrowserController {
     }
 
 
-    private void updateDisableFlagOfConnectorActionButtonStatus(String connectorStatus)
-    {
+    private void updateDisableFlagOfConnectorActionButtonStatus(String connectorStatus) {
         if (connectorStatus == null)
             connectorStatus = "";
 
-        switch(connectorStatus){
+        switch (connectorStatus) {
             case "RUNNING":
                 pauseButton.setDisable(false);
                 resumeButton.setDisable(true);
@@ -268,25 +270,21 @@ public class KafkaConnectBrowserController {
     }
 
     @FXML
-    public void pauseConnectorClick(ActionEvent actionEvent)
-    {
+    public void pauseConnectorClick(ActionEvent actionEvent) {
         rightPaneConnectorAction(RIGHT_PANE_CONNECTOR_ACTION_PAUSE);
     }
 
     @FXML
-    public void resumeConnectorClick(ActionEvent actionEvent)
-    {
+    public void resumeConnectorClick(ActionEvent actionEvent) {
         rightPaneConnectorAction(RIGHT_PANE_CONNECTOR_ACTION_RESUME);
     }
 
     @FXML
-    public void restartConnectorClick(ActionEvent actionEvent)
-    {
+    public void restartConnectorClick(ActionEvent actionEvent) {
         rightPaneConnectorAction(RIGHT_PANE_CONNECTOR_ACTION_RESTART);
     }
 
-    private void rightPaneConnectorAction(String action)
-    {
+    private void rightPaneConnectorAction(String action) {
         try {
 
             if (selectedConnectorInRightPane == null)
@@ -294,7 +292,7 @@ public class KafkaConnectBrowserController {
 
             boolean result = false;
 
-            switch(action){
+            switch (action) {
                 case RIGHT_PANE_CONNECTOR_ACTION_PAUSE:
                     result = kafkaesqueConnectClient.pauseConnector(selectedConnectorInRightPane);
                     break;
@@ -306,9 +304,8 @@ public class KafkaConnectBrowserController {
                     break;
             }
 
-            if (result != true)
-            {
-                WarningAlert.show("Connector Action", null, String.format("Connector action '%s' returned fales from API!",action), getWindow());
+            if (result != true) {
+                WarningAlert.show("Connector Action", null, String.format("Connector action '%s' returned fales from API!", action), getWindow());
             }
 
             //Refresh view
@@ -316,5 +313,24 @@ public class KafkaConnectBrowserController {
         } catch (Exception e) {
             ErrorAlert.show(e, getWindow());
         }
+    }
+
+    private EventHandler<? super KeyEvent> generateMessageTableCopyEventHandler() {
+        Map<KeyCodeCombination, Function<Status.TaskStatus, String>> copyCombinations = Map.of(
+                new KeyCodeCombination(KeyCode.I, KeyCombination.SHORTCUT_DOWN), taskStatus -> Integer.toString(taskStatus.getId()),
+                new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN), Status.TaskStatus::getStatus,
+                new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN), Status.TaskStatus::getWorkerId,
+                new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN), Status.TaskStatus::getTrace
+        );
+
+        return SystemUtils.generateTableCopySelectedItemCopyEventHandler(taskTableView, copyCombinations);
+    }
+
+    private String buildToolTip() {
+        return String.format("The following KeyCombinations let you copy data from the selected element in the tasks table%n" +
+                new KeyCodeCombination(KeyCode.I, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy task id%n" +
+                new KeyCodeCombination(KeyCode.S, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy task status%n" +
+                new KeyCodeCombination(KeyCode.W, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy worker id%n" +
+                new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy trace");
     }
 }

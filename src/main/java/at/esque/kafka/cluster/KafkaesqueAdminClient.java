@@ -20,6 +20,7 @@ import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.acl.AccessControlEntryFilter;
 import org.apache.kafka.common.acl.AclBinding;
@@ -31,7 +32,6 @@ import org.apache.kafka.common.resource.PatternType;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.apache.kafka.common.resource.ResourceType;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -42,7 +42,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class KafkaesqueAdminClient {
     private AdminClient adminClient;
@@ -70,20 +69,34 @@ public class KafkaesqueAdminClient {
         return new HashSet<>();
     }
 
-    public List<Integer> getTopicPatitions(String topic) {
+    public List<Integer> getPatitions(String topic) {
         DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic));
         try {
-            return result.values().get(topic).get().partitions().stream()
-                    .map(TopicPartitionInfo::partition).collect(Collectors.toList());
+            return result.topicNameValues().get(topic).get().partitions().stream()
+                    .map(TopicPartitionInfo::partition)
+                    .toList();
         } catch (Exception e) {
             ErrorAlert.show(e);
         }
-        return null;
+        return Collections.emptyList();
     }
+
+    public List<TopicPartition> getTopicPatitions(String topic) {
+        DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic));
+        try {
+            return result.topicNameValues().get(topic).get().partitions().stream()
+                    .map(topicPartitionInfo -> new TopicPartition(topic, topicPartitionInfo.partition()))
+                    .toList();
+        } catch (Exception e) {
+            ErrorAlert.show(e);
+        }
+        return Collections.emptyList();
+    }
+
 
     public void deleteTopic(String name) throws ExecutionException, InterruptedException {
         DeleteTopicsResult result = adminClient.deleteTopics(Collections.singletonList(name));
-        result.values().get(name).get();
+        result.topicNameValues().get(name).get();
     }
 
     public void createTopic(String name, int partitions, short replicationFactor, Map<String, String> configs) throws ExecutionException, InterruptedException {
@@ -102,7 +115,7 @@ public class KafkaesqueAdminClient {
         DescribeConfigsResult configsResult = adminClient.describeConfigs(Collections.singletonList(configResource));
 
         try {
-            TopicDescription topicDescription = describeResult.values().get(topic).get(10, TimeUnit.SECONDS);
+            TopicDescription topicDescription = describeResult.topicNameValues().get(topic).get(10, TimeUnit.SECONDS);
             Config config = configsResult.values().get(configResource).get(10, TimeUnit.SECONDS);
 
             return new DescribeTopicWrapper(topicDescription, config);
@@ -119,11 +132,11 @@ public class KafkaesqueAdminClient {
                 Lag lag = new Lag();
                 lag.setTitle(consumerGroupListing.groupId());
                 return lag;
-            }).collect(Collectors.toList());
+            }).toList();
         } catch (Exception e) {
             Platform.runLater(() -> ErrorAlert.show(e));
         }
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     public List<AclBinding> getACLs(ResourceType resourceType, PatternType resourcePattern, String resourceName, String principalName) {
@@ -138,12 +151,12 @@ public class KafkaesqueAdminClient {
 
             DescribeAclsResult describeAclsResult = adminClient.describeAcls(aclBindingFilter);
 
-            return describeAclsResult.values().get().stream().collect(Collectors.toList());
+            return describeAclsResult.values().get().stream().toList();
 
         } catch (Exception e) {
             Platform.runLater(() -> ErrorAlert.show(e));
         }
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     public List<AclBinding> getACLsBySubstring(ResourceType resourceType, PatternType resourcePattern, String resourceName, String principalName) {
@@ -154,14 +167,14 @@ public class KafkaesqueAdminClient {
             DescribeAclsResult describeAclsResult = adminClient.describeAcls(aclBindingFilter);
 
             return describeAclsResult.values().get().stream()
-                    .filter(acl -> "".equals(resourceName) ? true : acl.pattern().name().contains(resourceName))
-                    .filter(acl -> "".equals(principalName) ? true : acl.entry().principal().contains(principalName))
-                    .collect(Collectors.toList());
+                    .filter(acl -> "".equals(resourceName) || acl.pattern().name().contains(resourceName))
+                    .filter(acl -> "".equals(principalName) || acl.entry().principal().contains(principalName))
+                    .toList();
 
         } catch (Exception e) {
             Platform.runLater(() -> ErrorAlert.show(e));
         }
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
 
@@ -181,7 +194,7 @@ public class KafkaesqueAdminClient {
         try {
 
 
-            CreateAclsResult result = adminClient.createAcls(Arrays.asList(aclBinding));
+            CreateAclsResult result = adminClient.createAcls(Collections.singletonList(aclBinding));
 
             result.all().get();
 

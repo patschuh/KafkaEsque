@@ -1,16 +1,33 @@
 package at.esque.kafka;
 
 import at.esque.kafka.controls.JsonTreeItem;
+import at.esque.kafka.serialization.jackson.KafkaHeaderDeserializer;
+import at.esque.kafka.serialization.jackson.KafkaHeaderSerializer;
+import at.esque.kafka.serialization.jackson.MessageMetaDataDeserializer;
+import at.esque.kafka.topics.KafkaMessage;
+import at.esque.kafka.topics.metadata.MessageMetaData;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.Struct;
+import com.google.protobuf.util.JsonFormat;
 import javafx.scene.control.TreeItem;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,7 +40,88 @@ public final class JsonUtils {
     private JsonUtils() {
     }
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = initializeObjectMapper();
+
+    private static ObjectMapper initializeObjectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        SimpleModule simpleModule = new SimpleModule();
+        simpleModule.addDeserializer(Header.class, new KafkaHeaderDeserializer());
+        simpleModule.addDeserializer(MessageMetaData.class, new MessageMetaDataDeserializer());
+        simpleModule.addSerializer(RecordHeader.class, new KafkaHeaderSerializer());
+        objectMapper.registerModule(simpleModule);
+        return objectMapper;
+    }
+
+    public static void writeMessageToJsonFile(List<KafkaMessage> messages, Writer writer) {
+        try {
+            List<JsonNode> value1 = messages.stream()
+                    .map(kafkaMessage -> {
+                                JsonNode jsonNode = objectMapper.valueToTree(kafkaMessage);
+                                String value = kafkaMessage.getValue();
+                                String key = kafkaMessage.getKey();
+                                try {
+                                    JsonNode jsonNode1 = objectMapper.readTree(value);
+                                    if (jsonNode1.isObject()) {
+                                        ((ObjectNode) jsonNode).set("value", jsonNode1);
+                                    }
+                                } catch (Exception e) {
+                                    logger.warn("Failed to convert value to jsonNode [{}]", value);
+                                }
+                                try {
+                                    JsonNode jsonNode1 = objectMapper.readTree(key);
+                                    if (jsonNode1.isObject()) {
+                                        ((ObjectNode) jsonNode).set("key", jsonNode1);
+                                    }
+                                } catch (Exception e) {
+                                    logger.warn("Failed to convert key to jsonNode [{}]", key);
+                                }
+                                return jsonNode;
+                            }
+                    ).toList();
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(writer, value1);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static List<KafkaMessage> readMessages(Reader reader) {
+        ArrayList<KafkaMessage> kafkaMessages = new ArrayList<>();
+        try {
+            JsonNode inputMessages = objectMapper.readTree(reader);
+            if (inputMessages.isArray()) {
+                inputMessages.iterator().forEachRemaining(singleMessage -> {
+                    JsonNode value = singleMessage.get("value");
+                    JsonNode key = singleMessage.get("key");
+
+                    if (value.isObject()) {
+                        try {
+                            ((ObjectNode) singleMessage).set("value", TextNode.valueOf(objectMapper.writeValueAsString(value)));
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    if (key.isObject()) {
+                        try {
+                            ((ObjectNode) singleMessage).set("key", TextNode.valueOf(objectMapper.writeValueAsString(key)));
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    try {
+                        KafkaMessage kafkaMessage = objectMapper.readValue(singleMessage.toString(), KafkaMessage.class);
+                        kafkaMessages.add(kafkaMessage);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return kafkaMessages;
+    }
 
     public static String formatJson(String string) {
         try {
@@ -166,10 +264,10 @@ public final class JsonUtils {
 
     private static void replaceValue(JsonTreeItem path, JsonNode jsonNode) {
         if (jsonNode.get("value").isNull()) {
-            path.setPropertyValue((path.getPropertyValue() == null ? "" : path.getPropertyValue()) + " -> " + ((jsonNode.get("value") instanceof TextNode)?jsonNode.get("value").textValue():jsonNode.get("value")));
+            path.setPropertyValue((path.getPropertyValue() == null ? "" : path.getPropertyValue()) + " -> " + ((jsonNode.get("value") instanceof TextNode) ? jsonNode.get("value").textValue() : jsonNode.get("value")));
             applyChangeTypeAndPropagateToChilds(path, "remove");
         } else {
-            path.setPropertyValue(path.getPropertyValue() + " -> " + ((jsonNode.get("value") instanceof TextNode)?jsonNode.get("value").textValue():jsonNode.get("value")));
+            path.setPropertyValue(path.getPropertyValue() + " -> " + ((jsonNode.get("value") instanceof TextNode) ? jsonNode.get("value").textValue() : jsonNode.get("value")));
             path.setPropertyChangedType(jsonNode.get("op").textValue());
         }
     }
@@ -256,5 +354,22 @@ public final class JsonUtils {
         } else {
             recursivelyAddElements((String.valueOf(value)), treeItem);
         }
+    }
+
+    public static Message fromJson(String json) {
+        Struct.Builder structBuilder = Struct.newBuilder();
+        try {
+            JsonFormat.parser().ignoringUnknownFields().merge(json, structBuilder);
+        } catch (InvalidProtocolBufferException e) {
+            throw new RuntimeException(e);
+        }
+        return structBuilder.build();
+    }
+
+    public static String toJson(MessageOrBuilder messageOrBuilder) throws IOException {
+        if (messageOrBuilder == null) {
+            return null;
+        }
+        return JsonFormat.printer().print(messageOrBuilder);
     }
 }

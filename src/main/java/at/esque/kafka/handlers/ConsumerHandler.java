@@ -55,15 +55,17 @@ public class ConsumerHandler {
     public UUID registerConsumer(ClusterConfig config, TopicMessageTypeConfig topicMessageTypeConfig, Map<String, String> consumerConfigs) throws MissingSchemaRegistryException {
         Properties consumerProps = new Properties();
         consumerProps.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, config.getBootStrapServers());
+        String groupIdPrefix = Optional.ofNullable(consumerConfigs.get("group.id.prefix"))
+                .orElse("kafkaesque-");
         UUID consumerId = UUID.randomUUID();
-        consumerProps.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "kafkaesque-" + consumerId);
+        consumerProps.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupIdPrefix + consumerId);
         consumerProps.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, KafkaEsqueDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaEsqueDeserializer.class);
         consumerProps.put(KafkaAvroSerializerConfig.AVRO_USE_LOGICAL_TYPE_CONVERTERS_CONFIG, configHandler.getSettingsProperties().get(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS));
         consumerProps.setProperty("kafkaesque.cluster.id", config.getIdentifier());
         consumerProps.put("kafkaesque.confighandler", configHandler);
-        if (topicMessageTypeConfig.containsAvro() && StringUtils.isEmpty(config.getSchemaRegistry())) {
+        if (topicMessageTypeConfig.requiresSchemaRegistry() && StringUtils.isEmpty(config.getSchemaRegistry())) {
             Optional<String> input = SystemUtils.showInputDialog("http://localhost:8081", "Add schema-registry url", "this cluster config is missing a schema registry url please add it now", "schema-registry URL");
             if (!input.isPresent()) {
                 throw new MissingSchemaRegistryException(config.getIdentifier());

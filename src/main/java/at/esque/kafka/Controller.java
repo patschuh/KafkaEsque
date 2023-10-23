@@ -41,6 +41,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.protobuf.Message;
 import com.opencsv.bean.CsvToBeanBuilder;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import javafx.application.HostServices;
@@ -51,6 +52,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -72,7 +74,12 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
@@ -108,7 +115,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -126,6 +133,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -135,6 +143,7 @@ import java.util.stream.Collectors;
 public class Controller {
 
     private static final Pattern REPLACER_PATTERN = Pattern.compile("\\$\\{(?<identifier>.[^:{}]+):(?<type>.[^:{}]+)}");
+    public static final String ICONS_KAFKAESQUE_PNG_PATH = "/icons/kafkaesque.png";
 
     private KafkaesqueAdminClient adminClient;
 
@@ -161,6 +170,8 @@ public class Controller {
     private HostServices hostServices;
 
     //FXML
+    @FXML
+    private Tooltip helpIconToolTip;
     @FXML
     private KafkaEsqueCodeArea keyTextArea;
     @FXML
@@ -278,7 +289,7 @@ public class Controller {
 
         clusterComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             adminClient = new KafkaesqueAdminClient(newValue.getBootStrapServers(), configHandler.getSslProperties(selectedCluster()), configHandler.getSaslProperties(selectedCluster()));
-            refreshTopicList(newValue);
+            refreshTopicList();
         });
 
         partitionCombobox.getItems().add(-1);
@@ -290,7 +301,7 @@ public class Controller {
             if (newValue != null) {
                 try {
                     final Integer selectedItem = partitionCombobox.getSelectionModel().getSelectedItem();
-                    final List<Integer> topicPatitions = adminClient.getTopicPatitions(newValue);
+                    final List<Integer> topicPatitions = adminClient.getPatitions(newValue);
                     partitionCombobox.getItems().clear();
                     partitionCombobox.getItems().add(-1);
                     partitionCombobox.getItems().addAll(topicPatitions);
@@ -304,6 +315,9 @@ public class Controller {
                 }
             }
         });
+
+        headerTableView.setOnKeyPressed(generateHeaderTableEventHandler());
+        metdataTableView.setOnKeyPressed(generateMetadataTableEventHandler());
 
         configHandler.configureKafkaEsqueCodeArea(keyTextArea);
         configHandler.configureKafkaEsqueCodeArea(valueTextArea);
@@ -319,17 +333,14 @@ public class Controller {
         ClusterConfig dummycluster = new ClusterConfig();
         dummycluster.setIdentifier("Empty");
         messageTabPane.getTabs().add(createTab(dummycluster, "Tab"));
+        helpIconToolTip.setText(buildToolTip());
 
         versionInfoHandler.showDialogIfUpdateIsAvailable(hostServices);
     }
 
     private void setupJsonFormatToggle() {
-        formatJsonToggle.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            updateKeyValueTextArea(selectedMessage, newValue);
-        });
-        jqQueryField.textProperty().addListener((observable, oldValue, newValue) -> {
-            updateKeyValueTextArea(selectedMessage, formatJsonToggle.isSelected());
-        });
+        formatJsonToggle.selectedProperty().addListener((observable, oldValue, newValue) -> updateKeyValueTextArea(selectedMessage, newValue));
+        jqQueryField.textProperty().addListener((observable, oldValue, newValue) -> updateKeyValueTextArea(selectedMessage, formatJsonToggle.isSelected()));
         jqQueryField.visibleProperty().bind(Bindings.createBooleanBinding(() -> {
             if (formatJsonToggle.isSelected()) {
                 jqQueryField.setMaxWidth(-1);
@@ -459,7 +470,7 @@ public class Controller {
             try {
                 TopicMessageTypeConfig topicMessageTypeConfig = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-                TraceInputDialog.show(topicMessageTypeConfig.getKeyType() == MessageType.AVRO, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)), partitionCombobox.getItems())
+                TraceInputDialog.show(topicMessageTypeConfig.getKeyType() == MessageType.AVRO || topicMessageTypeConfig.getKeyType() == MessageType.PROTOBUF_SR, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)), partitionCombobox.getItems())
                         .ifPresent(traceInput -> {
                             backGroundTaskHolder.setBackGroundTaskDescription("tracing message");
                             Integer partition = null;
@@ -490,41 +501,24 @@ public class Controller {
                                 actualPredicate = keyPredicate.or(valuePredicate);
                             }
 
-                            trace(topicMessageTypeConfig, consumerConfig, actualPredicate, partition, traceInput.getEpoch());
+                            if (traceInput.getKafkaHeaderFilterOptions() != null && !traceInput.getKafkaHeaderFilterOptions().isEmpty()) {
+                                List<Predicate<ConsumerRecord>> predicates = traceInput.getKafkaHeaderFilterOptions()
+                                        .stream()
+                                        .map(TraceUtils::consumerRecordHeaderPredicate)
+                                        .toList();
+
+                                for (Predicate<ConsumerRecord> predicate : predicates) {
+                                    actualPredicate = actualPredicate.and(predicate);
+                                }
+
+                            }
+
+                            trace(topicMessageTypeConfig, consumerConfig, actualPredicate, partition, traceInput.getEpochStart(), traceInput.getEpochEnd() == null ? null : consumerRecord -> consumerRecord.timestamp() >= traceInput.getEpochEnd());
                         });
             } catch (Exception e) {
                 ErrorAlert.show(e, controlledStage);
             }
         });
-
-//        MenuItem traceInValueItem = new MenuItem();
-//        traceInValueItem.setGraphic(new FontIcon(FontAwesome.SEARCH));
-//        traceInValueItem.textProperty().set("trace in value");
-//        traceInValueItem.setOnAction(event -> {
-//            try {
-//                TopicMessageTypeConfig topicMessageTypeConfig = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
-//                Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
-//                TraceInputDialog.show(false, false, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)))
-//                        .ifPresent(traceInput -> {
-//                            backGroundTaskHolder.setBackGroundTaskDescription("tracing in Value: " + traceInput.getSearch());
-//                            Pattern pattern = Pattern.compile(traceInput.getSearch());
-//                            trace(topicMessageTypeConfig, consumerConfig, (ConsumerRecord cr) -> {
-//                                if (traceInput.isSearchNull()) {
-//                                    return cr.value() == null;
-//                                } else {
-//
-//                                    if (cr.value() == null) {
-//                                        return false;
-//                                    }
-//                                    Matcher matcher = pattern.matcher(cr.value().toString());
-//                                    return matcher.find();
-//                                }
-//                            }, null, traceInput.getEpoch());
-//                        });
-//            } catch (Exception e) {
-//                ErrorAlert.show(e, controlledStage);
-//            }
-//        });
 
         MenuItem deleteItem = new MenuItem();
         deleteItem.setGraphic(new FontIcon(FontAwesome.TRASH));
@@ -560,12 +554,12 @@ public class Controller {
         return cell;
     }
 
-    private void refreshTopicList(ClusterConfig newValue) {
+    private void refreshTopicList() {
         backGroundTaskHolder.setBackGroundTaskDescription("getting Topics...");
-        runInDaemonThread(() -> getTopicsForCluster(newValue));
+        runInDaemonThread(() -> getTopicsForCluster());
     }
 
-    private void getTopicsForCluster(ClusterConfig clusterConfig) {
+    private void getTopicsForCluster() {
         StopWatch stopWatch = new StopWatch();
         try {
             stopWatch.start();
@@ -573,7 +567,8 @@ public class Controller {
             backGroundTaskHolder.setIsInProgress(true);
             Set<String> topics = adminClient.getTopics();
             Platform.runLater(() -> topicListView.setItems(topics));
-
+        } catch (Exception e) {
+            Platform.runLater(() -> ErrorAlert.show(e));
         } finally {
             stopWatch.stop();
             LOGGER.info("Finished getting topics for cluster [{}]", stopWatch);
@@ -583,10 +578,7 @@ public class Controller {
 
     @FXML
     public void refreshButtonClick(ActionEvent e) {
-        ClusterConfig selectedCluster = selectedCluster();
-        if (selectedCluster != null) {
-            refreshTopicList(selectedCluster);
-        }
+        refreshTopicList();
     }
 
     @FXML
@@ -643,7 +635,7 @@ public class Controller {
             SchemaRegistryBrowserController controller = fxmlLoader.getController();
             controller.setup(selectedConfig, configHandler);
             Stage stage = new Stage();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.NONE);
             stage.setTitle("Browse Schema Registry - " + selectedConfig.getIdentifier());
@@ -675,7 +667,7 @@ public class Controller {
             KafkaConnectBrowserController controller = fxmlLoader.getController();
             controller.setup(selectedConfig, configHandler);
             Stage stage = new Stage();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.NONE);
             stage.setTitle("Browse Kafka Connect - " + selectedConfig.getIdentifier());
@@ -707,7 +699,7 @@ public class Controller {
             InstalledConnectorPluginsController controller = fxmlLoader.getController();
             controller.setup(selectedConfig, configHandler);
             Stage stage = new Stage();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.NONE);
             stage.setTitle("Browse installed Kafka Connect plugins - " + selectedConfig.getIdentifier());
@@ -728,7 +720,7 @@ public class Controller {
             CrossClusterController controller = fxmlLoader.getController();
             controller.setup();
             Stage stage = new Stage();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Cross Cluster Operations");
@@ -751,7 +743,7 @@ public class Controller {
             KafkaConsumer consumer = consumerHandler.getConsumer(consumerId).orElseThrow(() -> new RuntimeException("Error getting consumer"));
             controller.setup(adminClient, consumer);
             Stage stage = new Stage();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.NONE);
             stage.setTitle("Lag Viewer - " + selectedCluster().getIdentifier());
@@ -776,16 +768,14 @@ public class Controller {
             AclViewerController controller = fxmlLoader.getController();
             controller.setup(adminClient);
             Stage stage = new Stage();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.NONE);
             stage.setTitle("ACL Viewer - " + selectedCluster().getIdentifier());
             stage.setScene(Main.createStyledScene(root1, 1000, 500));
             stage.show();
             centerStageOnControlledStage(stage);
-            stage.setOnCloseRequest(windowEvent -> {
-                controller.stop();
-            });
+            stage.setOnCloseRequest(windowEvent -> controller.stop());
         } catch (Exception e) {
             ErrorAlert.show(e, controlledStage);
         }
@@ -809,7 +799,6 @@ public class Controller {
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 consumerHandler.seekToOffset(consumerId, -1);
                 Map<TopicPartition, Long> currentOffsets = consumerHandler.getCurrentOffsets(consumerId);
-                //baseList.clear();
                 PinTab tab = getActiveTabOrAddNew(topic, false);
                 ObservableList<KafkaMessage> baseList = getAndClearBaseList(tab);
                 Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("getting messages..."));
@@ -922,7 +911,10 @@ public class Controller {
         if (selectedPartition >= 0) {
             consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(Collections.singletonList(new TopicPartition(selectedTopic(), selectedPartition))));
         } else {
-            consumerHandler.subscribe(consumerId, topic.getName());
+            List<TopicPartition> partitions = adminClient.getPatitions(topic.getName()).stream()
+                    .map(integer -> new TopicPartition(topic.getName(), integer))
+                    .collect(Collectors.toList());
+            consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(partitions));
         }
     }
 
@@ -960,7 +952,7 @@ public class Controller {
         });
     }
 
-    private <KT, VT> void trace(TopicMessageTypeConfig topic, Map<String, String> consumerConfig, Predicate<ConsumerRecord> predicate, Integer fasttracePartition, Long epoch) {
+    private <KT, VT> void trace(TopicMessageTypeConfig topic, Map<String, String> consumerConfig, Predicate<ConsumerRecord> predicate, Integer fasttracePartition, Long epoch, Predicate<ConsumerRecord> stopTraceInPartitionCondition) {
         runInDaemonThread(() -> {
             UUID consumerId = null;
             try {
@@ -971,11 +963,14 @@ public class Controller {
             }
             try {
                 backGroundTaskHolder.setIsInProgress(true);
+                List<TopicPartition> topicPatitions;
                 if (fasttracePartition != null) {
-                    consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(Collections.singletonList(new TopicPartition(selectedTopic(), fasttracePartition))));
+                    topicPatitions = new ArrayList<>(Collections.singletonList(new TopicPartition(selectedTopic(), fasttracePartition)));
                 } else {
-                    consumerHandler.subscribe(consumerId, selectedTopic());
+                    topicPatitions = new ArrayList<>(adminClient.getTopicPatitions(selectedTopic()));
                 }
+                consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(topicPatitions));
+
                 AtomicLong messagesConsumed = new AtomicLong(0);
                 AtomicLong messagesFound = new AtomicLong(0);
                 Map<TopicPartition, Long> minOffsets = consumerHandler.getMinOffsets(consumerId);
@@ -992,11 +987,27 @@ public class Controller {
                     while (!backGroundTaskHolder.getStopBackGroundTask() && !reachedMaxOffsetForAllPartitions(maxOffsets, minOffsets, currentOffsets)) {
                         ConsumerRecords<KT, VT> records = topicConsumer.poll(Duration.ofSeconds(1));
                         records.forEach(cr -> {
+                            if (!topicPatitions.contains(new TopicPartition(cr.topic(), cr.partition()))) {
+                                return;
+                            }
                             messagesConsumed.incrementAndGet();
                             currentOffsets.put(new TopicPartition(cr.topic(), cr.partition()), cr.offset());
                             if (predicate.test(cr)) {
                                 convertAndAdd(cr, baseList);
                                 messagesFound.incrementAndGet();
+                            }
+                            if (stopTraceInPartitionCondition != null && stopTraceInPartitionCondition.test(cr)) {
+                                Optional<TopicPartition> first = topicPatitions.stream()
+                                        .filter(topicPartition -> topicPartition.partition() == cr.partition())
+                                        .findFirst();
+
+                                first.ifPresent(topicPartition -> {
+                                    topicPatitions.remove(topicPartition);
+                                    maxOffsets.remove(topicPartition);
+                                    minOffsets.remove(topicPartition);
+                                    currentOffsets.remove(topicPartition);
+                                    topicConsumer.assign(topicPatitions);
+                                });
                             }
                         });
                         Platform.runLater(() -> backGroundTaskHolder.setProgressMessage(String.format("Found %s in %s consumed Messages", messagesFound, messagesConsumed)));
@@ -1015,11 +1026,9 @@ public class Controller {
             throw new RuntimeException("Failed to determine number of partitions!", topicDescription.getException());
         }
         int numberOfPartitions = topicDescription.getTopicDescription().partitions().size();
-        try {
-            return Utils.toPositive(Utils.murmur2(key.getBytes("UTF-8"))) % numberOfPartitions;
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+
+        return Utils.toPositive(Utils.murmur2(key.getBytes(StandardCharsets.UTF_8))) % numberOfPartitions;
+
     }
 
     private <KT, VT> void convertAndAdd(ConsumerRecord<KT, VT> cr, ObservableList<KafkaMessage> baseList) {
@@ -1029,12 +1038,26 @@ public class Controller {
         kafkaMessage.setKey(cr.key() == null ? null : cr.key().toString());
         kafkaMessage.setValue(cr.value() == null ? null : cr.value().toString());
 
-        if (cr.value() instanceof GenericData.Record) {
-            kafkaMessage.setValueType(extractTypeFromGenericRecord((GenericData.Record) cr.value()));
-            kafkaMessage.getMetaData().add(new StringMetadata("Value Schema ID", extractSchemaIdFromGenericRecord((GenericData.Record) cr.value())));
+        if (cr.value() instanceof GenericData.Record recordValue) {
+            kafkaMessage.setValueType(extractTypeFromGenericRecord(recordValue));
+            kafkaMessage.getMetaData().add(new StringMetadata("Value Schema ID", extractSchemaIdFromGenericRecord(recordValue)));
+        } else if (cr.value() instanceof Message message) {
+            kafkaMessage.setValueType(message.getDescriptorForType().getFullName());
+            try {
+                kafkaMessage.setValue(JsonUtils.toJson(message));
+            } catch (IOException e) {
+                LOGGER.error("Failed printing protobuf message as json", e);
+            }
         }
-        if (cr.key() instanceof GenericData.Record) {
-            kafkaMessage.setKeyType(extractTypeFromGenericRecord((GenericData.Record) cr.key()));
+        if (cr.key() instanceof GenericData.Record recordKey) {
+            kafkaMessage.setKeyType(extractTypeFromGenericRecord(recordKey));
+        } else if (cr.key() instanceof Message messageKey) {
+            kafkaMessage.setKeyType(messageKey.getDescriptorForType().getFullName());
+            try {
+                kafkaMessage.setKey(JsonUtils.toJson(messageKey));
+            } catch (IOException e) {
+                LOGGER.error("Failed printing protobuf message as json", e);
+            }
         }
 
         kafkaMessage.setTimestamp(Instant.ofEpochMilli(cr.timestamp()).toString());
@@ -1195,14 +1218,14 @@ public class Controller {
 
     private void showPublishMessageDialog(KafkaMessage kafkaMessage) {
         try {
-            List<Integer> partitions = adminClient.getTopicPatitions(selectedTopic());
+            List<Integer> partitions = adminClient.getPatitions(selectedTopic());
             FXMLLoader fxmlLoader = injector.getInstance(FXMLLoader.class);
             fxmlLoader.setLocation(getClass().getResource("/fxml/publishMessage.fxml"));
             Parent root1 = fxmlLoader.load();
             PublisherController controller = fxmlLoader.getController();
             controller.setup(selectedCluster(), selectedTopic(), FXCollections.observableArrayList(partitions), kafkaMessage);
             Stage stage = new Stage();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Publish Message");
@@ -1226,7 +1249,7 @@ public class Controller {
             CreateTopicController controller = fxmlLoader.getController();
             controller.setup(adminClient);
             Stage stage = new Stage();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Create Topic");
@@ -1247,7 +1270,7 @@ public class Controller {
             if (!describeTopicWrapper.isFailed()) {
                 controller.setup(describeTopicWrapper);
                 Stage stage = new Stage();
-                stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+                stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
                 stage.initOwner(controlledStage);
                 stage.initModality(Modality.APPLICATION_MODAL);
                 stage.setTitle("Topic Description");
@@ -1288,7 +1311,7 @@ public class Controller {
             MessageDiffView controller = fxmlLoader.getController();
             controller.setup(source, target);
             Stage stage = new Stage();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Json Diff");
@@ -1409,7 +1432,8 @@ public class Controller {
                                     });
                                     producerHandler.sendMessage(producerId, message.getTargetTopic(), message.getPartition() == -1 ? null : message.getPartition(), message.getKey(), message.getValue(), message.getKeyType(), message.getValueType());
                                     Platform.runLater(() -> backGroundTaskHolder.setProgressMessage("published " + counter.incrementAndGet() + " messages"));
-                                } catch (InterruptedException | ExecutionException | TimeoutException | IOException | RestClientException e) {
+                                } catch (InterruptedException | ExecutionException | TimeoutException | IOException |
+                                         RestClientException e) {
                                     throw new RuntimeException(e);
                                 }
                             });
@@ -1438,7 +1462,7 @@ public class Controller {
                     .withType(KafkaMessage.class)
                     .build().parse();
             messagesToSend.addAll(messages.stream().map(message -> new KafkaMessagBookWrapper(playFile.getName(), message))
-                    .collect(Collectors.toList()));
+                    .toList());
         } catch (FileNotFoundException e) {
             Platform.runLater(() -> ErrorAlert.show(e, controlledStage));
         }
@@ -1479,6 +1503,10 @@ public class Controller {
     }
 
     private PinTab createTab(ClusterConfig clusterConfig, String name) {
+        return createTab(clusterConfig, name, null);
+    }
+
+    private PinTab createTab(ClusterConfig clusterConfig, String name, List<KafkaMessage> kafkaMessages) {
 
         MessagesTabContent messagesTabContent = new MessagesTabContent();
 
@@ -1527,6 +1555,12 @@ public class Controller {
             updateKeyValueTextArea(selectedItem, formatJsonToggle.isSelected());
         });
 
+        if (kafkaMessages != null) {
+            messagesTabContent.getMessageTableView().getBaseList().clear();
+            messagesTabContent.getMessageTableView().getBaseList().addAll(kafkaMessages);
+
+        }
+
         return new PinTab(clusterConfig.getIdentifier() + " - " + name, messagesTabContent);
     }
 
@@ -1542,7 +1576,7 @@ public class Controller {
             AboutController controller = fxmlLoader.getController();
             controller.setup(versionInfoHandler, hostServices);
             Stage stage = new Stage();
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
+            stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("About KafkaEsque");
@@ -1555,7 +1589,48 @@ public class Controller {
         }
     }
 
+    private EventHandler<? super KeyEvent> generateHeaderTableEventHandler() {
+        Map<KeyCodeCombination, Function<Header, String>> copyCombinations = Map.of(
+                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN), header -> new String(header.value(), StandardCharsets.UTF_8),
+                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN), Header::key
+        );
+
+        return SystemUtils.generateTableCopySelectedItemCopyEventHandler(headerTableView, copyCombinations);
+    }
+
+    private EventHandler<? super KeyEvent> generateMetadataTableEventHandler() {
+        Map<KeyCodeCombination, Function<MessageMetaData, String>> copyCombinations = Map.of(
+                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN), metadata -> metadata.valueAsString().getValue(),
+                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN), metadata -> metadata.nameProperty().getName()
+        );
+
+        return SystemUtils.generateTableCopySelectedItemCopyEventHandler(metdataTableView, copyCombinations);
+    }
+
+
     public void setHostServices(HostServices hostServices) {
         this.hostServices = hostServices;
+    }
+
+    private String buildToolTip() {
+        return String.format("The following KeyCombinations let you copy data from the selected element in the metadata and header table%n" +
+                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy Key/Name%n" +
+                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy Value%n");
+    }
+
+    @FXML
+    public void loadFileToTabClick(ActionEvent actionEvent) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Load Message File");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON File (*.json)", "*.json"));
+        File selectedFile = fileChooser.showOpenDialog(controlledStage);
+        try (FileReader fileReader = new FileReader(selectedFile)) {
+            List<KafkaMessage> kafkaMessages = JsonUtils.readMessages(fileReader);
+            ClusterConfig dummyFileClusterConfig = new ClusterConfig();
+            dummyFileClusterConfig.setIdentifier("Loaded File");
+            messageTabPane.getTabs().add(createTab(dummyFileClusterConfig, selectedFile.getName(), kafkaMessages));
+        } catch (Exception e) {
+            ErrorAlert.show(e, controlledStage);
+        }
     }
 }

@@ -2,9 +2,14 @@ package at.esque.kafka.topics;
 
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.controls.InstantPicker;
+import at.esque.kafka.topics.model.KafkaHeaderFilterOption;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -12,12 +17,17 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
+import javafx.util.Callback;
 import org.controlsfx.control.PopOver;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,8 +44,10 @@ import static at.esque.kafka.dialogs.TraceInputDialog.recentTrace;
 
 public class TraceDialogController {
 
-    public HBox quickSelectButtonBar;
-    public InstantPicker epochInstantPicker;
+    public HBox quickSelectStartEpochButtonBar;
+    public InstantPicker epochStartInstantPicker;
+    public HBox quickSelectEndEpochButtonBar;
+    public InstantPicker epochEndInstantPicker;
     public ToggleButton epochToggleButton;
     public RadioButton traceModeKeyOnlyRadio;
     public ToggleGroup conditionMode;
@@ -54,26 +66,28 @@ public class TraceDialogController {
     public TitledPane keyOptionsPane;
     public TitledPane valueOptionsPane;
     public ComboBox<Integer> specificParitionComboBox;
-
-    public TraceDialogController() {
-    }
+    public TableView<KafkaHeaderFilterOption> headerTableView;
+    public TableColumn<KafkaHeaderFilterOption, String> headerFilterHeaderColumn;
+    public TableColumn<KafkaHeaderFilterOption, String> headerFilterFilterStringColumn;
+    public TableColumn<KafkaHeaderFilterOption, Boolean> headerFilterExactMatchColumn;
 
     @FXML
     public void initialize() {
         keyOptionsPane.disableProperty().bind(traceModeValueRadio.selectedProperty());
         valueOptionsPane.disableProperty().bind(traceModeKeyOnlyRadio.selectedProperty());
-        epochInstantPicker.displayAsEpochProperty().bind(epochToggleButton.selectedProperty());
+        epochStartInstantPicker.displayAsEpochProperty().bind(epochToggleButton.selectedProperty());
     }
 
-    public void setup(boolean isAvroKeyType, boolean traceQuickSelectEnabled, List<Duration> durations, int recentTraceMaxEntries, ObservableList<Integer> partitions) {
+    public void setup(boolean isAvroKeyType, boolean traceQuickSelectEnabled, List<Duration> durations, ObservableList<Integer> partitions) {
         clearButtonBar();
         if (traceQuickSelectEnabled) {
-            fillButtonBar(durations);
+            fillButtonBar(durations, quickSelectStartEpochButtonBar, epochStartInstantPicker);
+            fillButtonBar(durations, quickSelectEndEpochButtonBar, epochEndInstantPicker);
         }
-        if(!isAvroKeyType){
+        if (!isAvroKeyType) {
             fastTraceToggle.setDisable(false);
             fastTraceToggle.disableProperty().bind(Bindings.or(keyModeRegexRadio.selectedProperty(), traceModeOrRadio.selectedProperty()));
-        }else{
+        } else {
             fastTraceToggle.setDisable(true);
         }
         specificParitionComboBox.setItems(partitions);
@@ -85,30 +99,54 @@ public class TraceDialogController {
 
         keyHistoryButton.setOnAction(event -> popOverKey.show(keyHistoryButton));
         valueHistoryButton.setOnAction(event -> popOverValue.show(valueHistoryButton));
+
+        headerFilterHeaderColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        headerFilterFilterStringColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        headerFilterExactMatchColumn.setCellFactory(CheckBoxTableCell.forTableColumn(new Callback<Integer, ObservableValue<Boolean>>() {
+            @Override
+            public ObservableValue<Boolean> call(Integer param) {
+                KafkaHeaderFilterOption kafkaHeaderFilterOption = headerTableView.getItems().get(param);
+                SimpleBooleanProperty simpleBooleanProperty = new SimpleBooleanProperty(kafkaHeaderFilterOption.isExactMatch());
+                simpleBooleanProperty.addListener((observable, oldValue, newValue) -> kafkaHeaderFilterOption.setExactMatch(newValue))
+                ;
+                return simpleBooleanProperty;
+            }
+        }, false));
+        headerFilterHeaderColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getHeader()));
+        headerFilterFilterStringColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFilterString()));
+        headerFilterExactMatchColumn.setCellValueFactory(param -> new SimpleBooleanProperty(param.getValue().isExactMatch()));
+        headerFilterHeaderColumn.setOnEditCommit(event -> {
+            KafkaHeaderFilterOption current = event.getTableView().getItems().get(event.getTablePosition().getRow());
+            current.setHeader(event.getNewValue());
+        });
+        headerFilterFilterStringColumn.setOnEditCommit(event -> {
+            KafkaHeaderFilterOption current = event.getTableView().getItems().get(event.getTablePosition().getRow());
+            current.setFilterString(event.getNewValue());
+        });
     }
 
     private void clearButtonBar() {
-        quickSelectButtonBar.getChildren().clear();
+        quickSelectStartEpochButtonBar.getChildren().clear();
     }
 
-    private void fillButtonBar(List<Duration> durations) {
+    private void fillButtonBar(List<Duration> durations, HBox buttonBar, InstantPicker targetInstantPicker) {
         Button todayButton = new Button("Today");
         todayButton.setOnAction(event -> {
             OffsetDateTime offsetDateTime = Instant.now().atOffset(ZoneOffset.UTC);
             Instant today = OffsetDateTime.of(offsetDateTime.toLocalDate(), LocalTime.of(0, 0, 0, 0), ZoneOffset.UTC).toInstant();
-            epochInstantPicker.setInstantValue(today);
+            targetInstantPicker.setInstantValue(today);
         });
-        quickSelectButtonBar.getChildren().add(todayButton);
+        buttonBar.getChildren().add(todayButton);
         durations.forEach(duration -> {
             Button button = new Button("Now - " + stringifyDuration(duration));
             button.setOnAction(event -> {
                 try {
-                    epochInstantPicker.setInstantValue(Instant.now().minus(duration));
+                    targetInstantPicker.setInstantValue(Instant.now().minus(duration));
                 } catch (Exception e) {
                     ErrorAlert.show(e);
                 }
             });
-            quickSelectButtonBar.getChildren().add(button);
+            buttonBar.getChildren().add(button);
         });
     }
 
@@ -172,5 +210,18 @@ public class TraceDialogController {
         Collections.reverse(sortable);
         recentTraces.setItems(FXCollections.observableArrayList(sortable));
         return recentTraces;
+    }
+
+    @FXML
+    private void addHeaderClick(ActionEvent event) {
+        headerTableView.getItems().add(new KafkaHeaderFilterOption("header", "regex or exact string to match", false));
+    }
+
+    @FXML
+    private void removeHeaderClick(ActionEvent e) {
+        int selectedIndex = headerTableView.getSelectionModel().getSelectedIndex();
+        if (selectedIndex > -1) {
+            headerTableView.getItems().remove(selectedIndex);
+        }
     }
 }

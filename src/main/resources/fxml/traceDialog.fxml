@@ -7,10 +7,14 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -19,146 +23,246 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="1.0" minWidth="1.0" prefHeight="657.0" prefWidth="1047.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.topics.TraceDialogController">
-   <center>
-      <GridPane BorderPane.alignment="CENTER">
-        <columnConstraints>
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        </columnConstraints>
-        <rowConstraints>
-          <RowConstraints minHeight="10.0" percentHeight="33.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        </rowConstraints>
-         <children>
-            <TitledPane animated="false" collapsible="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="General Options">
-               <content>
-                  <GridPane>
-                    <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="152.0" minWidth="10.0" percentWidth="30.0" prefWidth="152.0" />
-                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="587.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                      <RowConstraints minHeight="10.0" percentHeight="33.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                     <children>
-                        <Label text="start epoch timestamp" />
-                        <HBox fx:id="quickSelectButtonBar" prefHeight="100.0" prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="1" />
-                        <HBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
-                           <children>
-                              <InstantPicker fx:id="epochInstantPicker" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS" />
-                              <ToggleButton fx:id="epochToggleButton" mnemonicParsing="false">
-                                 <graphic>
-                                    <FontIcon iconLiteral="fa-exchange" />
-                                 </graphic>
-                              </ToggleButton>
-                           </children>
-                        </HBox>
-                        <Label text="mode" GridPane.rowIndex="3" />
-                        <FlowPane alignment="CENTER_LEFT" columnHalignment="CENTER" hgap="10.0" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                           <children>
-                              <RadioButton fx:id="traceModeKeyOnlyRadio" graphicTextGap="5.0" layoutX="65.0" layoutY="14.0" mnemonicParsing="false" selected="true" text="key only">
-                                 <toggleGroup>
-                                    <ToggleGroup fx:id="conditionMode" />
-                                 </toggleGroup>
-                              </RadioButton>
-                              <RadioButton fx:id="traceModeValueRadio" graphicTextGap="5.0" layoutX="111.0" layoutY="14.0" mnemonicParsing="false" text="value only" toggleGroup="$conditionMode" />
-                              <RadioButton fx:id="traceModeAndRadio" graphicTextGap="5.0" mnemonicParsing="false" text="AND" toggleGroup="$conditionMode" />
-                              <RadioButton fx:id="traceModeOrRadio" graphicTextGap="5.0" mnemonicParsing="false" text="OR" toggleGroup="$conditionMode" />
-                           </children>
-                           <opaqueInsets>
-                              <Insets />
-                           </opaqueInsets>
-                        </FlowPane>
-                        <Label text="Select specific partition (-1: all partitions)" GridPane.rowIndex="2" />
-                        <ComboBox fx:id="specificParitionComboBox" maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                     </children>
-                  </GridPane>
-               </content>
-            </TitledPane>
-            <TitledPane fx:id="keyOptionsPane" animated="false" collapsible="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Key Options" GridPane.rowIndex="1">
-               <content>
-                  <GridPane>
-                    <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="152.0" minWidth="10.0" percentWidth="30.0" prefWidth="152.0" />
-                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="584.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                      <RowConstraints minHeight="10.0" percentHeight="33.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                     <children>
-                        <Label text="key" />
-                        <FlowPane alignment="CENTER_LEFT" columnHalignment="CENTER" hgap="10.0" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                           <children>
-                              <RadioButton fx:id="keyModeExactMatchRadio" graphicTextGap="5.0" mnemonicParsing="false" selected="true" text="exact match">
-                                 <toggleGroup>
-                                    <ToggleGroup fx:id="keyMode" />
-                                 </toggleGroup></RadioButton>
-                              <RadioButton fx:id="keyModeRegexRadio" graphicTextGap="5.0" mnemonicParsing="false" text="regex (find)" toggleGroup="$keyMode" />
-                           </children>
-                           <opaqueInsets>
-                              <Insets />
-                           </opaqueInsets>
-                           <GridPane.margin>
-                              <Insets />
-                           </GridPane.margin>
-                        </FlowPane>
-                        <Label text="mode" GridPane.rowIndex="1" />
-                        <CheckBox fx:id="fastTraceToggle" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                        <Label text="use fast trace" underline="true" GridPane.rowIndex="2">
-                           <tooltip>
-                              <Tooltip text="Determines the partition the key would be assigned to,&#10;using the algorithm Kafka's default partitioner would use&#10;and only searches in that partition.&#10;&#10;if this is selected the specific partition setting is ignored." />
-                           </tooltip></Label>
-                        <HBox alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1">
-                           <children>
-                              <TextField fx:id="keyTextBox" maxWidth="1.7976931348623157E308" styleClass="first" HBox.hgrow="ALWAYS" />
-                              <Button fx:id="keyHistoryButton" mnemonicParsing="false" styleClass="last">
-                                 <graphic>
-                                    <FontIcon iconLiteral="fa-history" />
-                                 </graphic>
-                              </Button>
-                           </children>
-                        </HBox>
-                     </children>
-                  </GridPane>
-               </content>
-            </TitledPane>
-            <TitledPane fx:id="valueOptionsPane" animated="false" collapsible="false" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Value Options" GridPane.rowIndex="2">
-               <content>
-                  <GridPane>
-                    <columnConstraints>
-                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="152.0" minWidth="10.0" percentWidth="30.0" prefWidth="152.0" />
-                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" prefWidth="585.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                      <RowConstraints maxHeight="30.0" minHeight="10.0" percentHeight="33.0" prefHeight="30.0" valignment="CENTER" vgrow="SOMETIMES" />
-                      <RowConstraints maxHeight="30.0" minHeight="10.0" percentHeight="33.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                      <RowConstraints minHeight="10.0" percentHeight="33.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                     <children>
-                        <Label text="regex (find)" />
-                        <HBox alignment="CENTER" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
-                           <children>
-                              <TextField fx:id="valueTextBox" maxWidth="1.7976931348623157E308" styleClass="first" HBox.hgrow="ALWAYS" />
-                              <Button fx:id="valueHistoryButton" mnemonicParsing="false" styleClass="last">
-                                 <graphic>
-                                    <FontIcon iconLiteral="fa-history" />
-                                 </graphic>
-                              </Button>
-                           </children>
-                        </HBox>
-                        <CheckBox fx:id="tombstoneToggle" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <Label text="Search for null/tombstone" GridPane.rowIndex="1" />
-                     </children>
-                  </GridPane>
-               </content>
-            </TitledPane>
-         </children>
-      </GridPane>
-   </center>
-</BorderPane>
+<?import java.lang.String?>
+<ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="1.0"
+            minWidth="1.0" prefHeight="657.0" prefWidth="1047.0" xmlns="http://javafx.com/javafx/17.0.2-ea"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="at.esque.kafka.topics.TraceDialogController">
+    <content>
+        <GridPane>
+            <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+                <RowConstraints vgrow="SOMETIMES"/>
+            </rowConstraints>
+            <children>
+                <TitledPane animated="false" collapsible="false" maxHeight="1.7976931348623157E308"
+                            maxWidth="1.7976931348623157E308" text="General Options">
+                    <content>
+                        <GridPane>
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="152.0" minWidth="10.0"
+                                                   percentWidth="30.0" prefWidth="152.0"/>
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0"
+                                                   prefWidth="587.0"/>
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints minHeight="35.0" percentHeight="16.6" prefHeight="35.0"
+                                                vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="35.0" percentHeight="16.6" prefHeight="35.0"
+                                                vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="35.0" percentHeight="16.6" prefHeight="35.0"
+                                                vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="35.0" percentHeight="16.6" prefHeight="35.0"
+                                                vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="35.0" percentHeight="16.6" prefHeight="35.0"
+                                                vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="35.0" percentHeight="16.6" prefHeight="35.0"
+                                                vgrow="SOMETIMES"/>
+                            </rowConstraints>
+                            <children>
+                                <Label text="start epoch timestamp"/>
+                                <HBox fx:id="quickSelectStartEpochButtonBar" prefHeight="100.0" prefWidth="200.0"
+                                      GridPane.columnSpan="2" GridPane.rowIndex="1"/>
+                                <HBox alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                      maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+                                      GridPane.vgrow="ALWAYS">
+                                    <children>
+                                        <InstantPicker fx:id="epochStartInstantPicker" maxWidth="1.7976931348623157E308"
+                                                       HBox.hgrow="ALWAYS"/>
+                                        <ToggleButton fx:id="epochToggleButton" mnemonicParsing="false">
+                                            <graphic>
+                                                <FontIcon iconLiteral="fa-exchange"/>
+                                            </graphic>
+                                        </ToggleButton>
+                                    </children>
+                                </HBox>
+                                <Label text="mode" GridPane.rowIndex="5"/>
+                                <FlowPane alignment="CENTER_LEFT" columnHalignment="CENTER" hgap="10.0"
+                                          maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0"
+                                          GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                    <children>
+                                        <RadioButton fx:id="traceModeKeyOnlyRadio" graphicTextGap="5.0" layoutX="65.0"
+                                                     layoutY="14.0" mnemonicParsing="false" selected="true"
+                                                     text="key only">
+                                            <toggleGroup>
+                                                <ToggleGroup fx:id="conditionMode"/>
+                                            </toggleGroup>
+                                        </RadioButton>
+                                        <RadioButton fx:id="traceModeValueRadio" graphicTextGap="5.0" layoutX="111.0"
+                                                     layoutY="14.0" mnemonicParsing="false" text="value only"
+                                                     toggleGroup="$conditionMode"/>
+                                        <RadioButton fx:id="traceModeAndRadio" graphicTextGap="5.0"
+                                                     mnemonicParsing="false" text="AND" toggleGroup="$conditionMode"/>
+                                        <RadioButton fx:id="traceModeOrRadio" graphicTextGap="5.0"
+                                                     mnemonicParsing="false" text="OR" toggleGroup="$conditionMode"/>
+                                    </children>
+                                    <opaqueInsets>
+                                        <Insets/>
+                                    </opaqueInsets>
+                                </FlowPane>
+                                <Label text="Select specific partition (-1: all partitions)" GridPane.rowIndex="4"/>
+                                <ComboBox fx:id="specificParitionComboBox" maxWidth="1.7976931348623157E308"
+                                          prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                                <Label layoutX="20.0" layoutY="40.0" text="end epoch timestamp" GridPane.rowIndex="2"/>
+                                <InstantPicker fx:id="epochEndInstantPicker" maxWidth="1.7976931348623157E308"
+                                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                                <HBox fx:id="quickSelectEndEpochButtonBar" layoutX="20.0" layoutY="76.0"
+                                      prefHeight="100.0" prefWidth="200.0" GridPane.columnSpan="2"
+                                      GridPane.rowIndex="3"/>
+                            </children>
+                        </GridPane>
+                    </content>
+                </TitledPane>
+                <TitledPane fx:id="keyOptionsPane" animated="false" collapsible="false"
+                            maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Key Options"
+                            GridPane.rowIndex="1">
+                    <content>
+                        <GridPane>
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="152.0" minWidth="10.0"
+                                                   percentWidth="30.0" prefWidth="152.0"/>
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0"
+                                                   prefWidth="584.0"/>
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            </rowConstraints>
+                            <children>
+                                <Label text="key"/>
+                                <FlowPane alignment="CENTER_LEFT" columnHalignment="CENTER" hgap="10.0"
+                                          maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0"
+                                          GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                    <children>
+                                        <RadioButton fx:id="keyModeExactMatchRadio" graphicTextGap="5.0"
+                                                     mnemonicParsing="false" selected="true" text="exact match">
+                                            <toggleGroup>
+                                                <ToggleGroup fx:id="keyMode"/>
+                                            </toggleGroup>
+                                        </RadioButton>
+                                        <RadioButton fx:id="keyModeRegexRadio" graphicTextGap="5.0"
+                                                     mnemonicParsing="false" text="regex (find)"
+                                                     toggleGroup="$keyMode"/>
+                                    </children>
+                                    <opaqueInsets>
+                                        <Insets/>
+                                    </opaqueInsets>
+                                    <GridPane.margin>
+                                        <Insets/>
+                                    </GridPane.margin>
+                                </FlowPane>
+                                <Label text="mode" GridPane.rowIndex="1"/>
+                                <CheckBox fx:id="fastTraceToggle" mnemonicParsing="false" GridPane.columnIndex="1"
+                                          GridPane.rowIndex="2"/>
+                                <Label text="use fast trace" underline="true" GridPane.rowIndex="2">
+                                    <tooltip>
+                                        <Tooltip
+                                                text="Determines the partition the key would be assigned to,&#10;using the algorithm Kafka's default partitioner would use&#10;and only searches in that partition.&#10;&#10;if this is selected the specific partition setting is ignored."/>
+                                    </tooltip>
+                                </Label>
+                                <HBox alignment="CENTER" maxHeight="1.7976931348623157E308"
+                                      maxWidth="1.7976931348623157E308" GridPane.columnIndex="1">
+                                    <children>
+                                        <TextField fx:id="keyTextBox" maxWidth="1.7976931348623157E308"
+                                                   styleClass="first" HBox.hgrow="ALWAYS"/>
+                                        <Button fx:id="keyHistoryButton" mnemonicParsing="false" styleClass="last">
+                                            <graphic>
+                                                <FontIcon iconLiteral="fa-history"/>
+                                            </graphic>
+                                        </Button>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </GridPane>
+                    </content>
+                </TitledPane>
+                <TitledPane fx:id="valueOptionsPane" animated="false" collapsible="false"
+                            maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Value Options"
+                            GridPane.rowIndex="2">
+                    <content>
+                        <GridPane>
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="152.0" minWidth="10.0"
+                                                   percentWidth="30.0" prefWidth="152.0"/>
+                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0"
+                                                   prefWidth="585.0"/>
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" valignment="CENTER"
+                                                vgrow="SOMETIMES"/>
+                                <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            </rowConstraints>
+                            <children>
+                                <Label text="regex (find)"/>
+                                <HBox alignment="CENTER" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+                                      GridPane.vgrow="ALWAYS">
+                                    <children>
+                                        <TextField fx:id="valueTextBox" maxWidth="1.7976931348623157E308"
+                                                   styleClass="first" HBox.hgrow="ALWAYS"/>
+                                        <Button fx:id="valueHistoryButton" mnemonicParsing="false" styleClass="last">
+                                            <graphic>
+                                                <FontIcon iconLiteral="fa-history"/>
+                                            </graphic>
+                                        </Button>
+                                    </children>
+                                </HBox>
+                                <CheckBox fx:id="tombstoneToggle" mnemonicParsing="false" GridPane.columnIndex="1"
+                                          GridPane.rowIndex="1"/>
+                                <Label text="Search for null/tombstone" GridPane.rowIndex="1"/>
+                            </children>
+                        </GridPane>
+                    </content>
+                </TitledPane>
+                <TitledPane GridPane.rowIndex="3" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Header Filter Options" expanded="false">
+                    <BorderPane>
+                        <center>
+                            <TableView fx:id="headerTableView" editable="true" prefHeight="200.0" prefWidth="200.0" minHeight="200">
+                                <columns>
+                                    <TableColumn fx:id="headerFilterHeaderColumn" maxWidth="1.7976931348623157E308"
+                                                 prefWidth="75.0" sortable="false" text="header"/>
+                                    <TableColumn fx:id="headerFilterFilterStringColumn" maxWidth="1.7976931348623157E308"
+                                                 prefWidth="500.0" sortable="false" text="filter"/>
+                                    <TableColumn fx:id="headerFilterExactMatchColumn" maxWidth="1.7976931348623157E308"
+                                                 prefWidth="75.0" sortable="false" text="exact match"/>
+                                </columns>
+                            </TableView>
+                        </center>
+                        <top>
+                            <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                                <items>
+                                    <HBox alignment="CENTER" prefHeight="30.0">
+                                        <children>
+                                            <Button mnemonicParsing="false" onAction="#addHeaderClick">
+                                                <graphic>
+                                                    <FontIcon iconColor="WHITE" iconLiteral="fa-plus"/>
+                                                </graphic>
+                                                <styleClass>
+                                                    <String fx:value="first"/>
+                                                    <String fx:value="success"/>
+                                                </styleClass>
+                                            </Button>
+                                            <Button mnemonicParsing="false" onAction="#removeHeaderClick">
+                                                <graphic>
+                                                    <FontIcon iconColor="WHITE" iconLiteral="fa-minus"/>
+                                                </graphic>
+                                                <styleClass>
+                                                    <String fx:value="last"/>
+                                                    <String fx:value="danger"/>
+                                                </styleClass>
+                                            </Button>
+                                        </children>
+                                    </HBox>
+                                </items>
+                            </ToolBar>
+                        </top>
+                    </BorderPane>
+                </TitledPane>
+            </children>
+        </GridPane>
+    </content>
+</ScrollPane>

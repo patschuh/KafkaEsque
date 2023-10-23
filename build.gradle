@@ -1,5 +1,6 @@
 import org.gradle.internal.jvm.Jvm
 import org.gradle.internal.os.OperatingSystem
+
 import java.text.SimpleDateFormat
 
 plugins {
@@ -10,7 +11,7 @@ plugins {
 }
 
 group = 'at.esque.kafka'
-version = '2.3.1'
+version = '2.7.3'
 
 repositories {
     mavenCentral()
@@ -39,8 +40,9 @@ dependencies {
     implementation 'org.kordamp.ikonli:ikonli-javafx:12.2.0'
     implementation 'org.kordamp.ikonli:ikonli-fontawesome-pack:12.2.0'
     implementation 'com.opencsv:opencsv:5.5.2'
-    implementation 'io.confluent:kafka-schema-registry:6.2.7'
+    implementation 'io.confluent:kafka-schema-registry:7.3.0'
     implementation 'io.confluent:kafka-avro-serializer:6.2.7'
+    implementation 'io.confluent:kafka-protobuf-serializer:6.2.7'
     implementation 'org.apache.avro:avro:1.11.1'
     implementation 'com.google.inject:guice:5.0.1'
     implementation 'org.fxmisc.richtext:richtextfx:0.10.7'
@@ -87,6 +89,8 @@ runtime {
 
         def currentOs = OperatingSystem.current()
         def imgType = currentOs.windows ? 'ico' : currentOs.macOsX ? 'icns' : 'png'
+
+        jvmArgs += ['-Dprism.dirtyopts=false']
         imageOptions += ['--icon', "src/main/resources/icons/package/KafkaEsque.$imgType"]
         installerOptions += ['--resource-dir', "src/main/resources"]
         installerOptions += ['--vendor', 'Patrick Schuh']
