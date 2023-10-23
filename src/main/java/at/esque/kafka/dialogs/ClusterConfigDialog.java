@@ -7,10 +7,11 @@ import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.model.util.BindingMode;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
+import javafx.scene.control.*;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.input.ZoomEvent;
 import javafx.util.StringConverter;
 
 import java.util.Optional;
@@ -20,7 +21,6 @@ public class ClusterConfigDialog {
     public static final String LABEL_IDENTIFIER = "Identifier";
     public static final String LABEL_BOOTSTRAP_SERVERS = "Bootstrap-Servers";
     public static final String LABEL_SCHEMA_REGISTRY_URL = "Schema Registry URL";
-    public static final String LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO = "<<Deprecated>>Schema Registry Basic Auth User Info";
     public static final String LABEL_SCHEMA_REGISTRY_AUTH_USER_INFO = "Schema Registry Auth Info";
     public static final String LABEL_SCHEMA_REGISTRY_AUTH_MODE = "Schema Registry Auth Mode";
     public static final String LABEL_ENABLE_SSL = "Enable SSL";
@@ -75,12 +75,6 @@ public class ClusterConfigDialog {
                                 .placeholder(LABEL_SCHEMA_REGISTRY_URL)
                                 .format(new NullFormatStringConverter())
                                 .bind(copy.schemaRegistryProperty()),
-                        Field.ofStringType(copy.getSchemaRegistryBasicAuthUserInfo() == null ? "" : copy.getSchemaRegistryBasicAuthUserInfo())
-                                .label(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
-                                .tooltip(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
-                                .placeholder(LABEL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO)
-                                .format(new NullFormatStringConverter())
-                                .bind(copy.schemaRegistryBasicAuthUserInfoProperty()),
                         Field.ofSingleSelectionType(copy.schemaRegistryAuthModesProperty())
                                 .label(LABEL_SCHEMA_REGISTRY_AUTH_MODE)
                                 .tooltip(LABEL_SCHEMA_REGISTRY_AUTH_MODE)
@@ -181,7 +175,6 @@ public class ClusterConfigDialog {
                                 .label(LABEL_SASL_CLIENT_CALLBACK_HANDLER_CLASS)
                                 .tooltip(LABEL_SASL_CLIENT_CALLBACK_HANDLER_CLASS)
                                 .placeholder(LABEL_SASL_CLIENT_CALLBACK_HANDLER_CLASS)
-                                .valueDescription(String.format("Is used f.e. %s=AWS_MSK_IAM, %s=software.amazon.msk.auth.iam.IAMClientCallbackHandler", LABEL_SASL_MECHANISM,LABEL_SASL_CLIENT_CALLBACK_HANDLER_CLASS))
                                 .format(new  NullFormatStringConverter())
                                 .bind(copy.saslClientCallbackHandlerClassProperty())
                 )
@@ -216,13 +209,13 @@ public class ClusterConfigDialog {
 
     }
 
-    private static class NullFormatStringConverter extends StringConverter<String>{
+    private static class NullFormatStringConverter extends StringConverter<String> {
         public NullFormatStringConverter() {
         }
 
         @Override
         public String toString(String s) {
-            if(s == null || "null".equals(s)){
+            if (s == null || "null".equals(s)) {
                 return "";
             }
             return s;
@@ -230,7 +223,7 @@ public class ClusterConfigDialog {
 
         @Override
         public String fromString(String s) {
-            if("".equals(s) || "null".equals(s)){
+            if ("".equals(s) || "null".equals(s)) {
                 return null;
             }
             return s;
