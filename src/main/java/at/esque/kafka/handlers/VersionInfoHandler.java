@@ -117,7 +117,7 @@ public class VersionInfoHandler {
 
 
                 } catch (Exception e) {
-                    Platform.runLater(() -> ErrorAlert.show(e));
+                    Platform.runLater(() -> ErrorAlert.show("Update Check failed", "Failed to check for availabe Updates", e.getMessage(), e, null, false));
                 }
             } else {
                 return (Map<String, Object>) versionCheckContent.get("release");
@@ -133,7 +133,7 @@ public class VersionInfoHandler {
             if (openInBrowser) {
                 try {
                     hostServices.showDocument(updateInfo.getReleasePage());
-                }catch (Exception e){
+                } catch (Exception e) {
                     ErrorAlert.show(e);
                 }
             }
