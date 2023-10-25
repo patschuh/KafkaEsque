@@ -17,10 +17,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -37,7 +34,6 @@ import java.util.stream.Collectors;
 
 
 public class PublisherController {
-
     @FXML
     private ComboBox<Integer> partitionCombobox;
     @FXML
@@ -55,7 +51,11 @@ public class PublisherController {
     @FXML
     private CheckBox validateIsJsonKeyBox;
     @FXML
+    public Button jsonKeyFormatButton;
+    @FXML
     private CheckBox validateIsJsonValueBox;
+    @FXML
+    public Button jsonValueFormatButton;
     @FXML
     private TableView<Header> headerTableView;
     @FXML
@@ -91,6 +91,8 @@ public class PublisherController {
         partitionCombobox.getSelectionModel().select(Integer.valueOf(-1));
         keyTextArea.disableProperty().bind(nullKeyToggle.selectedProperty());
         valueTextArea.disableProperty().bind(nullMessageToggle.selectedProperty());
+        jsonKeyFormatButton.setVisible(false);
+        jsonValueFormatButton.setVisible(false);
 
         if (kafkaMessage != null) {
             keyTextArea.setText(kafkaMessage.getKey());
@@ -142,6 +144,8 @@ public class PublisherController {
                 }
             }
         }
+
+        handleTextChange();
     }
 
 
@@ -231,5 +235,35 @@ public class PublisherController {
                 .filter(recordName -> !(recordName.equals("key") || recordName.equals("value")))
                 .collect(Collectors.toList());
         return FXCollections.observableList(collect);
+    }
+
+    private void handleTextChange() {
+        jsonKeyFormatButton.setVisible(jsonIsValidAndNotBlank(JsonUtils.validate(keyTextArea.getText())));
+        jsonValueFormatButton.setVisible(jsonIsValidAndNotBlank(JsonUtils.validate(valueTextArea.getText())));
+
+        keyTextArea.textProperty().addListener((observable, oldValue, newValue) ->
+            jsonKeyFormatButton.setVisible(jsonIsValidAndNotBlank(JsonUtils.validate(newValue)))
+        );
+        valueTextArea.textProperty().addListener((observable, oldValue, newValue) ->
+            jsonValueFormatButton.setVisible(jsonIsValidAndNotBlank(JsonUtils.validate(newValue)))
+        );
+    }
+
+    private boolean jsonIsValidAndNotBlank(ValidationResult validationResult) {
+        return validationResult.isValid() && !validationResult.isBlank();
+    }
+
+    @FXML
+    public void jsonKeyFormatClick(ActionEvent actionEvent) {
+        if (JsonUtils.validate(keyTextArea.getText()).isValid()) {
+            keyTextArea.setText(JsonUtils.formatJson(keyTextArea.getText()));
+        }
+    }
+
+    @FXML
+    public void jsonValueFormatClick(ActionEvent actionEvent) {
+        if (JsonUtils.validate(valueTextArea.getText()).isValid()) {
+            valueTextArea.setText(JsonUtils.formatJson(valueTextArea.getText()));
+        }
     }
 }

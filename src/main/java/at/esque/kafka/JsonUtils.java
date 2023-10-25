@@ -13,11 +13,13 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.base.Strings;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.Struct;
 import com.google.protobuf.util.JsonFormat;
+import io.netty.util.internal.StringUtil;
 import javafx.scene.control.TreeItem;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
@@ -150,14 +152,14 @@ public final class JsonUtils {
 
     public static ValidationResult validate(String jsonInString) {
         if (jsonInString == null) {
-            return new ValidationResult(true);
+            return new ValidationResult(true, true);
         }
 
         try {
             objectMapper.readTree(jsonInString);
-            return new ValidationResult(true);
+            return new ValidationResult(true, jsonInString.isBlank());
         } catch (IOException e) {
-            return new ValidationResult(false, e.getMessage());
+            return new ValidationResult(false, jsonInString.isBlank(), e.getMessage());
         }
     }
 
