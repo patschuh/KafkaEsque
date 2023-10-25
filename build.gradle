@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'at.esque.kafka'
-version = '2.7.3'
+version = '2.8.0'
 
 repositories {
     mavenCentral()
@@ -54,7 +54,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     implementation 'com.flipkart.zjsonpatch:zjsonpatch:0.4.12'
     implementation 'tech.allegro.schema.json2avro:converter:0.2.15'
-    implementation 'software.amazon.msk:aws-msk-iam-auth:1.1.5'
+    implementation 'software.amazon.msk:aws-msk-iam-auth:1.1.9'
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.springframework.kafka:spring-kafka-test:2.4.13.RELEASE'

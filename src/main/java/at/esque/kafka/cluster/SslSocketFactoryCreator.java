@@ -44,7 +44,10 @@ public class SslSocketFactoryCreator {
                 KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
                 ks.load(new FileInputStream(sslProperties.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG)), sslProperties.get(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG).toCharArray());
                 kmf.init(ks, sslProperties.get(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG).toCharArray());
+            }else{
+                kmf.init(null, null);
             }
+
             if (clusterConfig.isSchemaRegistrySuppressCertPathValidation()) {
                 sc.init(kmf.getKeyManagers(), UNQUESTIONING_TRUST_MANAGER, null);
             } else {

@@ -110,21 +110,24 @@ This can also be combined with given trust and keystore configuration
 
 ###### Example with Schema Registry with HTTPS and Basic Auth 
 
-The http**s** and 'sslEnabled' is important if you want to use truststore and/or keystore otherwise those attributes are ignored and now sslContext is provided to Schema Registry client
+The http**s** and 'sslEnabled' is important if you want to use truststore and/or keystore otherwise those attributes are ignored and now sslContext is provided to Schema Registry client.
 
-you can use only Basic Auth if you SR is only protected with basic auth, you can use only keystore+truststore if your SR is protected with mTLS or you can use both settings in parallel. 
-
+You can use only Basic Auth if youy SR is only protected with basic auth, you can use Token Auth if your SR is protected with an OAUTH Token, you can use only keystore+truststore if your SR is protected with mTLS or you can use both settings in parallel.
+schemaRegistryBasicAuthUserInfo is deprecated since token auth is supported in addition to basic auth.
+There is a schemaRegistryAuthMode property with possible values NONE, BASIC or TOKEN and schemaRegistryAuthConfig property with either basic auth credentials or OAuthToken.
  ```
 	{
-		....
-		"schemaRegistry": "https://myschemaregistry:8081", 
-        "schemaRegistryBasicAuthUserInfo": "<BasicAuthUser>:<BasicAuthPW>",
-        ...
-		"sslEnabled": true,
-		"keyStoreLocation": "mykeystore.jks",
-		"keyStorePassword": "mykeystorepw",
-		"trustStoreLocation": "mytruststore.jks",
-		"trustStorePassword": "mykeystorepw"
+              ....
+              "schemaRegistry": "https://myschemaregistry:8081", 
+deprecated-> "schemaRegistryBasicAuthUserInfo": "<BasicAuthUser>:<BasicAuthPW>",
+              "schemaRegistryAuthMode": "NONE|BASIC|TOKEN",
+              "schemaRegistryAuthConfig": "<BasicAuthUser>:<BasicAuthPW>|<OAuthToken>:",
+              ...
+              "sslEnabled": true,
+              "keyStoreLocation": "mykeystore.jks",
+              "keyStorePassword": "mykeystorepw",
+              "trustStoreLocation": "mytruststore.jks",
+              "trustStorePassword": "mykeystorepw"
     }
  ```
 

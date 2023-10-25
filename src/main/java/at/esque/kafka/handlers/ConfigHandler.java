@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -214,6 +215,7 @@ public class ConfigHandler {
         } else if (clusterConfig.exists()) {
             try {
                 clusterConfigs = objectMapper.readValue(clusterConfig, ClusterConfigs.class);
+                maybeMigrateDeprecatedConfig(clusterConfigs);
                 return clusterConfigs;
             } catch (IOException e) {
                 ErrorAlert.show(e);
@@ -232,11 +234,34 @@ public class ConfigHandler {
         return clusterConfigs;
     }
 
-    public void saveConfigs() {
+    public void maybeMigrateDeprecatedConfig(ClusterConfigs clusterConfigs) {
+        AtomicBoolean updated = new AtomicBoolean(false);
+        clusterConfigs.getClusterConfigs().forEach(config -> {
+            var schemaRegistryBasicAuthUserInfo = config.getSchemaRegistryBasicAuthUserInfo();
+            if (StringUtils.isNotBlank(schemaRegistryBasicAuthUserInfo)) {
+                config.setSchemaRegistryAuthMode(ClusterConfig.SchemaRegistryAuthMode.BASIC);
+                config.setSchemaRegistryAuthConfig(schemaRegistryBasicAuthUserInfo);
+                config.setSchemaRegistryBasicAuthUserInfo(null);
+                updated.set(true);
+            }
+        });
+        if (updated.get()) {
+            if (saveConfigs()) {
+                LOGGER.info("deprecated property migration sucessful!");
+            } else {
+                LOGGER.warn("deprecated property migration failed!");
+            }
+        }
+    }
+
+
+    public boolean saveConfigs() {
         try {
             objectMapper.writeValue(clusterConfig, clusterConfigs);
+            return true;
         } catch (IOException e) {
             ErrorAlert.show(e);
+            return false;
         }
     }
 
@@ -318,9 +343,12 @@ public class ConfigHandler {
     public Map<String, ?> getSchemaRegistryAuthProperties(ClusterConfig config) {
         Map<String, String> props = new HashMap<>();
 
-        if (StringUtils.isNoneEmpty(config.getSchemaRegistryBasicAuthUserInfo())) {
+        if (ClusterConfig.SchemaRegistryAuthMode.BASIC.equals(config.getSchemaRegistryAuthMode())) {
             props.put(SchemaRegistryClientConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO");
-            props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + SchemaRegistryClientConfig.USER_INFO_CONFIG, config.getSchemaRegistryBasicAuthUserInfo());
+            props.put(SchemaRegistryClientConfig.CLIENT_NAMESPACE + SchemaRegistryClientConfig.USER_INFO_CONFIG, config.getSchemaRegistryAuthConfig());
+        } else if (ClusterConfig.SchemaRegistryAuthMode.TOKEN.equals(config.getSchemaRegistryAuthMode())) {
+            props.put(SchemaRegistryClientConfig.BEARER_AUTH_CREDENTIALS_SOURCE, "STATIC_TOKEN");
+            props.put(SchemaRegistryClientConfig.BEARER_AUTH_TOKEN_CONFIG, config.getSchemaRegistryAuthConfig());
         }
 
         return props;
