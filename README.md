@@ -1,4 +1,4 @@
-# KafkaEsque
+# KafkaEsque 2.8.0
 
 ## What's new
 
