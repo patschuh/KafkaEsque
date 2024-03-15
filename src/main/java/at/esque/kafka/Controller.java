@@ -739,21 +739,15 @@ public class Controller {
             fxmlLoader.setLocation(getClass().getResource("/fxml/lagViewer.fxml"));
             Parent root1 = fxmlLoader.load();
             LagViewerController controller = fxmlLoader.getController();
-            UUID consumerId = consumerHandler.registerConsumer(selectedCluster(), new TopicMessageTypeConfig(), new HashMap<>());
-            KafkaConsumer consumer = consumerHandler.getConsumer(consumerId).orElseThrow(() -> new RuntimeException("Error getting consumer"));
-            controller.setup(adminClient, consumer);
+            controller.setup(adminClient);
             Stage stage = new Stage();
             stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
             stage.initOwner(controlledStage);
             stage.initModality(Modality.NONE);
             stage.setTitle("Lag Viewer - " + selectedCluster().getIdentifier());
-            stage.setScene(Main.createStyledScene(root1, 1000, 500));
+            stage.setScene(Main.createStyledScene(root1, 1200, 800));
             stage.show();
             centerStageOnControlledStage(stage);
-            stage.setOnCloseRequest(windowEvent -> {
-                controller.stop();
-                consumerHandler.deregisterConsumer(consumerId);
-            });
         } catch (Exception e) {
             ErrorAlert.show(e, controlledStage);
         }

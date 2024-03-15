@@ -1,6 +1,5 @@
 package at.esque.kafka.lag.viewer;
 
-import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.cluster.KafkaesqueAdminClient;
 import at.esque.kafka.controls.FilterableListView;
 import at.esque.kafka.controls.LagViewerCellContent;
@@ -12,19 +11,16 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.common.KafkaFuture;
-import org.apache.kafka.common.TopicPartition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LagViewerController {
+
+    private static final Logger logger = LoggerFactory.getLogger(LagViewerController.class);
 
     @FXML
     public FilterableListView<Lag> consumerGroupList;
@@ -32,10 +28,12 @@ public class LagViewerController {
     public Label titleLabel;
     @FXML
     public FilterableListView<Lag> topicOffsetList;
+    @FXML
+    public Label topicTitleLabel;
+    @FXML
+    public FilterableListView<Lag> partitionOffsetList;
 
     private KafkaesqueAdminClient adminClient;
-
-    private KafkaConsumer kafkaConsumer;
 
     private BooleanProperty refreshRunning = new SimpleBooleanProperty(false);
 
@@ -43,11 +41,11 @@ public class LagViewerController {
     public void initialize() {
         consumerGroupList.getListView().setCellFactory(laggingEntityListView -> topicListCellFactory());
         topicOffsetList.getListView().setCellFactory(laggingEntityListView -> topicListCellFactory());
+        partitionOffsetList.getListView().setCellFactory(laggingEntityListView -> topicListCellFactory());
     }
 
-    public void setup(KafkaesqueAdminClient adminClient, KafkaConsumer kafkaConsumer) {
+    public void setup(KafkaesqueAdminClient adminClient) {
         this.adminClient = adminClient;
-        this.kafkaConsumer = kafkaConsumer;
         titleLabel.textProperty().bind(Bindings.createStringBinding(() -> {
             Lag selectedItem = consumerGroupList.getListView().getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
@@ -59,17 +57,36 @@ public class LagViewerController {
         consumerGroupList.filterTextFieldDisableProperty().bind(refreshRunning);
         consumerGroupList.setStringifierFunction(Lag::getTitle);
         consumerGroupList.setListComparator(Comparator.comparing(Lag::getTitle));
-
         consumerGroupList.getListView().getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue == null) {
-                topicOffsetList.setItems(Collections.EMPTY_LIST);
+                topicOffsetList.setItems(Collections.emptyList());
             } else {
                 topicOffsetList.setItems(newValue.getSubEntities());
             }
         });
 
+        topicTitleLabel.textProperty().bind(Bindings.createStringBinding(() -> {
+            Lag selectedItem = topicOffsetList.getListView().getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                return selectedItem.getTitle();
+            }
+            return "";
+        }, topicOffsetList.getListView().getSelectionModel().selectedItemProperty()));
         topicOffsetList.setStringifierFunction(Lag::getTitle);
         topicOffsetList.setListComparator(Comparator.comparing(Lag::getTitle));
+        topicOffsetList.filterTextFieldDisableProperty().bind(refreshRunning);
+        topicOffsetList.setListComparator(Comparator.comparing(Lag::getTitle));
+        topicOffsetList.getListView().getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (newValue == null) {
+                partitionOffsetList.setItems(Collections.emptyList());
+            } else {
+                partitionOffsetList.setItems(newValue.getSubEntities());
+            }
+        });
+
+        partitionOffsetList.setStringifierFunction(Lag::getTitle);
+        partitionOffsetList.setListComparator(Comparator.comparing(Lag::getTitle));
+        partitionOffsetList.filterTextFieldDisableProperty().bind(refreshRunning);
 
         this.adminClient = adminClient;
         startRefreshList();
@@ -81,71 +98,20 @@ public class LagViewerController {
         runInDaemonThread(() -> {
             Platform.runLater(() -> {
                 refreshRunning.setValue(true);
-                consumerGroupList.setItems(FXCollections.observableArrayList(adminClient.getConsumerGroups()));
+                consumerGroupList.setItems(FXCollections.observableArrayList(adminClient.getConsumerGroupLags()));
                 refreshConsumerGroupsInFxThreadDone.set(true);
             });
-            while (!refreshConsumerGroupsInFxThreadDone.get()){
+            while (!refreshConsumerGroupsInFxThreadDone.get()) {
                 try {
                     Thread.sleep(100);
-                    System.out.println("Waiting for Fx Thread to update consumerGroup List");
+                    logger.info("Waiting for Fx Thread to update consumerGroup List");
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     return;
                 }
             }
-            consumerGroupList.getListView().getItems().forEach(lag -> {
-                try {
-                    KafkaFuture<Map<TopicPartition, OffsetAndMetadata>> mapKafkaFuture = adminClient.listConsumerGroupOffsets(lag.getTitle()).partitionsToOffsetAndMetadata();
-                    mapKafkaFuture.thenApply(topicPartitionOffsetAndMetadataMap -> {
-                        if (this.kafkaConsumer != null) {
-                            Map<TopicPartition, Long> offsetMap = getEndOffsets(topicPartitionOffsetAndMetadataMap);
-                            long endOffsets = offsetMap.values().stream().mapToLong(Long::longValue).sum();
-                            long currentOffsets = topicPartitionOffsetAndMetadataMap.values().stream().mapToLong(OffsetAndMetadata::offset).sum();
-                            Platform.runLater(() -> {
-                                lag.setEndOffset(endOffsets);
-                                lag.setCurrentOffset(currentOffsets);
-                                Collection<Lag> subEntites = createSubEntites(lag, topicPartitionOffsetAndMetadataMap, offsetMap);
-                                lag.getSubEntities().clear();
-                                lag.getSubEntities().addAll(subEntites);
-                            });
-                            return endOffsets - currentOffsets;
-                        } else {
-                            return 0;
-                        }
-                    }).get();
-                } catch (Exception e) {
-                    Platform.runLater(() -> ErrorAlert.show(e));
-                }
-            });
             Platform.runLater(() -> refreshRunning.setValue(false));
         });
-    }
-
-    private Map<TopicPartition, Long> getEndOffsets(Map<TopicPartition, OffsetAndMetadata> topicPartitionOffsetAndMetadataMap) {
-        Map<TopicPartition, Long> endOffsets = this.kafkaConsumer.endOffsets(topicPartitionOffsetAndMetadataMap.keySet());
-        if (endOffsets.keySet().size() < topicPartitionOffsetAndMetadataMap.keySet().size()) {
-            endOffsets = getEndOffsets(topicPartitionOffsetAndMetadataMap);
-        }
-        return endOffsets;
-    }
-
-    private Collection<Lag> createSubEntites(Lag parentEntity, Map<TopicPartition, OffsetAndMetadata> currentOffsetMap, Map<TopicPartition, Long> endOffsetMap) {
-        Map<String, Lag> topicEndOffsetMap = new HashMap<>();
-        if (currentOffsetMap != null && endOffsetMap != null && parentEntity != null) {
-            currentOffsetMap.forEach((key, value) -> {
-                Lag lag = topicEndOffsetMap.computeIfAbsent(key.topic(), s -> new Lag(s, 0, 0));
-                lag.setCurrentOffset(lag.getCurrentOffset() + value.offset());
-                Long endOffset = endOffsetMap.get(key);
-                if (endOffset != null) {
-                    lag.setEndOffset(lag.getEndOffset() + endOffset);
-                }
-            });
-        }
-        return topicEndOffsetMap.values();
-    }
-
-    public void stop() {
-        kafkaConsumer = null;
     }
 
     private ListCell<Lag> topicListCellFactory() {

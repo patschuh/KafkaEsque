@@ -2,7 +2,9 @@ package at.esque.kafka.cluster;
 
 import at.esque.kafka.alerts.ErrorAlert;
 import at.esque.kafka.lag.viewer.Lag;
+import at.esque.kafka.lag.viewer.LagViewerController;
 import at.esque.kafka.topics.DescribeTopicWrapper;
+import com.google.common.base.Functions;
 import javafx.application.Platform;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
@@ -15,11 +17,15 @@ import org.apache.kafka.clients.admin.DescribeAclsResult;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsResult;
+import org.apache.kafka.clients.admin.ListConsumerGroupOffsetsSpec;
 import org.apache.kafka.clients.admin.ListConsumerGroupsResult;
+import org.apache.kafka.clients.admin.ListOffsetsResult;
 import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.admin.OffsetSpec;
 import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.acl.AccessControlEntryFilter;
@@ -31,9 +37,12 @@ import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.resource.PatternType;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.apache.kafka.common.resource.ResourceType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +51,13 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class KafkaesqueAdminClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(LagViewerController.class);
+
     private AdminClient adminClient;
 
     public KafkaesqueAdminClient(String bootstrapServers, Map<String, String> sslProps, Map<String, String> saslProps) {
@@ -124,13 +138,23 @@ public class KafkaesqueAdminClient {
         }
     }
 
-    public List<Lag> getConsumerGroups() {
+    public List<Lag> getConsumerGroupLags() {
         ListConsumerGroupsResult result = adminClient.listConsumerGroups();
         try {
             Collection<ConsumerGroupListing> consumerGroupListings = result.all().get();
-            return consumerGroupListings.stream().map(consumerGroupListing -> {
-                Lag lag = new Lag();
-                lag.setTitle(consumerGroupListing.groupId());
+            ListConsumerGroupOffsetsResult listConsumerGroupOffsetsResult = adminClient.listConsumerGroupOffsets(buildConsumerGroupsOffsetSpecMap(consumerGroupListings));
+            Map<String, Map<TopicPartition, OffsetAndMetadata>> consumerGroupTopicPartitionOffsetMap = listConsumerGroupOffsetsResult.all().get();
+            Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> topicPartitionListOffsetsResultInfoMap = adminClient.listOffsets(buildListEndOffsetParameters(consumerGroupTopicPartitionOffsetMap)).all().get();
+            return consumerGroupTopicPartitionOffsetMap.entrySet().stream().map(consumerGroup -> {
+                Map<TopicPartition, Long> relevantEndOffsets = buildRelevantOffsetsMap(topicPartitionListOffsetsResultInfoMap, consumerGroup.getValue().keySet());
+                Lag lag = new Lag(
+                        consumerGroup.getKey(),
+                        calculateCurrentOffsetSum(consumerGroup),
+                        relevantEndOffsets.values().stream()
+                                .mapToLong(Long::longValue)
+                                .sum()
+                );
+                lag.getSubEntities().addAll(createSubLags(lag, consumerGroup.getValue(), relevantEndOffsets));
                 return lag;
             }).toList();
         } catch (Exception e) {
@@ -138,6 +162,51 @@ public class KafkaesqueAdminClient {
         }
         return Collections.emptyList();
     }
+
+    private Map<TopicPartition, OffsetSpec> buildListEndOffsetParameters(Map<String, Map<TopicPartition, OffsetAndMetadata>> consumerGroupTopicPartitionOffsetMap) {
+        return consumerGroupTopicPartitionOffsetMap.values().stream()
+                .flatMap(map -> map.keySet().stream())
+                .distinct()
+                .collect(Collectors.toMap(Function.identity(), topicPartition -> OffsetSpec.latest()));
+    }
+
+    private Map<String, ListConsumerGroupOffsetsSpec> buildConsumerGroupsOffsetSpecMap(Collection<ConsumerGroupListing> consumerGroupListings) {
+        return consumerGroupListings.stream().map(ConsumerGroupListing::groupId).collect(Collectors.toMap(Functions.identity(), s -> new ListConsumerGroupOffsetsSpec()));
+    }
+
+    private long calculateCurrentOffsetSum(Map.Entry<String, Map<TopicPartition, OffsetAndMetadata>> consumerGroupListing) {
+        return consumerGroupListing.getValue().values().stream()
+                .mapToLong(OffsetAndMetadata::offset)
+                .sum();
+    }
+
+    private Map<TopicPartition, Long> buildRelevantOffsetsMap(Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> topicPartitionListOffsetsResultInfoMap, Collection<TopicPartition> topicPartitionStream) {
+        return topicPartitionListOffsetsResultInfoMap.entrySet().stream()
+                .filter(topicPartitionListOffsetsResultInfoEntry -> topicPartitionStream.contains(topicPartitionListOffsetsResultInfoEntry.getKey()))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        o -> o.getValue().offset()
+                ));
+    }
+
+    private Collection<Lag> createSubLags(Lag parentEntity, Map<TopicPartition, OffsetAndMetadata> currentOffsetMap, Map<TopicPartition, Long> endOffsetMap) {
+        Map<String, Lag> topicEndOffsetMap = new HashMap<>();
+        if (currentOffsetMap != null && endOffsetMap != null && parentEntity != null) {
+            currentOffsetMap.forEach((key, value) -> {
+                Lag lag = topicEndOffsetMap.computeIfAbsent(key.topic(), s -> new Lag(s, 0, 0));
+                Lag partitionLag = new Lag("" + key.partition(), value.offset(), 0);
+                lag.setCurrentOffset(lag.getCurrentOffset() + value.offset());
+                Long endOffset = endOffsetMap.get(key);
+                if (endOffset != null) {
+                    lag.setEndOffset(lag.getEndOffset() + endOffset);
+                    partitionLag.setEndOffset(endOffset);
+                }
+                lag.getSubEntities().add(partitionLag);
+            });
+        }
+        return topicEndOffsetMap.values();
+    }
+
 
     public List<AclBinding> getACLs(ResourceType resourceType, PatternType resourcePattern, String resourceName, String principalName) {
         try {
