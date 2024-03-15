@@ -138,14 +138,21 @@ public class KafkaesqueAdminClient {
         }
     }
 
-    public List<Lag> getConsumerGroupLags() {
+    public List<Lag> getConsumerGroupLags(Set<String> consumedTopicFilterParameters) {
         ListConsumerGroupsResult result = adminClient.listConsumerGroups();
         try {
             Collection<ConsumerGroupListing> consumerGroupListings = result.all().get();
             ListConsumerGroupOffsetsResult listConsumerGroupOffsetsResult = adminClient.listConsumerGroupOffsets(buildConsumerGroupsOffsetSpecMap(consumerGroupListings));
             Map<String, Map<TopicPartition, OffsetAndMetadata>> consumerGroupTopicPartitionOffsetMap = listConsumerGroupOffsetsResult.all().get();
-            Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> topicPartitionListOffsetsResultInfoMap = adminClient.listOffsets(buildListEndOffsetParameters(consumerGroupTopicPartitionOffsetMap)).all().get();
-            return consumerGroupTopicPartitionOffsetMap.entrySet().stream().map(consumerGroup -> {
+            Map<String, Map<TopicPartition, OffsetAndMetadata>> filteredConsumerGroups = consumerGroupTopicPartitionOffsetMap.entrySet().stream().filter(stringMapEntry -> {
+                if (consumedTopicFilterParameters == null) {
+                    return true;
+                }
+                return stringMapEntry.getValue().keySet().stream()
+                        .anyMatch(topicPartition -> consumedTopicFilterParameters.contains(topicPartition.topic()));
+            }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> topicPartitionListOffsetsResultInfoMap = adminClient.listOffsets(buildListEndOffsetParameters(filteredConsumerGroups)).all().get();
+            return filteredConsumerGroups.entrySet().stream().map(consumerGroup -> {
                 Map<TopicPartition, Long> relevantEndOffsets = buildRelevantOffsetsMap(topicPartitionListOffsetsResultInfoMap, consumerGroup.getValue().keySet());
                 Lag lag = new Lag(
                         consumerGroup.getKey(),

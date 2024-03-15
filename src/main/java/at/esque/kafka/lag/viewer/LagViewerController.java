@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LagViewerController {
@@ -35,6 +36,8 @@ public class LagViewerController {
 
     private KafkaesqueAdminClient adminClient;
 
+    private Set<String> consumedTopicFilterParameters;
+
     private BooleanProperty refreshRunning = new SimpleBooleanProperty(false);
 
     @FXML
@@ -45,7 +48,12 @@ public class LagViewerController {
     }
 
     public void setup(KafkaesqueAdminClient adminClient) {
+        setup(adminClient, null);
+    }
+
+    public void setup(KafkaesqueAdminClient adminClient, Set<String> consumedTopicFilterParameters) {
         this.adminClient = adminClient;
+        this.consumedTopicFilterParameters = consumedTopicFilterParameters;
         titleLabel.textProperty().bind(Bindings.createStringBinding(() -> {
             Lag selectedItem = consumerGroupList.getListView().getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
@@ -85,7 +93,14 @@ public class LagViewerController {
         });
 
         partitionOffsetList.setStringifierFunction(Lag::getTitle);
-        partitionOffsetList.setListComparator(Comparator.comparing(Lag::getTitle));
+        partitionOffsetList.setListComparator(Comparator.comparing(lag -> {
+            try {
+                return Integer.parseInt(lag.getTitle());
+            } catch (NumberFormatException e) {
+                logger.warn("partion lag title " + lag.getTitle() +" could not be parsed as int", e);
+                return Integer.MAX_VALUE;
+            }
+        }));
         partitionOffsetList.filterTextFieldDisableProperty().bind(refreshRunning);
 
         this.adminClient = adminClient;
@@ -98,7 +113,7 @@ public class LagViewerController {
         runInDaemonThread(() -> {
             Platform.runLater(() -> {
                 refreshRunning.setValue(true);
-                consumerGroupList.setItems(FXCollections.observableArrayList(adminClient.getConsumerGroupLags()));
+                consumerGroupList.setItems(FXCollections.observableArrayList(adminClient.getConsumerGroupLags(consumedTopicFilterParameters)));
                 refreshConsumerGroupsInFxThreadDone.set(true);
             });
             while (!refreshConsumerGroupsInFxThreadDone.get()) {

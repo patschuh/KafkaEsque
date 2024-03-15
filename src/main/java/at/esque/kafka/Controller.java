@@ -448,11 +448,15 @@ public class Controller {
 
         ContextMenu contextMenu = new ContextMenu();
 
-
         MenuItem infoItem = new MenuItem();
         infoItem.textProperty().set("describe");
         infoItem.setGraphic(new FontIcon(FontAwesome.INFO));
         infoItem.setOnAction(event -> showDescribeTopicDialog(selectedTopic()));
+
+        MenuItem consumingGroupsItem = new MenuItem();
+        consumingGroupsItem.textProperty().set("show consumer groups");
+        consumingGroupsItem.setGraphic(new FontIcon(FontAwesome.OBJECT_GROUP));
+        consumingGroupsItem.setOnAction(event -> showLagViewerForTopic(selectedTopic()));
 
         MenuItem configMessageTypesItem = new MenuItem();
         configMessageTypesItem.textProperty().set("configure message types");
@@ -533,7 +537,7 @@ public class Controller {
                 }
             }
         });
-        contextMenu.getItems().addAll(infoItem, configMessageTypesItem, traceItem, deleteItem);
+        contextMenu.getItems().addAll(infoItem, configMessageTypesItem, consumingGroupsItem, traceItem, deleteItem);
 
         cell.textProperty().bind(cell.itemProperty());
 
@@ -745,6 +749,26 @@ public class Controller {
             stage.initOwner(controlledStage);
             stage.initModality(Modality.NONE);
             stage.setTitle("Lag Viewer - " + selectedCluster().getIdentifier());
+            stage.setScene(Main.createStyledScene(root1, 1200, 800));
+            stage.show();
+            centerStageOnControlledStage(stage);
+        } catch (Exception e) {
+            ErrorAlert.show(e, controlledStage);
+        }
+    }
+
+    public void showLagViewerForTopic(String topic) {
+        try {
+            FXMLLoader fxmlLoader = injector.getInstance(FXMLLoader.class);
+            fxmlLoader.setLocation(getClass().getResource("/fxml/lagViewer.fxml"));
+            Parent root1 = fxmlLoader.load();
+            LagViewerController controller = fxmlLoader.getController();
+            controller.setup(adminClient, Set.of(topic));
+            Stage stage = new Stage();
+            stage.getIcons().add(new Image(getClass().getResourceAsStream(ICONS_KAFKAESQUE_PNG_PATH)));
+            stage.initOwner(controlledStage);
+            stage.initModality(Modality.NONE);
+            stage.setTitle("Groups consuming " + topic + " - " + selectedCluster().getIdentifier());
             stage.setScene(Main.createStyledScene(root1, 1200, 800));
             stage.show();
             centerStageOnControlledStage(stage);
