@@ -39,6 +39,7 @@ import at.esque.kafka.topics.model.Topic;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.protobuf.Message;
@@ -46,35 +47,24 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import javafx.application.HostServices;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.*;
+import javafx.event.*;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.*;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -86,6 +76,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.util.Pair;
 import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.JsonQuery;
@@ -336,6 +327,19 @@ public class Controller {
         helpIconToolTip.setText(buildToolTip());
 
         versionInfoHandler.showDialogIfUpdateIsAvailable(hostServices);
+        messageTabPane.addEventHandler(Event.ANY, this::onMessageTabPaneSelectionChange);
+    }
+
+    private void onMessageTabPaneSelectionChange(Event action) {
+        String windowName = Optional.ofNullable(messageTabPane.getSelectionModel())
+            .map(SingleSelectionModel::getSelectedItem)
+            .map(Tab::getText)
+            .orElse(null);
+        if (Strings.isNullOrEmpty(windowName)) {
+            controlledStage.setTitle("Kafkaesque");
+        } else {
+            controlledStage.setTitle("Kafkaesque - " + windowName);
+        }
     }
 
     private void setupJsonFormatToggle() {
@@ -475,50 +479,50 @@ public class Controller {
                 TopicMessageTypeConfig topicMessageTypeConfig = configHandler.getConfigForTopic(selectedCluster().getIdentifier(), selectedTopic());
                 Map<String, String> consumerConfig = configHandler.readConsumerConfigs(selectedCluster().getIdentifier());
                 TraceInputDialog.show(topicMessageTypeConfig.getKeyType() == MessageType.AVRO || topicMessageTypeConfig.getKeyType() == MessageType.PROTOBUF_SR, Settings.isTraceQuickSelectEnabled(configHandler.getSettingsProperties()), Settings.readDurationSetting(configHandler.getSettingsProperties()), Integer.parseInt(configHandler.getSettingsProperties().get(Settings.RECENT_TRACE_MAX_ENTRIES)), partitionCombobox.getItems())
-                        .ifPresent(traceInput -> {
-                            backGroundTaskHolder.setBackGroundTaskDescription("tracing message");
-                            Integer partition = null;
-                            if (!traceInput.getConditionMode().equals("value only") && !traceInput.getConditionMode().equals("OR") && topicMessageTypeConfig.getKeyType() != MessageType.AVRO && traceInput.isFastTrace()) {
-                                partition = getPartitionForKey(selectedTopic(), traceInput.getKeySearch());
-                            } else if (!traceInput.isFastTrace() && traceInput.getPartition() != null && traceInput.getPartition() > -1) {
-                                partition = traceInput.getPartition();
-                            }
-                            Predicate<ConsumerRecord> keyPredicate = null;
-                            Predicate<ConsumerRecord> valuePredicate = null;
-                            Predicate<ConsumerRecord> actualPredicate = null;
+                    .ifPresent(traceInput -> {
+                        backGroundTaskHolder.setBackGroundTaskDescription("tracing message");
+                        Integer partition = null;
+                        if (!traceInput.getConditionMode().equals("value only") && !traceInput.getConditionMode().equals("OR") && topicMessageTypeConfig.getKeyType() != MessageType.AVRO && traceInput.isFastTrace()) {
+                            partition = getPartitionForKey(selectedTopic(), traceInput.getKeySearch());
+                        } else if (!traceInput.isFastTrace() && traceInput.getPartition() != null && traceInput.getPartition() > -1) {
+                            partition = traceInput.getPartition();
+                        }
+                        Predicate<ConsumerRecord> keyPredicate = null;
+                        Predicate<ConsumerRecord> valuePredicate = null;
+                        Predicate<ConsumerRecord> actualPredicate = null;
 
 
-                            if (!traceInput.getConditionMode().equals("value only")) {
-                                keyPredicate = TraceUtils.keyPredicate(traceInput.getKeySearch(), traceInput.getKeyMode());
-                            }
-                            if (!traceInput.getConditionMode().equals("key only")) {
-                                valuePredicate = TraceUtils.valuePredicate(traceInput.getValueSearch(), traceInput.isSearchNull());
-                            }
+                        if (!traceInput.getConditionMode().equals("value only")) {
+                            keyPredicate = TraceUtils.keyPredicate(traceInput.getKeySearch(), traceInput.getKeyMode());
+                        }
+                        if (!traceInput.getConditionMode().equals("key only")) {
+                            valuePredicate = TraceUtils.valuePredicate(traceInput.getValueSearch(), traceInput.isSearchNull());
+                        }
 
-                            if (traceInput.getConditionMode().equals("key only")) {
-                                actualPredicate = keyPredicate;
-                            } else if (traceInput.getConditionMode().equals("value only")) {
-                                actualPredicate = valuePredicate;
-                            } else if (traceInput.getConditionMode().equals("AND")) {
-                                actualPredicate = keyPredicate.and(valuePredicate);
-                            } else if (traceInput.getConditionMode().equals("OR")) {
-                                actualPredicate = keyPredicate.or(valuePredicate);
-                            }
+                        if (traceInput.getConditionMode().equals("key only")) {
+                            actualPredicate = keyPredicate;
+                        } else if (traceInput.getConditionMode().equals("value only")) {
+                            actualPredicate = valuePredicate;
+                        } else if (traceInput.getConditionMode().equals("AND")) {
+                            actualPredicate = keyPredicate.and(valuePredicate);
+                        } else if (traceInput.getConditionMode().equals("OR")) {
+                            actualPredicate = keyPredicate.or(valuePredicate);
+                        }
 
-                            if (traceInput.getKafkaHeaderFilterOptions() != null && !traceInput.getKafkaHeaderFilterOptions().isEmpty()) {
-                                List<Predicate<ConsumerRecord>> predicates = traceInput.getKafkaHeaderFilterOptions()
-                                        .stream()
-                                        .map(TraceUtils::consumerRecordHeaderPredicate)
-                                        .toList();
+                        if (traceInput.getKafkaHeaderFilterOptions() != null && !traceInput.getKafkaHeaderFilterOptions().isEmpty()) {
+                            List<Predicate<ConsumerRecord>> predicates = traceInput.getKafkaHeaderFilterOptions()
+                                .stream()
+                                .map(TraceUtils::consumerRecordHeaderPredicate)
+                                .toList();
 
-                                for (Predicate<ConsumerRecord> predicate : predicates) {
-                                    actualPredicate = actualPredicate.and(predicate);
-                                }
-
+                            for (Predicate<ConsumerRecord> predicate : predicates) {
+                                actualPredicate = actualPredicate.and(predicate);
                             }
 
-                            trace(topicMessageTypeConfig, consumerConfig, actualPredicate, partition, traceInput.getEpochStart(), traceInput.getEpochEnd() == null ? null : consumerRecord -> consumerRecord.timestamp() >= traceInput.getEpochEnd());
-                        });
+                        }
+
+                        trace(topicMessageTypeConfig, consumerConfig, actualPredicate, partition, traceInput.getEpochStart(), traceInput.getEpochEnd() == null ? null : consumerRecord -> consumerRecord.timestamp() >= traceInput.getEpochEnd());
+                    });
             } catch (Exception e) {
                 ErrorAlert.show(e, controlledStage);
             }
@@ -930,8 +934,8 @@ public class Controller {
             consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(Collections.singletonList(new TopicPartition(selectedTopic(), selectedPartition))));
         } else {
             List<TopicPartition> partitions = adminClient.getPatitions(topic.getName()).stream()
-                    .map(integer -> new TopicPartition(topic.getName(), integer))
-                    .collect(Collectors.toList());
+                .map(integer -> new TopicPartition(topic.getName(), integer))
+                .collect(Collectors.toList());
             consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> topicConsumer.assign(partitions));
         }
     }
@@ -1016,8 +1020,8 @@ public class Controller {
                             }
                             if (stopTraceInPartitionCondition != null && stopTraceInPartitionCondition.test(cr)) {
                                 Optional<TopicPartition> first = topicPatitions.stream()
-                                        .filter(topicPartition -> topicPartition.partition() == cr.partition())
-                                        .findFirst();
+                                    .filter(topicPartition -> topicPartition.partition() == cr.partition())
+                                    .findFirst();
 
                                 first.ifPresent(topicPartition -> {
                                     topicPatitions.remove(topicPartition);
@@ -1180,14 +1184,14 @@ public class Controller {
     }
 
     private boolean reachedMaxOffsetForAllPartitions
-            (Map<TopicPartition, Long> maxOffsets, Map<TopicPartition, Long> minOffsets, Map<TopicPartition, Long> currentOffsets) {
+        (Map<TopicPartition, Long> maxOffsets, Map<TopicPartition, Long> minOffsets, Map<TopicPartition, Long> currentOffsets) {
         return maxOffsets.entrySet().stream()
-                .noneMatch(maxOffset -> (maxOffset.getValue() > -1 && maxOffset.getValue() > minOffsets.get(maxOffset.getKey()) && (currentOffsets.get(maxOffset.getKey()) == null || (maxOffset.getValue() - 1 > (currentOffsets.get(maxOffset.getKey()) == null ? 0L : currentOffsets.get(maxOffset.getKey()))))));
+            .noneMatch(maxOffset -> (maxOffset.getValue() > -1 && maxOffset.getValue() > minOffsets.get(maxOffset.getKey()) && (currentOffsets.get(maxOffset.getKey()) == null || (maxOffset.getValue() - 1 > (currentOffsets.get(maxOffset.getKey()) == null ? 0L : currentOffsets.get(maxOffset.getKey()))))));
 
     }
 
     private boolean reachedMaxOffsetForAllPartitionsOrGotEnoughMessages
-            (Map<TopicPartition, Long> maxOffsets, Map<TopicPartition, Long> minOffsets, Map<TopicPartition, Long> currentOffsets, Map<Integer, AtomicLong> messagesConsumedPerPartition, long numberOfMessagesToConsume) {
+        (Map<TopicPartition, Long> maxOffsets, Map<TopicPartition, Long> minOffsets, Map<TopicPartition, Long> currentOffsets, Map<Integer, AtomicLong> messagesConsumedPerPartition, long numberOfMessagesToConsume) {
         return maxOffsets.entrySet().stream().noneMatch(maxOffset -> {
             AtomicLong atomicLong = messagesConsumedPerPartition.get(maxOffset.getKey().partition());
             boolean notEnoughMessagesConsumed = (atomicLong == null ? 0L : atomicLong.get()) < numberOfMessagesToConsume;
@@ -1209,14 +1213,14 @@ public class Controller {
     public void deleteClusterConfigsClick(ActionEvent event) {
         ObservableList<ClusterConfig> clusterConfigs = clusterComboBox.getItems();
         DeleteClustersDialog.show(clusterConfigs)
-                .ifPresent(deletedClusterConfigs -> {
-                    StringBuilder builder = new StringBuilder();
-                    deletedClusterConfigs.forEach(config -> builder.append(config.toString()).append(System.lineSeparator()));
-                    if (ConfirmationAlert.show("Deleting cluster configs", "The following configs will be permanently deleted:", builder.toString())) {
-                        clusterConfigs.removeAll(deletedClusterConfigs);
-                        configHandler.saveConfigs();
-                    }
-                });
+            .ifPresent(deletedClusterConfigs -> {
+                StringBuilder builder = new StringBuilder();
+                deletedClusterConfigs.forEach(config -> builder.append(config.toString()).append(System.lineSeparator()));
+                if (ConfirmationAlert.show("Deleting cluster configs", "The following configs will be permanently deleted:", builder.toString())) {
+                    clusterConfigs.removeAll(deletedClusterConfigs);
+                    configHandler.saveConfigs();
+                }
+            });
     }
 
     @FXML
@@ -1374,9 +1378,9 @@ public class Controller {
                         String currentTopic = topic.getName();
                         try {
                             adminClient.createTopic(topic.getName(),
-                                    topic.getPartitions() > 0 ? topic.getPartitions() : defaultPartitions,
-                                    topic.getReplacationFactor() > 0 ? topic.getReplacationFactor() : defualtReplication,
-                                    topic.getConfigs());
+                                topic.getPartitions() > 0 ? topic.getPartitions() : defaultPartitions,
+                                topic.getReplacationFactor() > 0 ? topic.getReplacationFactor() : defualtReplication,
+                                topic.getConfigs());
                             createdTopics.add(currentTopic);
                         } catch (Exception e) {
                             if (e.getCause() instanceof TopicExistsException) {
@@ -1399,13 +1403,13 @@ public class Controller {
     public void showSettingsDialog(ActionEvent event) {
         Map<String, String> settingsProperties = configHandler.getSettingsProperties();
         SettingsDialog.show(settingsProperties).ifPresent(
-                settingsProperties1 -> {
-                    try {
-                        configHandler.setSettingsProperties(settingsProperties1);
-                    } catch (IOException e) {
-                        ErrorAlert.show(e);
-                    }
+            settingsProperties1 -> {
+                try {
+                    configHandler.setSettingsProperties(settingsProperties1);
+                } catch (IOException e) {
+                    ErrorAlert.show(e);
                 }
+            }
         );
     }
 
@@ -1439,22 +1443,22 @@ public class Controller {
                     Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("Playing Message Book: producing messages"));
                     AtomicInteger counter = new AtomicInteger(0);
                     messagesToSend.stream().sorted(Comparator.comparing(KafkaMessagBookWrapper::getTimestamp, Comparator.nullsLast(Comparator.naturalOrder())))
-                            .forEach(message -> {
-                                try {
-                                    UUID producerId = topicToProducerMap.computeIfAbsent(message.getTargetTopic(), targetTopic -> {
-                                        try {
-                                            return producerHandler.registerProducer(selectedCluster(), targetTopic);
-                                        } catch (IOException e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                    });
-                                    producerHandler.sendMessage(producerId, message.getTargetTopic(), message.getPartition() == -1 ? null : message.getPartition(), message.getKey(), message.getValue(), message.getKeyType(), message.getValueType());
-                                    Platform.runLater(() -> backGroundTaskHolder.setProgressMessage("published " + counter.incrementAndGet() + " messages"));
-                                } catch (InterruptedException | ExecutionException | TimeoutException | IOException |
-                                         RestClientException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
+                        .forEach(message -> {
+                            try {
+                                UUID producerId = topicToProducerMap.computeIfAbsent(message.getTargetTopic(), targetTopic -> {
+                                    try {
+                                        return producerHandler.registerProducer(selectedCluster(), targetTopic);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                });
+                                producerHandler.sendMessage(producerId, message.getTargetTopic(), message.getPartition() == -1 ? null : message.getPartition(), message.getKey(), message.getValue(), message.getKeyType(), message.getValueType());
+                                Platform.runLater(() -> backGroundTaskHolder.setProgressMessage("published " + counter.incrementAndGet() + " messages"));
+                            } catch (InterruptedException | ExecutionException | TimeoutException | IOException |
+                                     RestClientException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
                 } catch (Exception e) {
                     Platform.runLater(() -> ErrorAlert.show(e, controlledStage));
                 } finally {
@@ -1477,10 +1481,10 @@ public class Controller {
     private void addMessagesToSend(List<KafkaMessagBookWrapper> messagesToSend, File playFile) {
         try {
             List<KafkaMessage> messages = new CsvToBeanBuilder<KafkaMessage>(new FileReader(playFile.getAbsolutePath()))
-                    .withType(KafkaMessage.class)
-                    .build().parse();
+                .withType(KafkaMessage.class)
+                .build().parse();
             messagesToSend.addAll(messages.stream().map(message -> new KafkaMessagBookWrapper(playFile.getName(), message))
-                    .toList());
+                .toList());
         } catch (FileNotFoundException e) {
             Platform.runLater(() -> ErrorAlert.show(e, controlledStage));
         }
@@ -1529,39 +1533,39 @@ public class Controller {
         MessagesTabContent messagesTabContent = new MessagesTabContent();
 
         messagesTabContent.getMessageTableView().setRowFactory(
-                tableView -> {
-                    final TableRow<KafkaMessage> row = new TableRow<>();
-                    final ContextMenu rowMenu = new ContextMenu();
-                    MenuItem openinPublisher = new MenuItem("open in publisher");
-                    openinPublisher.setGraphic(new FontIcon(FontAwesome.SHARE));
-                    openinPublisher.setOnAction(event -> showPublishMessageDialog(row.getItem()));
-                    MenuItem openAsTxt = new MenuItem("open in text editor");
-                    openAsTxt.setGraphic(new FontIcon(FontAwesome.EDIT));
-                    openAsTxt.setOnAction(event -> openInTextEditor(row.getItem(), "txt"));
-                    MenuItem openAsJson = new MenuItem("open in json editor");
-                    openAsJson.setGraphic(new FontIcon(FontAwesome.EDIT));
-                    openAsJson.setOnAction(event -> openInTextEditor(row.getItem(), "json"));
-                    MenuItem jsonDiff = new MenuItem("Json Diff");
-                    jsonDiff.setGraphic(new FontIcon(FontAwesome.EXCHANGE));
-                    jsonDiff.disableProperty().bind(Bindings.createBooleanBinding(() -> messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems() != null && messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems().size() != 2, messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems()));
-                    jsonDiff.setOnAction(event -> {
-                        final ObservableList<KafkaMessage> selectedItems = messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems();
-                        if (selectedItems != null && selectedItems.size() == 2) {
-                            showJsonDiffDialog(selectedItems.get(0), selectedItems.get(1));
-                        } else {
-                            ErrorAlert.show("Unsupported selection", "Selection has to be exactly 2 message", null, null, controlledStage, false);
-                        }
+            tableView -> {
+                final TableRow<KafkaMessage> row = new TableRow<>();
+                final ContextMenu rowMenu = new ContextMenu();
+                MenuItem openinPublisher = new MenuItem("open in publisher");
+                openinPublisher.setGraphic(new FontIcon(FontAwesome.SHARE));
+                openinPublisher.setOnAction(event -> showPublishMessageDialog(row.getItem()));
+                MenuItem openAsTxt = new MenuItem("open in text editor");
+                openAsTxt.setGraphic(new FontIcon(FontAwesome.EDIT));
+                openAsTxt.setOnAction(event -> openInTextEditor(row.getItem(), "txt"));
+                MenuItem openAsJson = new MenuItem("open in json editor");
+                openAsJson.setGraphic(new FontIcon(FontAwesome.EDIT));
+                openAsJson.setOnAction(event -> openInTextEditor(row.getItem(), "json"));
+                MenuItem jsonDiff = new MenuItem("Json Diff");
+                jsonDiff.setGraphic(new FontIcon(FontAwesome.EXCHANGE));
+                jsonDiff.disableProperty().bind(Bindings.createBooleanBinding(() -> messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems() != null && messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems().size() != 2, messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems()));
+                jsonDiff.setOnAction(event -> {
+                    final ObservableList<KafkaMessage> selectedItems = messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems();
+                    if (selectedItems != null && selectedItems.size() == 2) {
+                        showJsonDiffDialog(selectedItems.get(0), selectedItems.get(1));
+                    } else {
+                        ErrorAlert.show("Unsupported selection", "Selection has to be exactly 2 message", null, null, controlledStage, false);
+                    }
 
-                    });
-                    rowMenu.getItems().addAll(openinPublisher, openAsTxt, openAsJson, jsonDiff);
-
-                    // only display context menu for non-null items:
-                    row.contextMenuProperty().bind(
-                            Bindings.when(Bindings.isNotNull(row.itemProperty()))
-                                    .then(rowMenu)
-                                    .otherwise((ContextMenu) null));
-                    return row;
                 });
+                rowMenu.getItems().addAll(openinPublisher, openAsTxt, openAsJson, jsonDiff);
+
+                // only display context menu for non-null items:
+                row.contextMenuProperty().bind(
+                    Bindings.when(Bindings.isNotNull(row.itemProperty()))
+                        .then(rowMenu)
+                        .otherwise((ContextMenu) null));
+                return row;
+            });
         messagesTabContent.getMessageTableView().getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         messagesTabContent.getMessageTableView().getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             selectedMessage = newValue;
@@ -1583,7 +1587,10 @@ public class Controller {
     }
 
     private void updateTabName(PinTab tab, ClusterConfig clusterConfig, String name) {
-        Platform.runLater(() -> tab.setText(clusterConfig.getIdentifier() + " - " + name));
+        Platform.runLater(() -> {
+            tab.setText(clusterConfig.getIdentifier() + " - " + name);
+            onMessageTabPaneSelectionChange(null);
+        });
     }
 
     @FXML
@@ -1609,8 +1616,8 @@ public class Controller {
 
     private EventHandler<? super KeyEvent> generateHeaderTableEventHandler() {
         Map<KeyCodeCombination, Function<Header, String>> copyCombinations = Map.of(
-                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN), header -> new String(header.value(), StandardCharsets.UTF_8),
-                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN), Header::key
+            new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN), header -> new String(header.value(), StandardCharsets.UTF_8),
+            new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN), Header::key
         );
 
         return SystemUtils.generateTableCopySelectedItemCopyEventHandler(headerTableView, copyCombinations);
@@ -1618,8 +1625,8 @@ public class Controller {
 
     private EventHandler<? super KeyEvent> generateMetadataTableEventHandler() {
         Map<KeyCodeCombination, Function<MessageMetaData, String>> copyCombinations = Map.of(
-                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN), metadata -> metadata.valueAsString().getValue(),
-                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN), metadata -> metadata.nameProperty().getName()
+            new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN), metadata -> metadata.valueAsString().getValue(),
+            new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN), metadata -> metadata.nameProperty().getName()
         );
 
         return SystemUtils.generateTableCopySelectedItemCopyEventHandler(metdataTableView, copyCombinations);
@@ -1632,8 +1639,8 @@ public class Controller {
 
     private String buildToolTip() {
         return String.format("The following KeyCombinations let you copy data from the selected element in the metadata and header table%n" +
-                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy Key/Name%n" +
-                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy Value%n");
+            new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy Key/Name%n" +
+            new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN).getDisplayText() + " - copy Value%n");
     }
 
     @FXML
