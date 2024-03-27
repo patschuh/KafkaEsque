@@ -3,7 +3,9 @@ package at.esque.kafka.alerts;
 import at.esque.kafka.Main;
 import at.esque.kafka.alerts.model.UpdateDialogResult;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.stage.Window;
 
 import java.util.Optional;
@@ -21,7 +23,7 @@ public class UpdateAlert {
         Main.applyIcon(alert);
 
         ButtonType open = new ButtonType("Open", ButtonBar.ButtonData.FINISH);
-        ButtonType askAgain = new ButtonType("Ask in 24h again", ButtonBar.ButtonData.OK_DONE);
+        ButtonType askAgain = new ButtonType("Ask again in 24h", ButtonBar.ButtonData.OK_DONE);
         ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
 
         alert.getButtonTypes().setAll(open, askAgain, cancel);
