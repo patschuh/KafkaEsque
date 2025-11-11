@@ -1,3 +1,5 @@
 "key","partition","timestamp","value"
-"${value1:UUID}","-1","2022-11-06T17:11:52.919Z","{""version"":0,""newId"":""${value1:UUID}""}"
-"${value2:UUID}","-1","2022-11-06T17:13:52.919Z","{""version"":0,""newId"":""${value2:UUID}""}"
+"${my_uuid1:UUID}","-1","2022-11-06T17:11:52.919Z","{""version"":0,""newId"":""${my_uuid1:UUID}""}"
+"${my_uuid2:UUID}","-1","2022-11-06T17:13:52.919Z","{""version"":0,""newId"":""${my_uuid2:UUID}""}"
+"${my_int1:RANDOM_INT_OF_LENGTH_4}","-1","2022-11-06T17:14:52.919Z","{""version"":0,""newId"":""${my_int1:RANDOM_INT_OF_LENGTH_4}""}"
+"${my_int2:RANDOM_INT_OF_LENGTH_12}","-1","2022-11-06T17:17:52.919Z","{""version"":0,""newId"":""${my_int2:RANDOM_INT_OF_LENGTH_12}""}"
