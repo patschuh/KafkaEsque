@@ -65,7 +65,7 @@ Consumes Messages only keeping Messages in the result list where the message key
 Consumes Messages only keeping Messages in the result list where a sequence in the message value matches the given regex
 ***
 ### Export Messages
-Mesages displayed in the message list can be exportet in csv format and played into any cluster via a message book with minimal modifications.
+Messages displayed in the message list can be exported in CSV format and played into any cluster via a message book with minimal modifications.
 ***
 ### Topic Templates
 Allows for defining and configurating topics once and apply them to different clusters with one file, see the [Wiki]("https://github.com/patschuh/KafkaEsque/wiki/Topic-Templates") for Details
@@ -112,7 +112,7 @@ This can also be combined with given trust and keystore configuration
 
 The http**s** and 'sslEnabled' is important if you want to use truststore and/or keystore otherwise those attributes are ignored and now sslContext is provided to Schema Registry client.
 
-You can use only Basic Auth if youy SR is only protected with basic auth, you can use Token Auth if your SR is protected with an OAUTH Token, you can use only keystore+truststore if your SR is protected with mTLS or you can use both settings in parallel.
+You can use only Basic Auth if you SR is only protected with basic auth, you can use Token Auth if your SR is protected with an OAUTH Token, you can use only keystore+truststore if your SR is protected with mTLS or you can use both settings in parallel.
 schemaRegistryBasicAuthUserInfo is deprecated since token auth is supported in addition to basic auth.
 There is a schemaRegistryAuthMode property with possible values NONE, BASIC or TOKEN and schemaRegistryAuthConfig property with either basic auth credentials or OAuthToken.
  ```
@@ -132,7 +132,7 @@ deprecated-> "schemaRegistryBasicAuthUserInfo": "<BasicAuthUser>:<BasicAuthPW>",
  ```
 
 ###### Using SSL without domain name 
-In some situation you might need to use ip address for your bootstrap server and SSL. 
+In some situations you might need to use ip address for your bootstrap server and SSL. 
 With default config the API does a host name identification which fails in those scenarios with 
 ```
 java.security.cert.CertificateException: No subject alternative names matching IP address .... found
