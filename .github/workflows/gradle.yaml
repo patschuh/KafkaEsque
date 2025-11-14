@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ macos-12, ubuntu-22.04, windows-2022 ]
+        os: [ macos-14, ubuntu-22.04, windows-2022 ]
         java: [ '17' ]
       fail-fast: false
     name: ${{ matrix.os }}
@@ -56,13 +56,13 @@ jobs:
         if: matrix.os == 'windows-2022'
         run: .\gradlew.bat --info jpackage
       - name: Upload DMG as an artifact
-        if: matrix.os == 'macos-12'
+        if: matrix.os == 'macos-14'
         uses: actions/upload-artifact@v4
         with:
           name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-dmg
           path: build/jpackage/*.dmg
       - name: Upload PKG as an artifact
-        if: matrix.os == 'macos-12'
+        if: matrix.os == 'macos-14'
         uses: actions/upload-artifact@v4
         with:
           name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-pkg
@@ -97,12 +97,12 @@ jobs:
           codesign --sign - --deep --force --preserve-metadata=entitlements,requirements,flags,runtime build/jpackage/*.dmg
         if: |
           startsWith(github.ref, 'refs/tags/') &&
-          matrix.os == 'macos-12'
+          matrix.os == 'macos-14'
       - name: Create release (macOS)
         uses: softprops/action-gh-release@v2
         if: |
           startsWith(github.ref, 'refs/tags/') &&
-          matrix.os == 'macos-12'
+          matrix.os == 'macos-14'
         with:
           files: build/jpackage/*.dmg
       - name: Create release (Ubuntu)
@@ -125,7 +125,7 @@ jobs:
         id: extract-version
         if: |
           startsWith(github.ref, 'refs/tags/') &&
-          matrix.os == 'macos-12'
+          matrix.os == 'macos-14'
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
           echo "tag-name=${TAG_NAME:1}" >> $GITHUB_OUTPUT
@@ -133,7 +133,7 @@ jobs:
         uses: MWin123/bump-homebrew-formula-action@v0.3.0
         if: |
           startsWith(github.ref, 'refs/tags/') &&
-          matrix.os == 'macos-12'
+          matrix.os == 'macos-14'
         with:
           formula-name: homebrew-esque
           formula-path: Casks/kafkaesque.rb
