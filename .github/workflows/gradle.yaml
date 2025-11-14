@@ -13,9 +13,9 @@ jobs:
     name: ${{ matrix.os }}
     steps:
       - name: Git checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: ${{ matrix.java }}
@@ -24,7 +24,7 @@ jobs:
       - name: Echo JAVA_HOME
         run: echo $JAVA_HOME
       - name: Verify Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
+        uses: gradle/actions/wrapper-validation@v3
       - name: Execute build (macOS & Ubuntu)
         if: matrix.os != 'windows-2022'
         run: ./gradlew --info build
@@ -33,13 +33,13 @@ jobs:
         run: .\gradlew.bat --info build
       - name: Upload TAR as an artifact
         if: matrix.os != 'windows-2022'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-tar
           path: build/distributions/*.tar
       - name: Upload ZIP as an artifact
         if: matrix.os == 'windows-2022'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-zip
           path: build/distributions/*.zip
@@ -57,37 +57,37 @@ jobs:
         run: .\gradlew.bat --info jpackage
       - name: Upload DMG as an artifact
         if: matrix.os == 'macos-12'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-dmg
           path: build/jpackage/*.dmg
       - name: Upload PKG as an artifact
         if: matrix.os == 'macos-12'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-pkg
           path: build/jpackage/*.pkg
       - name: Upload DEB as an artifact
         if: matrix.os == 'ubuntu-22.04'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-deb
           path: build/jpackage/*.deb
       - name: Upload RPM as an artifact
         if: matrix.os == 'ubuntu-22.04'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-rpm
           path: build/jpackage/*.rpm
       - name: Upload EXE as an artifact
         if: matrix.os == 'windows-2022'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-exe
           path: build/jpackage/*.exe
       - name: Upload MSI as an artifact
         if: matrix.os == 'windows-2022'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kafkaesque-jdk${{ matrix.java }}-${{ matrix.os }}-msi
           path: build/jpackage/*.msi
@@ -99,14 +99,14 @@ jobs:
           startsWith(github.ref, 'refs/tags/') &&
           matrix.os == 'macos-12'
       - name: Create release (macOS)
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: |
           startsWith(github.ref, 'refs/tags/') &&
           matrix.os == 'macos-12'
         with:
           files: build/jpackage/*.dmg
       - name: Create release (Ubuntu)
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: |
           startsWith(github.ref, 'refs/tags/') &&
           matrix.os == 'ubuntu-22.04'
@@ -115,7 +115,7 @@ jobs:
             build/jpackage/*.deb
             build/jpackage/*.rpm
       - name: Create release (Windows)
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: |
           startsWith(github.ref, 'refs/tags/') &&
           matrix.os == 'windows-2022'
