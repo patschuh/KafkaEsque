@@ -142,7 +142,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
+import java.util.Random;
 
 public class Controller {
 
@@ -1586,28 +1586,51 @@ public class Controller {
         addReplacementEntries(replacementMap, message.getValue());
     }
 
-    private void addReplacementEntries(Map<String, String> replacementMap, String matchingString) {
-        String replaceMentKeyFormat = "${%s:%s}";
+    void addReplacementEntries(Map<String, String> replacementMap, String matchingString) {
+        String replacementKeyFormat = "${%s:%s}";
         Matcher matcher = REPLACER_PATTERN.matcher(matchingString);
+        Random rand = new Random();
 
         while (matcher.find()) {
             String identifier = matcher.group("identifier");
             String type = matcher.group("type");
-
             Serializable replacement;
-            switch (type) {
-                case "UUID":
-                    replacement = UUID.randomUUID();
-                    break;
-                default:
-                    throw new RuntimeException("Unsupported replacement type: " + type);
+
+            // Can safely generate random ints up to length 19 (within long range)
+            if (type.startsWith("RANDOM_INT_OF_LENGTH")) {
+                int lastUnderscoreIndex = type.lastIndexOf('_');
+                String numberPart = (lastUnderscoreIndex == -1) ? "" : type.substring(lastUnderscoreIndex + 1);
+
+                if (!numberPart.matches("\\d+")) {
+                    throw new RuntimeException("Invalid or missing length for random int type: " + type);
+                }
+
+                int lengthOfRandomInt;
+                try {
+                    lengthOfRandomInt = Integer.parseInt(numberPart);
+                    if (lengthOfRandomInt < 1 || lengthOfRandomInt > 19) {
+                        throw new RuntimeException("Random int length must be between 1 and 19: " + lengthOfRandomInt);
+                    }
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException("Invalid or missing length for random int type: " + type, e);
+                }
+
+
+                long min = (long) Math.pow(10, lengthOfRandomInt - 1);
+                long max = (long) Math.pow(10, lengthOfRandomInt) - 1;
+
+                long randomNum = rand.nextLong(max - min + 1) + min;
+                replacement = String.valueOf(randomNum);
+
+            } else if ("UUID".equals(type)) {
+                replacement = UUID.randomUUID();
+
+            } else {
+                throw new RuntimeException("Unsupported replacement type: " + type);
             }
 
-            replacementMap.put(String.format(replaceMentKeyFormat, identifier, type), replacement.toString());
-
-
+            replacementMap.put(String.format(replacementKeyFormat, identifier, type), replacement.toString());
         }
-
     }
 
     private void centerStageOnControlledStage(Stage stage) {
