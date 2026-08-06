@@ -67,11 +67,20 @@
                   <TextField fx:id="valueRegexFilterField" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.rowIndex="3" />
                   <TextField fx:id="amountLimit" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.rowIndex="4" />
                   <Label text="Limit Amount:" GridPane.rowIndex="4" />
-                  <CheckBox fx:id="reserializeMessagesToggle" mnemonicParsing="false" selected="true" text="reserialize messages" underline="true" GridPane.columnSpan="3" GridPane.halignment="CENTER" GridPane.rowIndex="5">
-                     <tooltip>
-                        <Tooltip text="Deserializes the messages and re-serializes them again for the target cluster.&#10;&#10;Important for serializers using the schema-registry to make sure schema id in the record is correct for the target cluster&#10;and value is valid for targets clusters registered schema" />
-                     </tooltip>
-                  </CheckBox>
+                   <HBox alignment="CENTER" spacing="15.0" GridPane.columnSpan="3" GridPane.halignment="CENTER" GridPane.rowIndex="5">
+                       <children>
+                           <CheckBox fx:id="reserializeMessagesToggle" mnemonicParsing="false" selected="true" text="reserialize messages" underline="true">
+                               <tooltip>
+                                   <Tooltip text="Deserializes the messages and re-serializes them again for the target cluster.&#10;&#10;Important for serializers using the schema-registry to make sure schema id in the record is correct for the target cluster&#10;and value is valid for targets clusters registered schema" />
+                               </tooltip>
+                           </CheckBox>
+                           <CheckBox fx:id="preserveTimestampsToggle" mnemonicParsing="false" selected="false" text="preserve timestamps" underline="true">
+                               <tooltip>
+                                   <Tooltip text="Preserve timestamps from source cluster topic messages in destination cluster topic messages.&#10;&#10;For example, if message was published 10 days ago, it's timestamp will be 10 days ago as well on destination cluster." />
+                               </tooltip>
+                           </CheckBox>
+                       </children>
+                   </HBox>
                </children>
             </GridPane>
             <GridPane>

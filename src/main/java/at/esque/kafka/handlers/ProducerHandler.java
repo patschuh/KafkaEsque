@@ -128,6 +128,10 @@ public class ProducerHandler {
     }
 
     public RecordMetadata sendMessage(UUID producerId, String topic, Integer selectedpartition, String key, String value, String keyRecordType, String valueRecordType, List<Header> headers) throws InterruptedException, ExecutionException, TimeoutException, IOException, RestClientException {
+        return sendMessage(producerId, topic, selectedpartition, key, value, keyRecordType, valueRecordType, headers, false, 0L);
+    }
+
+    public RecordMetadata sendMessage(UUID producerId, String topic, Integer selectedpartition, String key, String value, String keyRecordType, String valueRecordType, List<Header> headers, boolean preserveTimestamp, long timestamp) throws InterruptedException, ExecutionException, TimeoutException, IOException, RestClientException {
         ProducerWrapper producerWrapper = registeredProducers.get(producerId);
         if (producerWrapper == null) {
             throw new RuntimeException(String.format("Producer with id [%s] does not exist!", producerId));
@@ -137,9 +141,19 @@ public class ProducerHandler {
         Object keyValue = getMessageValue(topic, key, producerWrapper, typeConfig.getKeyType(), true, keyRecordType);
         Object valueValue = getMessageValue(topic, value, producerWrapper, typeConfig.getValueType(), false, valueRecordType);
         if (selectedpartition != null && selectedpartition > -1) {
-            record = new ProducerRecord(topic, selectedpartition, keyValue, valueValue);
+            if (preserveTimestamp) {
+                record = new ProducerRecord(topic, selectedpartition, timestamp, keyValue, valueValue);
+            }
+            else {
+                record = new ProducerRecord(topic, selectedpartition, keyValue, valueValue);
+            }
         } else {
-            record = new ProducerRecord(topic, keyValue, valueValue);
+            if (preserveTimestamp) {
+                record = new ProducerRecord(topic, null, timestamp, keyValue, valueValue);
+            }
+            else {
+                record = new ProducerRecord(topic, keyValue, valueValue);
+            }
         }
         if (headers != null) {
             headers.forEach(header -> record.headers().add(header));

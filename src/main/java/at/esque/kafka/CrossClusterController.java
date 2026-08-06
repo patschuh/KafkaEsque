@@ -69,6 +69,8 @@ public class CrossClusterController {
     private TextField amountLimit;
     @FXML
     public CheckBox reserializeMessagesToggle;
+    @FXML
+    public CheckBox preserveTimestampsToggle;
 
     @FXML
     private FilterableListView<String> fromClusterTopicsList;
@@ -201,9 +203,25 @@ public class CrossClusterController {
                             if (operation.getFilterFunction().test(consumerRecord)) {
                                 if (reserializeMessagesToggle.isSelected()) {
                                     KafkaMessage convert = convert(consumerRecord);
-                                    producerHandler.sendMessage(producerId, operation.getToTopic().getName(), -1, convert.getKey(), convert.getValue(), convert.getKeyType(), convert.getValueType(), convert.getHeaders());
+                                    producerHandler.sendMessage(producerId,
+                                        operation.getToTopic().getName(),
+                                        -1,
+                                        convert.getKey(),
+                                        convert.getValue(),
+                                        convert.getKeyType(),
+                                        convert.getValueType(),
+                                        convert.getHeaders(),
+                                        preserveTimestampsToggle.isSelected(),
+                                        Instant.parse(convert.getTimestamp()).toEpochMilli()
+                                    );
                                 } else {
-                                    ProducerRecord producerRecord = new ProducerRecord(operation.getToTopic().getName(), consumerRecord.key(), consumerRecord.value());
+                                    ProducerRecord producerRecord;
+                                    if (preserveTimestampsToggle.isSelected()) {
+                                        producerRecord = new ProducerRecord(operation.getToTopic().getName(), null, consumerRecord.timestamp(), consumerRecord.key(), consumerRecord.value());
+                                    }
+                                    else {
+                                        producerRecord = new ProducerRecord(operation.getToTopic().getName(), consumerRecord.key(), consumerRecord.value());
+                                    }
                                     consumerRecord.headers().forEach(header -> producerRecord.headers().add(header));
                                     producerHandler.sendRecord(producerId, producerRecord);
                                 }
