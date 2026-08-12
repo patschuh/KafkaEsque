@@ -42,8 +42,7 @@ public class Settings {
     public static final String ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS = "avro.logical.type.conversions.enabled";
     public static final String ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS_DEFAULT = "true";
     public static final String MESSAGE_PREVIEW_SIZE_BYTES = "message.preview.size.bytes";
-    public static final String MESSAGE_PREVIEW_SIZE_BYTES_DEFAULT = "1024";
-    public static final String LEGACY_MESSAGE_PREVIEW_SIZE_KB = "message.preview.size.kb";
+    public static final String MESSAGE_PREVIEW_SIZE_BYTES_DEFAULT = "512";
 
 
     public static List<Duration> readDurationSetting(Map<String, String> settings) {
