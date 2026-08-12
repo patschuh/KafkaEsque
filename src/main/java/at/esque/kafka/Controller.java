@@ -357,13 +357,16 @@ public class Controller {
         messageTabPane.getTabs().add(createTab(dummycluster, "Tab"));
         helpIconToolTip.setText(buildToolTip());
 
-        versionInfoHandler.showDialogIfUpdateIsAvailable(hostServices);
         messageTabPane.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             String text = Optional.ofNullable(newValue)
                     .map(Tab::getText)
                     .orElse(null);
             showTextInStageTitle(text);
         });
+    }
+
+    public void checkForUpdatesAsync() {
+        versionInfoHandler.showDialogIfUpdateIsAvailableAsync(hostServices);
     }
 
     private BooleanBinding noClusterSelectedBinding() {

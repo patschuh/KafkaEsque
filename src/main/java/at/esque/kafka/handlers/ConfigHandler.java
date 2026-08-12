@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.inject.Singleton;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClientConfig;
+import javafx.application.Platform;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SaslConfigs;
@@ -397,7 +398,12 @@ public class ConfigHandler {
         try {
             objectMapper.writeValue(versionCheckFile, content);
         } catch (IOException e) {
-            ErrorAlert.show(e);
+            Runnable showError = () -> ErrorAlert.show(e);
+            if (Platform.isFxApplicationThread()) {
+                showError.run();
+            } else {
+                Platform.runLater(showError);
+            }
         }
     }
 }
