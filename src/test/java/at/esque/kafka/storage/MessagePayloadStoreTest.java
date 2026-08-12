@@ -71,7 +71,10 @@ public class MessagePayloadStoreTest {
     public void readsPreviewLimitAsBytes() {
         assertEquals(1536, Settings.readMessagePreviewSizeBytes(
                 Map.of(Settings.MESSAGE_PREVIEW_SIZE_BYTES, "1536")));
-        assertEquals(1024, Settings.readMessagePreviewSizeBytes(Map.of()));
+        int defaultSizeBytes = Integer.parseInt(Settings.MESSAGE_PREVIEW_SIZE_BYTES_DEFAULT);
+        assertEquals(defaultSizeBytes, Settings.readMessagePreviewSizeBytes(Map.of()));
+        assertEquals(defaultSizeBytes, Settings.readMessagePreviewSizeBytes(
+                Map.of(Settings.MESSAGE_PREVIEW_SIZE_BYTES, "invalid")));
     }
 
     private static KafkaMessage message(String key, String value) {

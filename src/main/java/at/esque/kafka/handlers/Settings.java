@@ -102,7 +102,7 @@ public class Settings {
             return Math.max(1, Integer.parseInt(settings.getOrDefault(
                     MESSAGE_PREVIEW_SIZE_BYTES, MESSAGE_PREVIEW_SIZE_BYTES_DEFAULT)));
         } catch (RuntimeException e) {
-            return 1024;
+            return 512;
         }
     }
 
