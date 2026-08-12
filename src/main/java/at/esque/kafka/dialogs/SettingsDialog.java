@@ -16,11 +16,16 @@ import javafx.scene.control.Dialog;
 import javafx.util.StringConverter;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class SettingsDialog {
+
+    private static final List<String> MESSAGE_TYPE_DISPLAY_NAMES = Arrays.stream(MessageType.values())
+            .map(MessageType::toString)
+            .collect(Collectors.toList());
 
     private SettingsDialog() {
     }
@@ -35,15 +40,15 @@ public class SettingsDialog {
                                 .id(Settings.USE_SYSTEM_MENU_BAR)
                 ),
                 Group.of(
-                        Field.ofSingleSelectionType(Arrays.stream(MessageType.values()).map(MessageType::name).collect(Collectors.toList()))
-                                .select(Arrays.stream(MessageType.values()).map(MessageType::name).collect(Collectors.toList()).indexOf(existingConfig.getOrDefault(Settings.DEFAULT_KEY_MESSAGE_TYPE, Settings.DEFAULT_KEY_MESSAGE_TYPE_DEFAULT)))
+                        Field.ofSingleSelectionType(MESSAGE_TYPE_DISPLAY_NAMES)
+                                .select(messageTypeIndex(existingConfig.getOrDefault(Settings.DEFAULT_KEY_MESSAGE_TYPE, Settings.DEFAULT_KEY_MESSAGE_TYPE_DEFAULT)))
                                 .label(Settings.DEFAULT_KEY_MESSAGE_TYPE)
                                 .tooltip(Settings.DEFAULT_KEY_MESSAGE_TYPE)
                                 .placeholder(Settings.DEFAULT_KEY_MESSAGE_TYPE)
                                 .id(Settings.DEFAULT_KEY_MESSAGE_TYPE)
                                 .required("This field is required"),
-                        Field.ofSingleSelectionType(Arrays.stream(MessageType.values()).map(MessageType::name).collect(Collectors.toList()))
-                                .select(Arrays.stream(MessageType.values()).map(MessageType::name).collect(Collectors.toList()).indexOf(existingConfig.getOrDefault(Settings.DEFAULT_VALUE_MESSAGE_TYPE, Settings.DEFAULT_VALUE_MESSAGE_TYPE_DEFAULT)))
+                        Field.ofSingleSelectionType(MESSAGE_TYPE_DISPLAY_NAMES)
+                                .select(messageTypeIndex(existingConfig.getOrDefault(Settings.DEFAULT_VALUE_MESSAGE_TYPE, Settings.DEFAULT_VALUE_MESSAGE_TYPE_DEFAULT)))
                                 .label(Settings.DEFAULT_VALUE_MESSAGE_TYPE)
                                 .tooltip(Settings.DEFAULT_VALUE_MESSAGE_TYPE)
                                 .placeholder(Settings.DEFAULT_VALUE_MESSAGE_TYPE)
@@ -123,10 +128,26 @@ public class SettingsDialog {
         if (field instanceof DataField) {
             return ((DataField) field).getValue().toString();
         } else if (field instanceof SingleSelectionField) {
-            return ((SingleSelectionField<?>) field).getSelection().toString();
+            String selection = ((SingleSelectionField<?>) field).getSelection().toString();
+            if (Settings.DEFAULT_KEY_MESSAGE_TYPE.equals(field.getID()) || Settings.DEFAULT_VALUE_MESSAGE_TYPE.equals(field.getID())) {
+                return Arrays.stream(MessageType.values())
+                        .filter(messageType -> messageType.toString().equals(selection))
+                        .findFirst()
+                        .orElse(MessageType.STRING)
+                        .name();
+            }
+            return selection;
         } else {
             return "";
         }
+    }
+
+    private static int messageTypeIndex(String configuredType) {
+        MessageType messageType = Arrays.stream(MessageType.values())
+                .filter(type -> type.name().equals(configuredType))
+                .findFirst()
+                .orElse(MessageType.STRING);
+        return Arrays.asList(MessageType.values()).indexOf(messageType);
     }
 
     private static class NullFormatStringConverter extends StringConverter<String> {

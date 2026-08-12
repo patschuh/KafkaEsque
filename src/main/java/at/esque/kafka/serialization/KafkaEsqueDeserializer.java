@@ -8,6 +8,7 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serdes;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
@@ -75,6 +76,8 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
         switch (type) {
             case STRING:
                 return Serdes.String().deserializer();
+            case STRING_ISO_8859_1:
+                return (topic, data) -> data == null ? null : new String(data, StandardCharsets.ISO_8859_1);
             case SHORT:
                 return Serdes.Short().deserializer();
             case INTEGER:
@@ -114,4 +117,3 @@ public class KafkaEsqueDeserializer implements Deserializer<Object> {
         return buffer.getInt();
     }
 }
-
