@@ -41,6 +41,9 @@ public class Settings {
     public static final String CHECK_FOR_UPDATES_DURATION_BETWEEN_HOURS_DEFAULT = "24";
     public static final String ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS = "avro.logical.type.conversions.enabled";
     public static final String ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS_DEFAULT = "true";
+    public static final String MESSAGE_PREVIEW_SIZE_BYTES = "message.preview.size.bytes";
+    public static final String MESSAGE_PREVIEW_SIZE_BYTES_DEFAULT = "1024";
+    public static final String LEGACY_MESSAGE_PREVIEW_SIZE_KB = "message.preview.size.kb";
 
 
     public static List<Duration> readDurationSetting(Map<String, String> settings) {
@@ -93,6 +96,15 @@ public class Settings {
                 .filter(messageType -> messageType.name().equals(setting))
                 .findFirst()
                 .orElse(MessageType.STRING);
+    }
+
+    public static int readMessagePreviewSizeBytes(Map<String, String> settings) {
+        try {
+            return Math.max(1, Integer.parseInt(settings.getOrDefault(
+                    MESSAGE_PREVIEW_SIZE_BYTES, MESSAGE_PREVIEW_SIZE_BYTES_DEFAULT)));
+        } catch (RuntimeException e) {
+            return 1024;
+        }
     }
 
 

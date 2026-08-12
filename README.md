@@ -74,14 +74,14 @@ Allows for defining and configurating topics once and apply them to different cl
 Allows for playing a set of Messages over different topics into a cluster, see the [Wiki]("https://github.com/patschuh/KafkaEsque/wiki/Message-Books") for details
 ***
 
-### Authentication 
+### Authentication
 Within the cluster.json file it is possible to configure Authentication for Kafka and Confluent Schema Registry:
-Note: the secrets have to be given in the json file in plain text. This might be a security issue. Feel free to apply a PR if you want to improve this. 
+Note: the secrets have to be given in the json file in plain text. This might be a security issue. Feel free to apply a PR if you want to improve this.
 sslEnabled controls the SSL Authentication method
 
 Config of the Authentication can be done either in cluster.json directly or via the UI.
 
-###### Example for SSL with mTLS Authentication to the broker: 
+###### Example for SSL with mTLS Authentication to the broker:
  ```
 	{
 		"identifier": "my-mtls-secured-cluster",
@@ -103,12 +103,12 @@ This can also be combined with given trust and keystore configuration
 		"identifier": "my-mtls-secured-cluster",
 		"bootstrapServers": "broker:<portofmtlslistener>",
         "saslSecurityProtocol": "SASL_SSL",
-        "saslMechanism"  : "PLAIN", 
+        "saslMechanism"  : "PLAIN",
         "saslJaasConfig" : "org.apache.kafka.common.security.plain.PlainLoginModule required serviceName=kafka username=\"MYUSER\" password=\"53CR37\";"
     }
  ```
 
-###### Example with Schema Registry with HTTPS and Basic Auth 
+###### Example with Schema Registry with HTTPS and Basic Auth
 
 The http**s** and 'sslEnabled' is important if you want to use truststore and/or keystore otherwise those attributes are ignored and now sslContext is provided to Schema Registry client.
 
@@ -118,7 +118,7 @@ There is a schemaRegistryAuthMode property with possible values NONE, BASIC or T
  ```
 	{
               ....
-              "schemaRegistry": "https://myschemaregistry:8081", 
+              "schemaRegistry": "https://myschemaregistry:8081",
 deprecated-> "schemaRegistryBasicAuthUserInfo": "<BasicAuthUser>:<BasicAuthPW>",
               "schemaRegistryAuthMode": "NONE|BASIC|TOKEN",
               "schemaRegistryAuthConfig": "<BasicAuthUser>:<BasicAuthPW>|<OAuthToken>:",
@@ -131,14 +131,14 @@ deprecated-> "schemaRegistryBasicAuthUserInfo": "<BasicAuthUser>:<BasicAuthPW>",
     }
  ```
 
-###### Using SSL without domain name 
-In some situations you might need to use ip address for your bootstrap server and SSL. 
-With default config the API does a host name identification which fails in those scenarios with 
+###### Using SSL without domain name
+In some situations you might need to use ip address for your bootstrap server and SSL.
+With default config the API does a host name identification which fails in those scenarios with
 ```
 java.security.cert.CertificateException: No subject alternative names matching IP address .... found
 ```
 If you select the toggle "No SSL Endpoint Identification" the kafka property "ssl.endpoint.identification.algorithm" and schema-registry property "schema-registry.ssl.endpoint.identification.algorithm"
-are set to an empty string so that this identification is suppressed 
+are set to an empty string so that this identification is suppressed
 
 ###### suppress cert path validation
 In some situation you might need to suppress domain name validation for schema-registry.
@@ -167,6 +167,8 @@ Check the settings.yaml in the <user.home>/.kafkaesque directory for cluster ind
   * <span style="color:gray">default: STRING</span>
 * default.value.messagetype: configures the default Value MessageType to use if no configuration was saved for the topic yet</span>.
   * <span style="color:gray">default: STRING</span>
+* message.preview.size.bytes: maximum UTF-8 size retained in memory for each key and value preview in a message tab. Full payloads and headers are kept in temporary disk storage and loaded on demand.
+  * <span style="color:gray">default: 512</span>
 * check.for.updates.enabled: configures if KafkaEsque checks github-releases for a newer version on startup</span>.
   * <span style="color:gray">default: true</span>
 * check.for.updates.duration.between.hours: configures how many hours a check of the latest version on github is valid before it is checked again</span>.

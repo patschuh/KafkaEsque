@@ -1,9 +1,11 @@
 package at.esque.kafka.topics;
 
+import at.esque.kafka.storage.MessagePayloadStore;
 import at.esque.kafka.serialization.jackson.HeaderObservableListConverter;
 import at.esque.kafka.serialization.jackson.MessageMetaDataObservableListConverter;
 import at.esque.kafka.topics.metadata.MessageMetaData;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.LongProperty;
@@ -29,6 +31,10 @@ public class KafkaMessage {
     private StringProperty valueType = new SimpleStringProperty();
     @JsonDeserialize(converter = MessageMetaDataObservableListConverter.class)
     private ObservableList<MessageMetaData> metaData = FXCollections.observableArrayList();
+    @JsonIgnore
+    private transient MessagePayloadStore payloadStore;
+    @JsonIgnore
+    private transient long payloadOffset = -1;
 
     public long getOffset() {
         return offset.get();
@@ -132,5 +138,37 @@ public class KafkaMessage {
 
     public void setMetaData(ObservableList<MessageMetaData> metaData) {
         this.metaData = metaData;
+    }
+
+    public void setPayloadReference(MessagePayloadStore payloadStore, long payloadOffset) {
+        this.payloadStore = payloadStore;
+        this.payloadOffset = payloadOffset;
+    }
+
+    @JsonIgnore
+    public boolean isOffloaded() {
+        return payloadStore != null && payloadOffset >= 0;
+    }
+
+    @JsonIgnore
+    public long getPayloadOffset() {
+        return payloadOffset;
+    }
+
+    @JsonIgnore
+    public KafkaMessage materialize() {
+        return isOffloaded() ? payloadStore.materialize(this) : this;
+    }
+
+    @JsonIgnore
+    public KafkaMessage copyMetadata() {
+        KafkaMessage copy = new KafkaMessage();
+        copy.setOffset(getOffset());
+        copy.setPartition(getPartition());
+        copy.setTimestamp(getTimestamp());
+        copy.setKeyType(getKeyType());
+        copy.setValueType(getValueType());
+        copy.setMetaData(FXCollections.observableArrayList(getMetaData()));
+        return copy;
     }
 }

@@ -178,6 +178,20 @@ public class ConfigHandler {
             settings.put(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS, Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS_DEFAULT);
             changed = true;
         }
+        if (!settings.containsKey(Settings.MESSAGE_PREVIEW_SIZE_BYTES)) {
+            String legacyKilobytes = settings.remove(Settings.LEGACY_MESSAGE_PREVIEW_SIZE_KB);
+            if (legacyKilobytes != null) {
+                try {
+                    settings.put(Settings.MESSAGE_PREVIEW_SIZE_BYTES,
+                            Integer.toString(Math.multiplyExact(Integer.parseInt(legacyKilobytes), 512)));
+                } catch (RuntimeException e) {
+                    settings.put(Settings.MESSAGE_PREVIEW_SIZE_BYTES, Settings.MESSAGE_PREVIEW_SIZE_BYTES_DEFAULT);
+                }
+            } else {
+                settings.put(Settings.MESSAGE_PREVIEW_SIZE_BYTES, Settings.MESSAGE_PREVIEW_SIZE_BYTES_DEFAULT);
+            }
+            changed = true;
+        }
         return changed;
     }
 

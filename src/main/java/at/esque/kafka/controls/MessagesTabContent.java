@@ -3,6 +3,8 @@ package at.esque.kafka.controls;
 import at.esque.kafka.JsonUtils;
 import at.esque.kafka.SystemUtils;
 import at.esque.kafka.alerts.ErrorAlert;
+import at.esque.kafka.storage.MessagePayloadStore;
+import at.esque.kafka.storage.MessagePayloadStoreManager;
 import at.esque.kafka.topics.KafkaMessage;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
@@ -24,7 +26,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 public class MessagesTabContent extends VBox {
@@ -35,8 +41,18 @@ public class MessagesTabContent extends VBox {
     private KafkaMessageTableView messageTableView;
     @FXML
     private Tooltip helpIconToolTip;
+    private final MessagePayloadStore payloadStore;
+    private volatile int previewSizeBytes;
+    private final ConcurrentLinkedQueue<KafkaMessage> pendingMessages = new ConcurrentLinkedQueue<>();
+    private final AtomicBoolean flushScheduled = new AtomicBoolean();
 
     public MessagesTabContent() {
+        this(1024);
+    }
+
+    public MessagesTabContent(int previewSizeBytes) {
+        setPreviewSizeBytes(previewSizeBytes);
+        this.payloadStore = MessagePayloadStoreManager.createStore();
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(
                 "/fxml/controls/messagesTab.fxml"));
         fxmlLoader.setRoot(this);
@@ -75,7 +91,7 @@ public class MessagesTabContent extends VBox {
             try (Writer writer = new FileWriter(selectedFile.getAbsolutePath())) {
                 if ("json".equals(fileExtension)) {
                     try {
-                        JsonUtils.writeMessageToJsonFile(messageTableView.getItems(), writer);
+                        JsonUtils.writeMessageToJsonFile(messageTableView.getItems(), this::materialize, writer);
                     } catch (Exception e) {
                         ErrorAlert.show(e);
                     }
@@ -83,7 +99,7 @@ public class MessagesTabContent extends VBox {
                     StatefulBeanToCsv<KafkaMessage> beanToCsv = new StatefulBeanToCsvBuilder<KafkaMessage>(writer).build();
                     messageTableView.getItems().forEach(message -> {
                         try {
-                            beanToCsv.write(message);
+                            beanToCsv.write(materialize(message));
                         } catch (Exception e) {
                             ErrorAlert.show(e);
                         }
@@ -97,8 +113,8 @@ public class MessagesTabContent extends VBox {
 
     private EventHandler<? super KeyEvent> generateMessageTableCopyEventHandler() {
         Map<KeyCodeCombination, Function<KafkaMessage, String>> copyCombinations = Map.of(
-                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN), KafkaMessage::getValue,
-                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN), KafkaMessage::getKey,
+                new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN), message -> materialize(message).getValue(),
+                new KeyCodeCombination(KeyCode.K, KeyCombination.SHORTCUT_DOWN), message -> materialize(message).getKey(),
                 new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN), message -> Long.toString(message.getOffset()),
                 new KeyCodeCombination(KeyCode.P, KeyCombination.SHORTCUT_DOWN), message -> Integer.toString(message.getPartition()),
                 new KeyCodeCombination(KeyCode.T, KeyCombination.SHORTCUT_DOWN), KafkaMessage::getTimestamp
@@ -109,6 +125,74 @@ public class MessagesTabContent extends VBox {
 
     public KafkaMessageTableView getMessageTableView() {
         return messageTableView;
+    }
+
+    public void addMessage(KafkaMessage message) {
+        KafkaMessage preview = payloadStore.offload(message, previewSizeBytes);
+        pendingMessages.add(preview);
+        schedulePendingMessageFlush();
+    }
+
+    public void addMessages(Iterable<KafkaMessage> messages) {
+        for (KafkaMessage message : messages) {
+            messageTableView.getBaseList().add(payloadStore.offload(message, previewSizeBytes));
+        }
+    }
+
+    public KafkaMessage materialize(KafkaMessage message) {
+        return message == null ? null : message.materialize();
+    }
+
+    public void setPreviewSizeBytes(int previewSizeBytes) {
+        this.previewSizeBytes = Math.max(1, previewSizeBytes);
+    }
+
+    public void clearMessages() {
+        pendingMessages.clear();
+        if (javafx.application.Platform.isFxApplicationThread()) {
+            messageTableView.getBaseList().clear();
+        } else {
+            CountDownLatch cleared = new CountDownLatch(1);
+            javafx.application.Platform.runLater(() -> {
+                messageTableView.getBaseList().clear();
+                cleared.countDown();
+            });
+            try {
+                cleared.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while clearing messages", e);
+            }
+        }
+        payloadStore.reset();
+    }
+
+    public void close() {
+        pendingMessages.clear();
+        payloadStore.close();
+    }
+
+    private void schedulePendingMessageFlush() {
+        if (flushScheduled.compareAndSet(false, true)) {
+            javafx.application.Platform.runLater(this::flushPendingMessages);
+        }
+    }
+
+    private void flushPendingMessages() {
+        var batch = new ArrayList<KafkaMessage>(500);
+        KafkaMessage message;
+        while (batch.size() < 500 && (message = pendingMessages.poll()) != null) {
+            batch.add(message);
+        }
+        messageTableView.getBaseList().addAll(batch);
+        if (pendingMessages.isEmpty()) {
+            flushScheduled.set(false);
+            if (!pendingMessages.isEmpty()) {
+                schedulePendingMessageFlush();
+            }
+        } else {
+            javafx.application.Platform.runLater(this::flushPendingMessages);
+        }
     }
 
     private String buildToolTip() {

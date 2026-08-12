@@ -53,7 +53,14 @@ public class SettingsDialog {
                                 .label("(experimantal) " + Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS)
                                 .tooltip("(experimantal) " + Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS)
                                 .placeholder(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS)
-                                .id(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS)
+                                .id(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS),
+                        Field.ofStringType(existingConfig.getOrDefault(Settings.MESSAGE_PREVIEW_SIZE_BYTES, Settings.MESSAGE_PREVIEW_SIZE_BYTES_DEFAULT))
+                                .label(Settings.MESSAGE_PREVIEW_SIZE_BYTES)
+                                .tooltip("Maximum in-memory key/value preview size per message in bytes")
+                                .placeholder(Settings.MESSAGE_PREVIEW_SIZE_BYTES)
+                                .id(Settings.MESSAGE_PREVIEW_SIZE_BYTES)
+                                .required("This field is required")
+                                .format(new NullFormatStringConverter())
                 ),
                 Group.of(
                         Field.ofStringType(existingConfig.getOrDefault(Settings.RECENT_TRACE_MAX_ENTRIES, Settings.RECENT_TRACE_MAX_ENTRIES_DEFAULT))

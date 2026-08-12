@@ -6,6 +6,7 @@ import at.esque.kafka.serialization.jackson.KafkaHeaderSerializer;
 import at.esque.kafka.serialization.jackson.MessageMetaDataDeserializer;
 import at.esque.kafka.topics.KafkaMessage;
 import at.esque.kafka.topics.metadata.MessageMetaData;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +35,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 public final class JsonUtils {
 
@@ -55,35 +57,47 @@ public final class JsonUtils {
     }
 
     public static void writeMessageToJsonFile(List<KafkaMessage> messages, Writer writer) {
+        writeMessageToJsonFile(messages, Function.identity(), writer);
+    }
+
+    public static void writeMessageToJsonFile(Iterable<KafkaMessage> messages,
+                                               Function<KafkaMessage, KafkaMessage> materializer,
+                                               Writer writer) {
         try {
-            List<JsonNode> value1 = messages.stream()
-                    .map(kafkaMessage -> {
-                                JsonNode jsonNode = objectMapper.valueToTree(kafkaMessage);
-                                String value = kafkaMessage.getValue();
-                                String key = kafkaMessage.getKey();
-                                try {
-                                    JsonNode jsonNode1 = objectMapper.readTree(value);
-                                    if (jsonNode1.isObject()) {
-                                        ((ObjectNode) jsonNode).set("value", jsonNode1);
-                                    }
-                                } catch (Exception e) {
-                                    logger.warn("Failed to convert value to jsonNode [{}]", value);
-                                }
-                                try {
-                                    JsonNode jsonNode1 = objectMapper.readTree(key);
-                                    if (jsonNode1.isObject()) {
-                                        ((ObjectNode) jsonNode).set("key", jsonNode1);
-                                    }
-                                } catch (Exception e) {
-                                    logger.warn("Failed to convert key to jsonNode [{}]", key);
-                                }
-                                return jsonNode;
-                            }
-                    ).toList();
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(writer, value1);
+            try (JsonGenerator generator = objectMapper.getFactory().createGenerator(writer)) {
+                generator.useDefaultPrettyPrinter();
+                generator.writeStartArray();
+                for (KafkaMessage preview : messages) {
+                    generator.writeTree(messageToJsonNode(materializer.apply(preview)));
+                }
+                generator.writeEndArray();
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static JsonNode messageToJsonNode(KafkaMessage kafkaMessage) {
+        JsonNode jsonNode = objectMapper.valueToTree(kafkaMessage);
+        String value = kafkaMessage.getValue();
+        String key = kafkaMessage.getKey();
+        try {
+            JsonNode parsedValue = objectMapper.readTree(value);
+            if (parsedValue.isObject()) {
+                ((ObjectNode) jsonNode).set("value", parsedValue);
+            }
+        } catch (Exception e) {
+            logger.debug("Message value is not a JSON object");
+        }
+        try {
+            JsonNode parsedKey = objectMapper.readTree(key);
+            if (parsedKey.isObject()) {
+                ((ObjectNode) jsonNode).set("key", parsedKey);
+            }
+        } catch (Exception e) {
+            logger.debug("Message key is not a JSON object");
+        }
+        return jsonNode;
     }
 
     public static List<KafkaMessage> readMessages(Reader reader) {
