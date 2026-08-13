@@ -28,6 +28,7 @@ public class Main extends Application {
         primaryStage.setTitle("Kafkaesque");
         primaryStage.setScene(createStyledScene(root, 1600, 900));
         primaryStage.show();
+        controller.checkForUpdatesAsync();
     }
 
     public static Scene createStyledScene(Parent parent, double width, double height) {

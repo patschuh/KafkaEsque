@@ -125,7 +125,16 @@ public class VersionInfoHandler {
         return null;
     }
 
-    public void showDialogIfUpdateIsAvailable(HostServices hostServices) {
+    public void showDialogIfUpdateIsAvailableAsync(HostServices hostServices) {
+        Thread updateCheckThread = new Thread(
+                () -> checkForUpdateAndScheduleDialog(hostServices),
+                "kafkaesque-update-check"
+        );
+        updateCheckThread.setDaemon(true);
+        updateCheckThread.start();
+    }
+
+    private void checkForUpdateAndScheduleDialog(HostServices hostServices) {
         final String askLaterFieldName = "showUpdateDialogAgainTimestamp";
         int showUpdateDialogTimestamp = Optional.ofNullable(configHandler.getVersionCheckContent())
             .map(el -> (Integer) el.get(askLaterFieldName))
@@ -136,18 +145,22 @@ public class VersionInfoHandler {
 
         final UpdateInfo updateInfo = availableUpdate();
         if (updateInfo != null) {
-            final UpdateDialogResult action = UpdateAlert.show("Update Available", "Version " + updateInfo.getTag() + " is available", "Do you want to open the release page?");
-            if (UpdateDialogResult.OPEN.equals(action)) {
-                try {
-                    hostServices.showDocument(updateInfo.getReleasePage());
-                } catch (Exception e) {
-                    ErrorAlert.show(e);
-                }
-            } else if (UpdateDialogResult.REMIND_LATER.equals(action)) {
-                Map<String, Object> versionCheckContent = Optional.ofNullable(configHandler.getVersionCheckContent()).orElse(new HashMap<>());
-                versionCheckContent.put(askLaterFieldName, Instant.now().plus(1, ChronoUnit.DAYS).getEpochSecond());
-                configHandler.writeVersionCheckContent(versionCheckContent);
+            Platform.runLater(() -> showUpdateDialog(hostServices, askLaterFieldName, updateInfo));
+        }
+    }
+
+    private void showUpdateDialog(HostServices hostServices, String askLaterFieldName, UpdateInfo updateInfo) {
+        final UpdateDialogResult action = UpdateAlert.show("Update Available", "Version " + updateInfo.getTag() + " is available", "Do you want to open the release page?");
+        if (UpdateDialogResult.OPEN.equals(action)) {
+            try {
+                hostServices.showDocument(updateInfo.getReleasePage());
+            } catch (Exception e) {
+                ErrorAlert.show(e);
             }
+        } else if (UpdateDialogResult.REMIND_LATER.equals(action)) {
+            Map<String, Object> versionCheckContent = Optional.ofNullable(configHandler.getVersionCheckContent()).orElse(new HashMap<>());
+            versionCheckContent.put(askLaterFieldName, Instant.now().plus(1, ChronoUnit.DAYS).getEpochSecond());
+            configHandler.writeVersionCheckContent(versionCheckContent);
         }
     }
 }
