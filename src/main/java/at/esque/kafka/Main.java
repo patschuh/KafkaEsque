@@ -1,6 +1,7 @@
 package at.esque.kafka;
 
 import at.esque.kafka.guice.GuiceEsqueModule;
+import at.esque.kafka.storage.MessagePayloadStoreManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import javafx.application.Application;
@@ -16,6 +17,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        MessagePayloadStoreManager.cleanupStaleStores();
         Injector injector = Guice.createInjector(new GuiceEsqueModule());
         FXMLLoader loader = injector.getInstance(FXMLLoader.class);
         loader.setLocation(getClass().getResource("/fxml/mainScene.fxml"));
@@ -53,6 +55,7 @@ public class Main extends Application {
 
     @Override
     public void stop() {
+        MessagePayloadStoreManager.closeAll();
     }
 
     private static void setSystemProperties() {
