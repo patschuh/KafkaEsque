@@ -12,6 +12,7 @@ import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.utils.Bytes;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -75,6 +76,9 @@ public class KafkaEsqueSerializer implements Serializer<Object> {
         switch (type) {
             case STRING:
                 return new SerializerWrapper<String>(s -> s, Serdes.String().serializer());
+            case STRING_ISO_8859_1:
+                return new SerializerWrapper<String>(s -> s,
+                        (topic, data) -> data == null ? null : data.getBytes(StandardCharsets.ISO_8859_1));
             case SHORT:
                 return new SerializerWrapper<Short>(Short::parseShort, Serdes.Short().serializer());
             case INTEGER:
@@ -110,4 +114,3 @@ public class KafkaEsqueSerializer implements Serializer<Object> {
         }
     }
 }
-
