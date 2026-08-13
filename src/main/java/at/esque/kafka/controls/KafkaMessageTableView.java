@@ -30,8 +30,8 @@ public class KafkaMessageTableView extends TableView<KafkaMessage> {
         sortedMessages.comparatorProperty().bind(this.comparatorProperty());
         buildTableColumns();
         this.setItems(sortedMessages);
-        this.minHeight(0);
-        this.minWidth(0);
+        this.setMinHeight(0);
+        this.setMinWidth(0);
     }
 
     private void buildTableColumns() {
