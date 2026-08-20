@@ -27,6 +27,8 @@ import org.apache.kafka.common.header.internals.RecordHeader;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -41,9 +43,13 @@ public class PublisherController {
     @FXML
     private ComboBox<String> valueTypeSelectCombobox;
     @FXML
+    private KafkaEsqueCodeArea timestampTextArea;
+    @FXML
     private KafkaEsqueCodeArea keyTextArea;
     @FXML
     private KafkaEsqueCodeArea valueTextArea;
+    @FXML
+    private CheckBox autoGenerateTimestampBox;
     @FXML
     private CheckBox nullKeyToggle;
     @FXML
@@ -79,6 +85,7 @@ public class PublisherController {
         configForTopic = configHandler.getConfigForTopic(clusterConfig.getIdentifier(), topic);
         producerId = producerHandler.registerProducer(clusterConfig, topic);
         producerWrapper = producerHandler.getProducer(producerId).orElse(null);
+        configHandler.configureKafkaEsqueCodeArea(timestampTextArea);
         configHandler.configureKafkaEsqueCodeArea(keyTextArea);
         configHandler.configureKafkaEsqueCodeArea(valueTextArea);
         setupControls(partitions, configForTopic, kafkaMessage);
@@ -91,10 +98,12 @@ public class PublisherController {
         partitionCombobox.getSelectionModel().select(Integer.valueOf(-1));
         keyTextArea.disableProperty().bind(nullKeyToggle.selectedProperty());
         valueTextArea.disableProperty().bind(nullMessageToggle.selectedProperty());
+        timestampTextArea.disableProperty().bind(autoGenerateTimestampBox.selectedProperty());
         jsonKeyFormatButton.setVisible(false);
         jsonValueFormatButton.setVisible(false);
 
         if (kafkaMessage != null) {
+            timestampTextArea.setText(kafkaMessage.getTimestamp());
             keyTextArea.setText(kafkaMessage.getKey());
             valueTextArea.setText(kafkaMessage.getValue());
             headerTableView.setItems(kafkaMessage.getHeaders());
@@ -148,6 +157,18 @@ public class PublisherController {
         handleTextChange();
     }
 
+    private String timestampText() {
+        return timestampTextArea.isVisible() ? timestampTextArea.getText().strip() : null;
+    }
+
+    private Long timestampFromTimestampText() {
+        String timestampText = timestampText();
+        if (timestampText == null) {
+            return null;
+        }
+
+        return Instant.parse(timestampText).toEpochMilli();
+    }
 
     private String keyText() {
         return keyTextArea.isDisable() ? null : keyTextArea.getText();
@@ -160,14 +181,16 @@ public class PublisherController {
     public void publishClick(ActionEvent event) {
         Integer selectedPartition = partitionCombobox.getSelectionModel().getSelectedItem();
 
+        String timestampText = timestampText();
         String keyText = keyText();
         String valueText = valueText();
 
         String valueRecordType = valueTypeSelectCombobox.getSelectionModel().getSelectedItem();
         String keyRecordType = keyTypeSelectCombobox.getSelectionModel().getSelectedItem();
         try {
-            if (validateMessage(keyText, valueText)) {
-                RecordMetadata metadata = producerHandler.sendMessage(producerId, topic, selectedPartition, keyText, valueText, keyRecordType, valueRecordType, headerTableView.getItems());
+            if (validateMessage(timestampText, keyText, valueText)) {
+                Long timestamp = timestampFromTimestampText();
+                RecordMetadata metadata = producerHandler.sendMessage(producerId, topic, selectedPartition, keyText, valueText, keyRecordType, valueRecordType, headerTableView.getItems(), timestamp);
                 String successMessage = String.format("topic [%s] " + System.lineSeparator() + "partition [%s]" + System.lineSeparator() + "offset [%s]", metadata.topic(), metadata.partition(), metadata.offset());
                 SuccessAlert.show("Message published", "Message was published successfully", successMessage, getWindow());
             }
@@ -177,8 +200,17 @@ public class PublisherController {
 
     }
 
-    private boolean validateMessage(String key, String value) {
+    private boolean validateMessage(String timestamp, String key, String value) {
         boolean result = true;
+
+        if (!autoGenerateTimestampBox.isSelected()) {
+            ValidationResult validationResult = validateTimestamp(timestamp);
+
+            if (!validationResult.isValid()) {
+                result = false;
+                showError("timestamp", validationResult);
+            }
+        }
         if (validateIsJsonKeyBox.isSelected()) {
             ValidationResult validationResult = JsonUtils.validate(key);
 
@@ -251,6 +283,19 @@ public class PublisherController {
 
     private boolean jsonIsValidAndNotBlank(ValidationResult validationResult) {
         return validationResult.isValid() && !validationResult.isBlank();
+    }
+
+
+    private ValidationResult validateTimestamp(String timestamp) {
+        if (timestamp.isBlank()) {
+            return new ValidationResult(false, true, "Timestamp cannot be empty.");
+        }
+        try {
+            Instant.parse(timestamp);
+            return new ValidationResult(true, false);
+        } catch (DateTimeParseException ex) {
+            return new ValidationResult(false, false, "Invalid timestamp format. Please use ISO-8601 format up to seconds precision.");
+        }
     }
 
     @FXML
