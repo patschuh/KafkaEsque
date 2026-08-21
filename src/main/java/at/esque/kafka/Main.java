@@ -26,7 +26,7 @@ public class Main extends Application {
         controller.setup(primaryStage);
         primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/icons/kafkaesque.png")));
         primaryStage.setTitle("Kafkaesque");
-        primaryStage.setScene(createStyledScene(root, 1600, 900));
+        primaryStage.setScene(createStyledScene(root, -1, -1));
         primaryStage.show();
         controller.checkForUpdatesAsync();
     }
@@ -47,16 +47,10 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
-        setSystemProperties();
         launch(args);
     }
 
     @Override
     public void stop() {
     }
-
-    private static void setSystemProperties() {
-        System.setProperty("glass.win.uiScale", "100%");
-    }
-
 }
