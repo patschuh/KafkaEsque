@@ -158,7 +158,7 @@ public class PublisherController {
     }
 
     private String timestampText() {
-        return timestampTextArea.isVisible() ? timestampTextArea.getText().strip() : null;
+        return timestampTextArea.isDisabled() ? null : timestampTextArea.getText().strip();
     }
 
     private Long timestampFromTimestampText() {
