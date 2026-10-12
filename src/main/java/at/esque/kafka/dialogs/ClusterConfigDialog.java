@@ -203,8 +203,13 @@ public class ClusterConfigDialog {
         addClusterButton.disableProperty().bind(form.validProperty().not());
 
         FormRenderer formRenderer = new FormRenderer(form);
-        formRenderer.setPrefWidth(1000);
-        dialog.getDialogPane().setContent(formRenderer);
+
+        javafx.scene.control.ScrollPane scrollPane = new javafx.scene.control.ScrollPane(formRenderer);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefViewportWidth(1000);
+        scrollPane.setPrefViewportHeight(500);
+
+        dialog.getDialogPane().setContent(scrollPane);
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == addClusterButtonType) {
