@@ -14,7 +14,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.TlsVersion;
-import org.gradle.util.VersionNumber;
 
 import java.io.InputStream;
 import java.time.Duration;
@@ -52,12 +51,12 @@ public class VersionInfoHandler {
 
     public UpdateInfo availableUpdate() {
         final Map<String, Object> latestVersion = checkLatestVersion();
-        final VersionNumber currentVersionNumber = versionInfo.releaseVersion();
-        if (latestVersion != null && currentVersionNumber != null) {
-            final VersionNumber latestVersionNumber = VersionNumber.parse(((String) latestVersion.get(TAG_NAME)).substring(1));
-            final int i = currentVersionNumber.compareTo(latestVersionNumber);
-            if (i < 0) {
-                return new UpdateInfo((String) latestVersion.get(TAG_NAME), (String) latestVersion.get(HTML_URL));
+        final Version currentVersion = versionInfo.releaseVersion();
+        final String latestTag = latestVersion == null ? null : (String) latestVersion.get(TAG_NAME);
+        if (latestTag != null && currentVersion != null) {
+            final Version latestVersionNumber = Version.parse(latestTag);
+            if (currentVersion.compareTo(latestVersionNumber) < 0) {
+                return new UpdateInfo(latestTag, (String) latestVersion.get(HTML_URL));
             }
         }
         return null;

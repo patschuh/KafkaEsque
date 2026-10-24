@@ -2,7 +2,6 @@ package at.esque.kafka.handlers;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import org.gradle.util.VersionNumber;
 
 public class VersionInfo {
     private StringProperty name = new SimpleStringProperty();
@@ -85,10 +84,10 @@ public class VersionInfo {
         this.buildJvm.set(buildJvm);
     }
 
-    public VersionNumber releaseVersion(){
-        if(tag.get() == null){
+    public Version releaseVersion(){
+        if(tag.get() == null || tag.get().isBlank()){
             return null;
         }
-        return VersionNumber.parse(tag.get().substring(1));
+        return Version.parse(tag.get());
     }
 }

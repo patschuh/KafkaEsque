@@ -24,9 +24,6 @@ repositories {
     maven {
         url = 'https://repository.mulesoft.org/nexus/content/repositories/public/'
     }
-    maven {
-        url = 'https://repo.gradle.org/gradle/libs-releases-local/'
-    }
 }
 
 dependencies {
@@ -50,7 +47,6 @@ dependencies {
     implementation 'com.dlsc.formsfx:formsfx-core:11.4.2'
     implementation 'org.sourcelab:kafka-connect-client:4.0.4'
     implementation 'org.controlsfx:controlsfx:11.1.1'
-    implementation 'org.gradle:gradle-core:6.1.1'
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     implementation 'com.flipkart.zjsonpatch:zjsonpatch:0.4.16'
     implementation 'tech.allegro.schema.json2avro:converter:0.2.15'
