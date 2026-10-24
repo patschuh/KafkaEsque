@@ -39,7 +39,9 @@ public class VersionInfoHandler {
     public VersionInfoHandler() {
         objectMapper.disable(FAIL_ON_UNKNOWN_PROPERTIES);
         try (InputStream resourceAsStream = getClass().getResourceAsStream("/version.json")) {
-            versionInfo = objectMapper.readValue(resourceAsStream, VersionInfo.class);
+            if (resourceAsStream != null) {
+                versionInfo = objectMapper.readValue(resourceAsStream, VersionInfo.class);
+            }
         } catch (Exception e) {
             Platform.runLater(() -> ErrorAlert.show(e));
         }
@@ -126,8 +128,8 @@ public class VersionInfoHandler {
 
     public void showDialogIfUpdateIsAvailableAsync(HostServices hostServices) {
         Thread updateCheckThread = new Thread(
-                () -> checkForUpdateAndScheduleDialog(hostServices),
-                "kafkaesque-update-check"
+            () -> checkForUpdateAndScheduleDialog(hostServices),
+            "kafkaesque-update-check"
         );
         updateCheckThread.setDaemon(true);
         updateCheckThread.start();

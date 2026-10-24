@@ -192,6 +192,7 @@ public class ClusterConfigDialog {
         Dialog<ClusterConfig> dialog = new Dialog<>();
         Main.applyIcon(dialog);
         dialog.setTitle(isCreatingNew ? "Add new Kafka Cluster" : "Change Kafka Cluster");
+        dialog.setResizable(true);
 
         ButtonType addClusterButtonType = new ButtonType(existingConfig != null ? "Change" : "Add", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(addClusterButtonType, ButtonType.CANCEL);

@@ -5,13 +5,13 @@ import java.text.SimpleDateFormat
 
 plugins {
     id 'application'
-    id 'org.openjfx.javafxplugin' version '0.0.10'
-    id 'org.beryx.runtime' version '1.12.7'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'org.beryx.runtime' version '2.0.1'
     id "org.ajoberstar.grgit" version "5.0.0"
 }
 
 group = 'at.esque.kafka'
-version = '2.9.7'
+version = '2.9.8'
 
 repositories {
     mavenCentral()
@@ -19,7 +19,7 @@ repositories {
         url = 'https://packages.confluent.io/maven/'
     }
     maven {
-        url 'https://jitpack.io'
+        url = 'https://jitpack.io'
     }
     maven {
         url = 'https://repository.mulesoft.org/nexus/content/repositories/public/'
@@ -64,8 +64,8 @@ application {
 }
 
 java {
-    sourceCompatibility = '17'
-    targetCompatibility = '17'
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 javafx {
@@ -101,10 +101,10 @@ runtime {
     }
 }
 
-task versionFile() {
+tasks.register('versionFile') {
     doLast {
-        mkdir "$buildDir/resources/main"
-        new File("$buildDir/resources/main", "version.json").text = """{
+        mkdir "${layout.buildDirectory.get()}/resources/main"
+        new File("${layout.buildDirectory.get()}/resources/main", "version.json").text = """{
 "version": "$version",
 "revision": "${grgit.head().abbreviatedId}",
 "tag": ${
