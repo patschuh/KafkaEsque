@@ -940,3 +940,15 @@ VBox > .split-menu-button.last > .arrow-button {
 .slider:vertical .track {
 	-fx-pref-width: 5;
 }
+
+/*******************************************************************************
+ *                                                                             *
+ * Record options strip (publisher)                                            *
+ *                                                                             *
+ ******************************************************************************/
+
+.record-options-bar {
+	-fx-background-color: #f5f5f5;
+	-fx-border-color: #dddddd transparent #dddddd transparent;
+	-fx-border-width: 1 0 1 0;
+}
