@@ -60,6 +60,7 @@ public class ConsumerHandler {
         UUID consumerId = UUID.randomUUID();
         consumerProps.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupIdPrefix + consumerId);
         consumerProps.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        consumerProps.setProperty(ConsumerConfig.EXCLUDE_INTERNAL_TOPICS_CONFIG, "true");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, KafkaEsqueDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaEsqueDeserializer.class);
         consumerProps.put(KafkaAvroSerializerConfig.AVRO_USE_LOGICAL_TYPE_CONVERTERS_CONFIG, configHandler.getSettingsProperties().get(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS));
