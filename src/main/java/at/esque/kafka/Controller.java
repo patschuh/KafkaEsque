@@ -1519,7 +1519,7 @@ public class Controller {
                 stopWatch.start();
                 Map<String, UUID> topicToProducerMap = new HashMap<>();
                 try {
-                    backGroundTaskHolder.setIsInProgress(true);
+                    Platform.runLater(() -> backGroundTaskHolder.setIsInProgress(true));
                     List<File> listedFiles = Arrays.asList(Objects.requireNonNull(selectedFolder.listFiles()));
                     Map<String, String> replacementMap = new HashMap<>();
                     List<KafkaMessageBookWrapper> messagesToSend = new ArrayList<>();
