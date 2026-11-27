@@ -179,6 +179,10 @@ public class ConfigHandler {
             settings.put(Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS, Settings.ENABLE_AVRO_LOGICAL_TYPE_CONVERSIONS_DEFAULT);
             changed = true;
         }
+        if (!settings.containsKey(Settings.MESSAGE_PREVIEW_SIZE_BYTES)) {
+            settings.put(Settings.MESSAGE_PREVIEW_SIZE_BYTES, Settings.MESSAGE_PREVIEW_SIZE_BYTES_DEFAULT);
+            changed = true;
+        }
         return changed;
     }
 

@@ -437,6 +437,10 @@ public class Controller {
     private void updateKeyValueTextArea(KafkaMessage selectedMessage, boolean formatJson) {
         updateValueTabLayout(formatJson);
         if (selectedMessage == null) {
+            keyTextArea.setText("");
+            valueTextArea.setText("");
+            headerTableView.setItems(FXCollections.observableArrayList());
+            metdataTableView.setItems(FXCollections.observableArrayList());
             return;
         }
         headerTableView.setItems(selectedMessage.getHeaders());
@@ -896,11 +900,11 @@ public class Controller {
                 consumerHandler.seekToOffset(consumerId, -1);
                 Map<TopicPartition, Long> currentOffsets = consumerHandler.getCurrentOffsets(consumerId);
                 PinTab tab = getActiveTabOrAddNew(topic, false);
-                ObservableList<KafkaMessage> baseList = getAndClearBaseList(tab);
+                MessagesTabContent messagesTabContent = getAndClearMessages(tab);
                 Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("getting messages..."));
                 consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
                     while (!backGroundTaskHolder.getStopBackGroundTask() && !reachedMaxOffsetForAllPartitionsOrGotEnoughMessages(maxOffsets, minOffsets, currentOffsets, messagesConsumed, getNumberOfMessagesToConsume())) {
-                        receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume(), baseList);
+                        receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume(), messagesTabContent);
                     }
                 });
             } finally {
@@ -911,21 +915,15 @@ public class Controller {
         });
     }
 
-    private ObservableList<KafkaMessage> getAndClearBaseList(PinTab tab) {
+    private MessagesTabContent getAndClearMessages(PinTab tab) {
         if (tab == null) {
             return null;
         }
-        ObservableList<KafkaMessage> baseList = ((MessagesTabContent) tab.getContent()).getMessageTableView().getBaseList();
-        Platform.runLater(baseList::clear);
-        while (!baseList.isEmpty()) {
-            LOGGER.info("Waiting for baseList to be cleared by FX thread");
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return baseList;
+        MessagesTabContent messagesTabContent = (MessagesTabContent) tab.getContent();
+        messagesTabContent.setPreviewSizeBytes(
+                Settings.readMessagePreviewSizeBytes(configHandler.getSettingsProperties()));
+        messagesTabContent.clearMessages();
+        return messagesTabContent;
     }
 
     private PinTab getActiveTabOrAddNew(TopicMessageTypeConfig topic, boolean isTrace) {
@@ -946,13 +944,13 @@ public class Controller {
         return Long.parseLong(numberOfMessagesToGetField.getText());
     }
 
-    private <KT, VT> void receiveMessages(Map<Integer, AtomicLong> messagesConsumedPerPartition, Map<TopicPartition, Long> currentOffsets, KafkaConsumer topicConsumer, long numberToConsume, ObservableList<KafkaMessage> baseList) {
+    private <KT, VT> void receiveMessages(Map<Integer, AtomicLong> messagesConsumedPerPartition, Map<TopicPartition, Long> currentOffsets, KafkaConsumer topicConsumer, long numberToConsume, MessagesTabContent messagesTabContent) {
         ConsumerRecords<KT, VT> records = topicConsumer.poll(Duration.ofSeconds(1));
         records.forEach(record -> {
             long numberConsumed = messagesConsumedPerPartition.computeIfAbsent(record.partition(), key -> new AtomicLong(0)).get();
             currentOffsets.put(new TopicPartition(record.topic(), record.partition()), record.offset());
             if (numberConsumed < numberToConsume) {
-                convertAndAdd(record, baseList);
+                convertAndAdd(record, messagesTabContent);
                 messagesConsumedPerPartition.computeIfAbsent(record.partition(), key -> new AtomicLong(0)).incrementAndGet();
             }
         });
@@ -999,11 +997,11 @@ public class Controller {
                 });
                 Map<TopicPartition, Long> currentOffsets = consumerHandler.getCurrentOffsets(consumerId);
                 PinTab tab = getActiveTabOrAddNew(topic, false);
-                ObservableList<KafkaMessage> baseList = getAndClearBaseList(tab);
+                MessagesTabContent messagesTabContent = getAndClearMessages(tab);
                 Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("getting messages..."));
                 consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
                     while (!backGroundTaskHolder.getStopBackGroundTask() && !reachedMaxOffsetForAllPartitions(maxOffsets, minOffsets, currentOffsets)) {
-                        receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume(), baseList);
+                        receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume(), messagesTabContent);
                     }
                 });
             } finally {
@@ -1041,13 +1039,13 @@ public class Controller {
                 subscribeOrAssignToSelectedPartition(topic, consumerId);
                 consumerHandler.seekToOffset(consumerId, -2);
                 PinTab tab = getActiveTabOrAddNew(topic, false);
-                ObservableList<KafkaMessage> baseList = getAndClearBaseList(tab);
+                MessagesTabContent messagesTabContent = getAndClearMessages(tab);
                 consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
                     while (!backGroundTaskHolder.getStopBackGroundTask()) {
                         ConsumerRecords<KT, VT> records = topicConsumer.poll(Duration.ofSeconds(1));
                         records.forEach(cr -> {
                             messagesConsumed.incrementAndGet();
-                            convertAndAdd(cr, baseList);
+                            convertAndAdd(cr, messagesTabContent);
                         });
                         Platform.runLater(() -> backGroundTaskHolder.setProgressMessage(String.format("Consumed %s messages", messagesConsumed)));
                     }
@@ -1088,7 +1086,7 @@ public class Controller {
                     consumerHandler.seekToOffset(consumerId, -1);
                 }
                 PinTab tab = getActiveTabOrAddNew(topic, true);
-                ObservableList<KafkaMessage> baseList = getAndClearBaseList(tab);
+                MessagesTabContent messagesTabContent = getAndClearMessages(tab);
                 Map<TopicPartition, Long> currentOffsets = new HashMap<>();
                 consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
                     while (!backGroundTaskHolder.getStopBackGroundTask() && !reachedMaxOffsetForAllPartitions(maxOffsets, minOffsets, currentOffsets)) {
@@ -1100,7 +1098,7 @@ public class Controller {
                             messagesConsumed.incrementAndGet();
                             currentOffsets.put(new TopicPartition(cr.topic(), cr.partition()), cr.offset());
                             if (predicate.test(cr)) {
-                                convertAndAdd(cr, baseList);
+                                convertAndAdd(cr, messagesTabContent);
                                 messagesFound.incrementAndGet();
                             }
                             if (stopTraceInPartitionCondition != null && stopTraceInPartitionCondition.test(cr)) {
@@ -1138,7 +1136,7 @@ public class Controller {
 
     }
 
-    private <KT, VT> void convertAndAdd(ConsumerRecord<KT, VT> cr, ObservableList<KafkaMessage> baseList) {
+    private <KT, VT> void convertAndAdd(ConsumerRecord<KT, VT> cr, MessagesTabContent messagesTabContent) {
         KafkaMessage kafkaMessage = new KafkaMessage();
         kafkaMessage.setOffset(cr.offset());
         kafkaMessage.setPartition(cr.partition());
@@ -1173,7 +1171,7 @@ public class Controller {
         kafkaMessage.getMetaData().add(new NumericMetadata("Serialized Key Size", (long) cr.serializedKeySize()));
         kafkaMessage.getMetaData().add(new NumericMetadata("Serialized Value Size", (long) cr.serializedValueSize()));
 
-        Platform.runLater(() -> baseList.add(kafkaMessage));
+        messagesTabContent.addMessage(kafkaMessage);
     }
 
     private String extractSchemaIdFromGenericRecord(GenericData.Record genericRecord) {
@@ -1219,12 +1217,12 @@ public class Controller {
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 consumerHandler.seekToOffset(consumerId, specifiedOffset);
                 PinTab tab = getActiveTabOrAddNew(topic, false);
-                ObservableList<KafkaMessage> baseList = getAndClearBaseList(tab);
+                MessagesTabContent messagesTabContent = getAndClearMessages(tab);
                 Map<TopicPartition, Long> currentOffsets = consumerHandler.getCurrentOffsets(consumerId);
                 Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("getting messages..."));
                 consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
                     while (!backGroundTaskHolder.getStopBackGroundTask() && !reachedMaxOffsetForAllPartitionsOrGotEnoughMessages(maxOffsets, minOffsets, currentOffsets, messagesConsumed, getNumberOfMessagesToConsume())) {
-                        receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume(), baseList);
+                        receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume(), messagesTabContent);
                     }
                 });
             } finally {
@@ -1259,12 +1257,12 @@ public class Controller {
                 Map<TopicPartition, Long> maxOffsets = consumerHandler.getMaxOffsets(consumerId);
                 consumerHandler.seekToTime(consumerId, specifiedInstant.toEpochMilli());
                 PinTab tab = getActiveTabOrAddNew(topic, false);
-                ObservableList<KafkaMessage> baseList = getAndClearBaseList(tab);
+                MessagesTabContent messagesTabContent = getAndClearMessages(tab);
                 Map<TopicPartition, Long> currentOffsets = consumerHandler.getCurrentOffsets(consumerId);
                 Platform.runLater(() -> backGroundTaskHolder.setBackGroundTaskDescription("getting messages..."));
                 consumerHandler.getConsumer(consumerId).ifPresent(topicConsumer -> {
                     while (!backGroundTaskHolder.getStopBackGroundTask() && !reachedMaxOffsetForAllPartitionsOrGotEnoughMessages(maxOffsets, minOffsets, currentOffsets, messagesConsumed, getNumberOfMessagesToConsume())) {
-                        receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume(), baseList);
+                        receiveMessages(messagesConsumed, currentOffsets, topicConsumer, getNumberOfMessagesToConsume(), messagesTabContent);
                     }
                 });
             } finally {
@@ -1500,6 +1498,12 @@ public class Controller {
                 settingsProperties1 -> {
                     try {
                         configHandler.setSettingsProperties(settingsProperties1);
+                        int previewSizeBytes = Settings.readMessagePreviewSizeBytes(settingsProperties1);
+                        messageTabPane.getTabs().stream()
+                                .map(Tab::getContent)
+                                .filter(MessagesTabContent.class::isInstance)
+                                .map(MessagesTabContent.class::cast)
+                                .forEach(tabContent -> tabContent.setPreviewSizeBytes(previewSizeBytes));
                     } catch (IOException e) {
                         ErrorAlert.show(e);
                     }
@@ -1647,7 +1651,8 @@ public class Controller {
 
     private PinTab createTab(ClusterConfig clusterConfig, String name, List<KafkaMessage> kafkaMessages) {
 
-        MessagesTabContent messagesTabContent = new MessagesTabContent();
+        MessagesTabContent messagesTabContent = new MessagesTabContent(
+                Settings.readMessagePreviewSizeBytes(configHandler.getSettingsProperties()));
 
         messagesTabContent.getMessageTableView().setRowFactory(
                 tableView -> {
@@ -1655,20 +1660,21 @@ public class Controller {
                     final ContextMenu rowMenu = new ContextMenu();
                     MenuItem openinPublisher = new MenuItem("open in publisher");
                     openinPublisher.setGraphic(new FontIcon(FontAwesome.SHARE));
-                    openinPublisher.setOnAction(event -> showPublishMessageDialog(row.getItem()));
+                    openinPublisher.setOnAction(event -> showPublishMessageDialog(messagesTabContent.materialize(row.getItem())));
                     MenuItem openAsTxt = new MenuItem("open in text editor");
                     openAsTxt.setGraphic(new FontIcon(FontAwesome.EDIT));
-                    openAsTxt.setOnAction(event -> openInTextEditor(row.getItem(), "txt"));
+                    openAsTxt.setOnAction(event -> openInTextEditor(messagesTabContent.materialize(row.getItem()), "txt"));
                     MenuItem openAsJson = new MenuItem("open in json editor");
                     openAsJson.setGraphic(new FontIcon(FontAwesome.EDIT));
-                    openAsJson.setOnAction(event -> openInTextEditor(row.getItem(), "json"));
+                    openAsJson.setOnAction(event -> openInTextEditor(messagesTabContent.materialize(row.getItem()), "json"));
                     MenuItem jsonDiff = new MenuItem("Json Diff");
                     jsonDiff.setGraphic(new FontIcon(FontAwesome.EXCHANGE));
                     jsonDiff.disableProperty().bind(Bindings.createBooleanBinding(() -> messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems() != null && messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems().size() != 2, messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems()));
                     jsonDiff.setOnAction(event -> {
                         final ObservableList<KafkaMessage> selectedItems = messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItems();
                         if (selectedItems != null && selectedItems.size() == 2) {
-                            showJsonDiffDialog(selectedItems.get(0), selectedItems.get(1));
+                            showJsonDiffDialog(messagesTabContent.materialize(selectedItems.get(0)),
+                                    messagesTabContent.materialize(selectedItems.get(1)));
                         } else {
                             ErrorAlert.show("Unsupported selection", "Selection has to be exactly 2 message", null, null, controlledStage, false);
                         }
@@ -1685,22 +1691,23 @@ public class Controller {
                 });
         messagesTabContent.getMessageTableView().getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         messagesTabContent.getMessageTableView().getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            selectedMessage = newValue;
+            selectedMessage = messagesTabContent.materialize(newValue);
             updateKeyValueTextArea(selectedMessage, formatJsonToggle.isSelected());
         });
 
         messagesTabContent.getMessageTableView().focusedProperty().addListener((observableValue, oldValue, newValue) -> {
-            KafkaMessage selectedItem = messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItem();
+            KafkaMessage selectedItem = messagesTabContent.materialize(
+                    messagesTabContent.getMessageTableView().getSelectionModel().getSelectedItem());
             updateKeyValueTextArea(selectedItem, formatJsonToggle.isSelected());
         });
 
         if (kafkaMessages != null) {
-            messagesTabContent.getMessageTableView().getBaseList().clear();
-            messagesTabContent.getMessageTableView().getBaseList().addAll(kafkaMessages);
+            messagesTabContent.addMessages(kafkaMessages);
 
         }
 
         PinTab pinTab = new PinTab(clusterConfig.getIdentifier() + " - " + name, messagesTabContent);
+        pinTab.setOnClosed(event -> messagesTabContent.close());
         pinTab.textProperty().addListener((observable, oldValue, newValue) -> {
             if (pinTab.isSelected()) {
                 showTextInStageTitle(newValue);
